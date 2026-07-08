@@ -1,0 +1,21 @@
+'use strict';
+import sharp from 'sharp';
+import { findMediaMessage, downloadMessageMedia } from '../../Library/handle.js';
+const handler = async (m, { conn }) => {
+    const media = findMediaMessage(m);
+    if (!media || media.type !== 'stickerMessage') {
+        await m.reply('Reply sticker-nya dengan caption .toimg ya.');
+        return;
+    }
+    const buffer = await downloadMessageMedia(m, conn);
+    if (!buffer?.length) {
+        await m.reply('Gagal download sticker.');
+        return;
+    }
+    const png = await sharp(buffer).png().toBuffer();
+    await conn.sendMessage(m.chat, { image: png, caption: '✅ Berhasil diubah jadi gambar.' }, { quoted: m.raw });
+};
+handler.help = ['toimg'];
+handler.tags = ['sticker'];
+handler.command = /^(toimg|toimage)$/i;
+export default handler;
