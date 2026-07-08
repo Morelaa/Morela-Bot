@@ -1,6 +1,6 @@
 # Morela Bot v0.0.1
 
-WhatsApp bot base berbasis [`@itsliaaa/baileys`](https://www.npmjs.com/package/@itsliaaa/baileys) — plugin hot-reload, database SQLite, sistem izin berlapis (owner/admin/premium).
+WhatsApp bot base berbasis [`@itsliaaa/baileys`](https://www.npmjs.com/package/@itsliaaa/baileys), plugin hot-reload, database SQLite, sistem izin berlapis (owner/admin/premium).
 
 ## Instalasi
 
@@ -14,9 +14,11 @@ Login pakai **pairing code** (bukan QR): bot minta nomor WhatsApp lalu tampilkan
 
 | Command | Kegunaan |
 |---|---|
-| `npm start` | Jalankan lewat `launcher.js` (auto-restart) |
-| `npm run start:direct` | Jalankan `utama.js` langsung, tanpa supervisor |
-| `npm run dev` | Sama seperti `start:direct`, buat development |
+| `npm start` | Jalankan lewat `launcher.js` (auto-restart kalau proses crash) |
+| `npm run start:direct` | Jalankan `utama.js` langsung, tanpa supervisor `launcher.js` |
+| `npm run dev` | Alias, isinya sama persis dengan `start:direct` (`node utama.js`) |
+
+Catatan: project ini plain JavaScript, tidak ada langkah compile/build (bukan TypeScript). Jadi tidak ada `npm run build`, dan `dev` bukan mode watch/nodemon, cuma nama lain untuk `node utama.js`, dipisah dari `start:direct` sekadar biar familiar buat yang terbiasa `npm run dev`. Kalau mau auto-restart pas develop, tetap pakai `npm start` (lewat `launcher.js`).
 
 ## Struktur Project
 
@@ -62,7 +64,7 @@ handler.limit = false;
 export default handler;
 ```
 
-Pengecekan akses & pesan penolakan sudah dihandle otomatis oleh `handler.js` — plugin tinggal pasang flag. File otomatis ke-reload saat disave (`pluginHotReload: true`).
+Pengecekan akses & pesan penolakan sudah dihandle otomatis oleh `handler.js`, plugin tinggal pasang flag. File otomatis ke-reload saat disave (`pluginHotReload: true`).
 
 Plugin juga bisa punya `handler.onText(m, { conn })` untuk menangkap pesan tanpa prefix (return `true` kalau sudah ditangani).
 
@@ -74,10 +76,9 @@ Plugin juga bisa punya `handler.onText(m, { conn })` untuk menangkap pesan tanpa
 
 ## Konfigurasi Tambahan
 
-- **`.ai`** — isi `apiKeys.anthropic` di `config.js`.
-- **`.ytmp3` / `.ytmp4` / `.tiktok`** — isi `apiKeys.neoxr` (daftar di https://api.neoxr.eu).
-- **`media/menu.jpg`** — belum disertakan, tambahkan sendiri kalau mau menu bergambar.
-- **`githubToken` / `githubRepo`** — belum dipakai plugin manapun saat ini.
+- **`.ytmp3` / `.ytmp4` / `.tiktok`**: isi `apiKeys.neoxr` (daftar di https://api.neoxr.eu).
+- **`media/menu.jpg`**: belum disertakan, tambahkan sendiri kalau mau menu bergambar.
+- **`githubToken` / `githubRepo`**: belum dipakai plugin manapun saat ini.
 
 ⚠️ Semua nilai sensitif (nomor owner, API key) ada langsung di `config.js`. Kalau mau push ke repo publik, kosongkan dulu atau masukkan `config.js` ke `.gitignore`.
 
