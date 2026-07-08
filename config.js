@@ -63,6 +63,7 @@ const config = {
         neoxr: 'YOUR_API_KEY',
         imgbb: 'YOUR_API_KEY',
         // Daftar gratis di https://api.imgbb.com/ untuk dapat key ini.
+        // Daftar gratis di https://api.neoxr.eu/ untuk dapat api key ini.
     },
 
     githubToken: '',
