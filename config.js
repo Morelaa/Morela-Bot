@@ -20,10 +20,10 @@ const config = {
     version: '0.0.1',
     // Nomor WhatsApp main owner (format angka saja, tanpa +). Selalu dianggap owner
     // tertinggi di semua pengecekan permission, terlepas dari isi owners.
-    mainOwner: '628999889149',
+    mainOwner: '',
     // Daftar nomor owner tambahan (selain mainOwner) yang juga lolos pengecekan owner-only.
     // Kosongkan [] kalau tidak ada owner tambahan.
-    owners: [6285895708072],
+    owners: [],
     // Daftar karakter prefix command yang dikenali (mis. ".menu", "!menu", "#menu", "/menu").
     prefix: ['.', '!', '#', '/'],
     // true -> pesan tanpa prefix sama sekali tetap dianggap command.
@@ -34,7 +34,7 @@ const config = {
     // Folder tempat menyimpan file kredensial/sesi WhatsApp (auth state Baileys).
     sessionDir: path.join(__dirname, 'session'),
     // Nomor WhatsApp bot yang dipakai untuk minta pairing code saat login pertama kali.
-    pairingNumber: '6282184455955',
+    pairingNumber: '',
     // Kode custom untuk pairing code (biar gampang diingat/dibaca user saat pairing).
     pairingCustomCode: 'MORELAXZ',
     // URL gambar thumbnail default (dipakai untuk preview link/konten tertentu).
@@ -45,9 +45,9 @@ const config = {
     // Path gambar yang dikirim di gate "belum terdaftar" (saat user belum .daftar/.register).
     registerImage: path.join(__dirname, 'media', 'register.jpg'),
     apiKeys: {
-        neoxr: 'Y4T0Xi',
+        neoxr: '',
         // Daftar gratis di https://api.imgbb.com/ untuk dapat key ini.
-        imgbb: 'a0fa1c4b6c7b1570879c6d71b590f4bf',
+        imgbb: '',
     },
     // Token GitHub untuk fitur backup ke repo (belum dipakai plugin manapun saat ini, isi kalau perlu).
     githubToken: '',
@@ -58,7 +58,7 @@ const config = {
     // Versi bot yang ditampilkan ke user di command menu (boleh beda format dari 'version').
     botVersion: 'v0.0.1',
     // JID channel/newsletter resmi yang dipakai untuk tampilan "forwarded dari channel".
-    channelJid: '120363420704282055@newsletter',
+    channelJid: '',
     // Nama channel yang tampil bareng channelJid di tampilan forwarded.
     channelName: 'Kunjungi Saluran Resmi Kami ✨',
     // true -> balasan teks/media dibungkus tampilan "forwarded/branded" (lihat Core/sockext.js).
