@@ -15,7 +15,7 @@ const config = {
     botName: 'Morela',
     // Nama bot yang tampil di menu, kontak (vCard), footer "Powered by", dsb.
 
-    copyrightName: 'Morela Bot',
+    copyrightName: 'Morela',
     // Teks copyright/branding yang tampil di footer game, watermark canvas,
     // dan metadata stiker (mis. "_© Morela Bot_"). Beda dari botName, ganti
     // nilai ini saja, semua fitur yang menampilkan teks copyright otomatis ikut berubah.
@@ -23,7 +23,7 @@ const config = {
     version: '0.0.1',
     // Versi internal bot (ditampilkan lewat botVersion di menu; field ini sendiri belum dipakai di kode).
 
-    mainOwner: '62xxx',
+    mainOwner: '628999889149',
     // Nomor WhatsApp main owner (format angka saja, tanpa +). Selalu dianggap owner
     // tertinggi di semua pengecekan permission, terlepas dari isi owners.
 
@@ -34,7 +34,7 @@ const config = {
     prefix: ['.', '!', '#', '/'],
     // Daftar karakter prefix command yang dikenali (mis. ".menu", "!menu", "#menu", "/menu").
 
-    allowNoPrefix: false,
+    allowNoPrefix: true,
     // true -> pesan tanpa prefix sama sekali tetap dianggap command.
     // false -> command wajib pakai salah satu karakter di 'prefix'.
 
@@ -44,7 +44,7 @@ const config = {
     sessionDir: path.join(__dirname, 'session'),
     // Folder tempat menyimpan file kredensial/sesi WhatsApp (auth state Baileys).
 
-    pairingNumber: '62xxx',
+    pairingNumber: '6282184455955',
     // Nomor WhatsApp bot yang dipakai untuk minta pairing code saat login pertama kali.
 
     pairingCustomCode: 'MORELAXZ',
@@ -60,10 +60,9 @@ const config = {
     // Path gambar yang dikirim di gate "belum terdaftar" (saat user belum .daftar/.register).
 
     apiKeys: {
-        neoxr: 'YOUR_API_KEY',
-        imgbb: 'YOUR_API_KEY',
+        neoxr: 'z33rpG',
+        imgbb: 'a0fa1c4b6c7b1570879c6d71b590f4bf',
         // Daftar gratis di https://api.imgbb.com/ untuk dapat key ini.
-        // Daftar gratis di https://api.neoxr.eu/ untuk dapat api key ini.
     },
 
     githubToken: '',
@@ -87,6 +86,12 @@ const config = {
     brandedReplies: true,
     // true -> balasan teks/media dibungkus tampilan "forwarded/branded" (lihat Core/sockext.js).
     // false -> semua balasan dikirim polos tanpa bungkus branding.
+
+    defaultReplyStyle: 'v1',
+    // Gaya tampilan branded reply kalau belum pernah di-set lewat command .setreplystyle.
+    // 'v1' -> extendedTextMessage (link preview card, gaya lama).
+    // 'v2' -> interactiveMessage di dalam viewOnceMessage (gaya button/card baru).
+    // Cuma berlaku kalau brandedReplies: true.
 
     rootDir: __dirname,
     // Path folder root project (otomatis, jangan diubah manual).
@@ -130,4 +135,3 @@ const config = {
     // Daftar nama folder di dalam Plugins-ESM yang di-scan & dimuat sebagai plugin.
 };
 export default config;
-    
