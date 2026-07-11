@@ -23,7 +23,7 @@ const config = {
     version: '0.0.1',
     // Versi internal bot (ditampilkan lewat botVersion di menu; field ini sendiri belum dipakai di kode).
 
-    mainOwner: '628999889149',
+    mainOwner: '628xxxxxxx',
     // Nomor WhatsApp main owner (format angka saja, tanpa +). Selalu dianggap owner
     // tertinggi di semua pengecekan permission, terlepas dari isi owners.
 
@@ -44,7 +44,7 @@ const config = {
     sessionDir: path.join(__dirname, 'session'),
     // Folder tempat menyimpan file kredensial/sesi WhatsApp (auth state Baileys).
 
-    pairingNumber: '6282184455955',
+    pairingNumber: '628xxxxxxxxxx',
     // Nomor WhatsApp bot yang dipakai untuk minta pairing code saat login pertama kali.
 
     pairingCustomCode: 'MORELAXZ',
@@ -60,9 +60,10 @@ const config = {
     // Path gambar yang dikirim di gate "belum terdaftar" (saat user belum .daftar/.register).
 
     apiKeys: {
-        neoxr: 'z33rpG',
-        imgbb: 'a0fa1c4b6c7b1570879c6d71b590f4bf',
+        neoxr: 'YOUR_API_KEY',
+        imgbb: 'YOUR_API_KEY',
         // Daftar gratis di https://api.imgbb.com/ untuk dapat key ini.
+        // Daftar gratis di https://api.neoxr.eu/ untuk dapat key ini.
     },
 
     githubToken: '',
@@ -77,7 +78,7 @@ const config = {
     botVersion: 'v0.0.1',
     // Versi bot yang ditampilkan ke user di command menu (boleh beda format dari 'version').
 
-    channelJid: '120363420704282055@newsletter',
+    channelJid: '', // isi jid saluran
     // JID channel/newsletter resmi yang dipakai untuk tampilan "forwarded dari channel".
 
     channelName: 'Kunjungi Saluran Resmi Kami ✨',
