@@ -5,6 +5,7 @@ import config from '../config.js';
 import { buildFkontak, buildForwardContext } from '../Library/utils.js';
 import { logError, logWarn } from './logutil.js';
 import { isUnbranded } from './brandcontext.js';
+import { getReplyStyle } from '../System/replystyle.js';
 
 let thumbCache = null;
 async function getDocThumb() {
@@ -54,24 +55,70 @@ export function extendSocket(sock) {
                 const thumb = await getDocThumb();
 
                 const quotedRef = fkontak;
+                const style = getReplyStyle();
 
-                const messageContent = {
-                    extendedTextMessage: {
-                        text: `https://google.com\n\n${content.text}`,
-                        matchedText: 'https://google.com',
-                        title: config.botName,
-                        description: `Owner: ${config.ownerName}`,
-                        previewType: 'NONE',
-                        jpegThumbnail: thumb.toString('base64'),
-                        contextInfo: {
-                            ...buildForwardContext(config),
-                            quotedMessage: quotedRef?.message,
-                            participant: quotedRef?.key?.participant,
-                            stanzaId: quotedRef?.key?.id,
-                            remoteJid: quotedRef?.key?.remoteJid,
+                const messageContent = style === 'v2'
+                    ? {
+                        viewOnceMessage: {
+                            message: {
+                                interactiveMessage: {
+                                    header: {
+                                        title: '',
+                                        subtitle: '',
+                                        hasMediaAttachment: false,
+                                    },
+                                    body: {
+                                        text: content.text,
+                                    },
+                                    footer: {
+                                        text: `${config.ownerName}`,
+                                    },
+                                    nativeFlowMessage: {
+                                        buttons: [
+                                            {
+                                                name: 'inapp_signup',
+                                                buttonParamsJson: '{}',
+                                            },
+                                        ],
+                                        messageParamsJson: '{}',
+                                    },
+                                    contextInfo: {
+                                        ...buildForwardContext(config),
+                                        isForwarded: false,
+                                        forwardingScore: 0,
+                                        participant: '13135550002@s.whatsapp.net',
+                                        quotedMessage: {
+                                            groupInviteMessage: {
+                                                groupJid: '0@g.us',
+                                                inviteCode: 'abdinr',
+                                                caption: config.botName,
+                                            },
+                                        },
+                                        remoteJid: 'status@broadcast',
+                                        expiration: 0,
+                                        quotedType: 'EXPLICIT',
+                                    },
+                                },
+                            },
                         },
-                    },
-                };
+                    }
+                    : {
+                        extendedTextMessage: {
+                            text: `https://google.com\n\n${content.text}`,
+                            matchedText: 'https://google.com',
+                            title: '',
+                            description: `${config.ownerName}`,
+                            previewType: 'NONE',
+                            jpegThumbnail: thumb.toString('base64'),
+                            contextInfo: {
+                                ...buildForwardContext(config),
+                                quotedMessage: quotedRef?.message,
+                                participant: quotedRef?.key?.participant,
+                                stanzaId: quotedRef?.key?.id,
+                                remoteJid: quotedRef?.key?.remoteJid,
+                            },
+                        },
+                    };
 
                 const msgId = await sock.relayMessage(jid, messageContent, {});
                 return {
