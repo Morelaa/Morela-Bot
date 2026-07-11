@@ -40,19 +40,24 @@ class PluginManager {
     }
     async loadAll() {
         this.plugins.clear();
+        const summary = [];
         for (const dir of config.pluginDirs) {
             const dirPath = path.join(__dirname, dir);
             if (!fs.existsSync(dirPath))
                 continue;
             const files = fs.readdirSync(dirPath).filter((f) => f.endsWith('.js'));
+            let loaded = 0;
             for (const file of files) {
                 const filePath = path.join(dirPath, file);
                 const handler = await this._loadFile(filePath);
                 if (handler)
-                    logPlugin(`Loaded: ${dir}/${file} -> ${handler.command}`);
+                    loaded++;
             }
+            if (loaded > 0)
+                summary.push(`${dir}(${loaded})`);
         }
         events.emitLogged(EVENTS.PLUGIN_LOADED, { total: this.plugins.size });
+        logPlugin(`Dimuat: ${summary.join(', ')}`);
         logPlugin(`Total ${this.plugins.size} plugin dimuat.`);
         if (config.pluginHotReload)
             this._setupWatchers();
