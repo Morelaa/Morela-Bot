@@ -68,18 +68,6 @@ Pengecekan akses & pesan penolakan sudah dihandle otomatis oleh `handler.js`, pl
 
 Plugin juga bisa punya `handler.onText(m, { conn })` untuk menangkap pesan tanpa prefix (return `true` kalau sudah ditangani).
 
-### ⚠️ Penting: `allowNoPrefix` wajib `false` kalau ada plugin game/`onText`
-
-`config.allowNoPrefix: true` bikin **semua teks apapun** (tanpa prefix `.`/`!`/`#`/`/`) otomatis dianggap command oleh `handler.js`. Ini bukan bug khusus buat game ini emang cara kerja `isCommand` yang disengaja, tapi efeknya: kalau ada game aktif (Tebak Bendera, Tebak Kata, dll) dan orang jawab pakai teks polos ("argentina", "kanada"), teks itu duluan dicoba dicocokkan sebagai command dulu (`.tebakbendera` -> gagal cari plugin bernama "argentina") dan **gak pernah nyampe ke `onText`** buat dicek jawabannya. Bot bakal diem aja, seolah-olah game-nya rusak/ngebug, padahal cuma soal urutan pengecekan.
-
-Kalau mau pasang plugin game atau apapun yang pakai `handler.onText`, pastikan:
-
-```js
-allowNoPrefix: false,
-```
-
-di `config.js`. Kalau butuh command tanpa prefix buat kebutuhan lain, sadari konsekuensinya: semua fitur `onText` (game tebak-tebakan, dll) otomatis berhenti bisa dijawab selama `allowNoPrefix` masih `true`.
-
 ## Pelacakan Event Grup
 
 `Core/store.js` otomatis nulis ke database setiap ada perubahan di grup:
