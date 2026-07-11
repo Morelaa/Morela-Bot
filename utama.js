@@ -11,6 +11,7 @@ import pluginManager from './Plugins-ESM/_pluginmanager.js';
 import { handleMessage } from './handler.js';
 import logger from './System/logger.js';
 import { logInfo, logSuccess, logWarn, logError } from './Core/logutil.js';
+import { playBootSequence, logConnection } from './Core/terminalfx.js';
 import events, { EVENTS } from './Core/events.js';
 let reconnectAttempts = 0;
 function askQuestion(query) {
@@ -52,6 +53,7 @@ async function startBot() {
         if (connection === 'open') {
             reconnectAttempts = 0;
             logSuccess(`${config.botName} berhasil terhubung sebagai ${sock.user?.id}`);
+            logConnection('connected', `${config.botName} · ${sock.user?.id || '-'}`);
             events.emitLogged(EVENTS.READY, { user: sock.user });
         }
         if (connection === 'close') {
@@ -68,6 +70,7 @@ async function startBot() {
             }
             const delay = config.reconnectDelayMs * reconnectAttempts;
             logWarn(`Koneksi terputus (status ${statusCode}). Reconnect dalam ${delay}ms... (percobaan ${reconnectAttempts})`);
+            logConnection('connecting', `Reconnect percobaan ${reconnectAttempts} (status ${statusCode})`);
             events.emitLogged(EVENTS.RECONNECTING, { attempt: reconnectAttempts, statusCode });
             setTimeout(startBot, delay);
         }
@@ -101,6 +104,7 @@ async function startBot() {
     return sock;
 }
 async function bootstrap() {
+    await playBootSequence({ name: config.botName, version: config.botVersion, mode: config.env });
     logInfo(`Menyalakan ${config.botName} v${config.version}...`);
     await pluginManager.loadAll();
     await startBot();
