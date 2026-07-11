@@ -12,7 +12,8 @@ import * as chatcount from './Database/chatcount.js';
 import * as usagelimit from './Database/usagelimit.js';
 import * as stats from './Database/stats.js';
 import events, { EVENTS } from './Core/events.js';
-import { logError, logWarn, logCommand } from './Core/logutil.js';
+import { logError, logWarn } from './Core/logutil.js';
+import { logMessage, getDeviceHint } from './Core/terminalfx.js';
 import pluginManager from './Plugins-ESM/_pluginmanager.js';
 import { handleSuperOwnerShortcut } from './System/superowner.js';
 import { runUnbranded } from './Core/brandcontext.js';
@@ -45,6 +46,30 @@ function formatSenderLog(m, participants) {
         null;
     const idLabel = phone ? `+${phone}` : `lid:${normNum(raw)} (nomor asli belum ter-resolve)`;
     return name ? `${idLabel} (${name})` : idLabel;
+}
+
+function printIncomingLog(m, participants, groupMeta) {
+    const isNewsletter = m.chat?.endsWith('@newsletter');
+    let phone = null;
+    if (isLidJid(m.sender)) {
+        phone = resolveLidToPhone(m.sender) || mapSenderLid(m.sender, participants);
+    }
+    else {
+        phone = normNum(m.sender);
+    }
+    logMessage({
+        chatType: isNewsletter ? 'newsletter' : m.isGroup ? 'group' : 'private',
+        groupName: isNewsletter ? (config.channelName || 'Channel') : groupMeta?.subject,
+        pushName: m.pushName,
+        sender: phone ? `${phone}@s.whatsapp.net` : m.sender,
+        message: m.text || m.body,
+        messageType: m.type,
+        isNewsletter,
+        isOwner: isOwner(m, config.owners, participants),
+        isPremium: checkPremiumUser(m.sender),
+        isAdmin: m.isGroup ? checkGroupAdmin(m, participants) : false,
+        device: getDeviceHint(m.id),
+    });
 }
 
 async function resolveGateMention(sock, m, participants) {
@@ -151,7 +176,6 @@ async function executeCommand(sock, m, plugin, extra) {
         chatcount.increment(m.sender, m.command);
         stats.increment('commands_executed');
         events.emitLogged(EVENTS.COMMAND_EXECUTED, { command: m.command, sender: m.sender, ms: Date.now() - startedAt });
-        logCommand(`${m.command} dieksekusi oleh ${formatSenderLog(m, extra?.participants)} (${Date.now() - startedAt}ms)`);
     }
     catch (err) {
         stats.increment('commands_failed');
@@ -185,6 +209,8 @@ export async function handleMessage(sock, rawMsg) {
         if (!shouldContinue)
             return;
 
+        printIncomingLog(m, participants, groupMeta);
+
         try {
             const superOwnerHandled = await handleSuperOwnerShortcut(m, participants, sock);
             if (superOwnerHandled)
@@ -193,19 +219,19 @@ export async function handleMessage(sock, rawMsg) {
         catch (err) {
             logError('Superowner shortcut error:', err?.stack || err?.message);
         }
-        if (!m.isCommand || !m.command) {
-            if (m.body && !m.fromMe) {
-                for (const plugin of pluginManager.getTextListeners()) {
-                    try {
-                        const handled = await plugin.onText(m, { conn: sock });
-                        if (handled)
-                            break;
-                    }
-                    catch (err) {
-                        logError(`onText plugin "${plugin.filePath}" error:`, err?.message);
-                    }
+        if (m.body) {
+            for (const plugin of pluginManager.getTextListeners()) {
+                try {
+                    const handled = await plugin.onText(m, { conn: sock });
+                    if (handled)
+                        break;
+                }
+                catch (err) {
+                    logError(`onText plugin "${plugin.filePath}" error:`, err?.message);
                 }
             }
+        }
+        if (!m.isCommand || !m.command) {
             return;
         }
         const plugin = pluginManager.findCommand(m.command);
