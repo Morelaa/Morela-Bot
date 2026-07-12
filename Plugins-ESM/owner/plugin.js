@@ -1,10 +1,8 @@
 'use strict';
 import config from '../../config.js';
 import pluginManager from '../_pluginmanager.js';
-
 const VALID_FOLDERS = config.pluginDirs;
 const DEFAULT_FOLDER = 'tools';
-
 function usageMessage() {
     return (
         `╭╌╌⬡「 📝 *PLUGIN CREATOR* 」\n` +
@@ -26,7 +24,6 @@ function usageMessage() {
         `╰╌╌⬡`
     );
 }
-
 const handler = async (m) => {
     const raw = (m.body || '').trim();
     const newlineIdx = raw.indexOf('\n');
