@@ -120,7 +120,6 @@ export function findBotParticipant(participants, botNumberOrJid) {
 export function isParticipantAdmin(p) {
     return !!p && (p.admin === 'admin' || p.admin === 'superadmin');
 }
-
 export function autoMapParticipantLids(participants) {
     if (!participants?.length)
         return;
@@ -142,7 +141,6 @@ export function autoMapParticipantLids(participants) {
         catch { }
     }
 }
-
 export function mapSenderLid(senderRaw, participants) {
     if (!isLidJid(senderRaw))
         return null;
@@ -161,7 +159,6 @@ export function mapSenderLid(senderRaw, participants) {
     }
     return null;
 }
-
 const _liveFetchTs = new Map();
 const LIVE_FETCH_COOLDOWN_MS = 15000;
 export async function resolveSenderLidLive(sock, groupJid, senderRaw) {
@@ -175,7 +172,6 @@ export async function resolveSenderLidLive(sock, groupJid, senderRaw) {
     try {
         const meta = await sock.groupMetadata(groupJid);
         autoMapParticipantLids(meta?.participants);
-
         globalThis.__botStore__?.setGroupMetadata?.(groupJid, meta);
         return mapSenderLid(senderRaw, meta?.participants);
     }
@@ -183,7 +179,6 @@ export async function resolveSenderLidLive(sock, groupJid, senderRaw) {
         return null;
     }
 }
-
 export function getSenderCandidates(m, participants) {
     const out = new Set();
     const rawRemoteJid = m?.key?.remoteJid || '';
