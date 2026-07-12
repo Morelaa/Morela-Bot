@@ -79,7 +79,6 @@ export function migrate() {
     });
     try {
         run();
-
         ensureColumn('users', 'sn_code', 'TEXT');
         logInfo('Database migration selesai.');
     }
