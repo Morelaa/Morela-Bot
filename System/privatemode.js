@@ -10,7 +10,6 @@ export function setPrivateMode(enabled) {
     kv.set(KEY_ENABLED, !!enabled);
     return isPrivateModeOn();
 }
-
 export function isChatAllowed(chatJid, isGroup, isOwnerSender) {
     if (isGroup)
         return true;
