@@ -2,7 +2,9 @@
 import * as baileys from '@itsliaaa/baileys';
 import config from '../../config.js';
 import pluginManager from '../_pluginmanager.js';
-import { loadConfigImage, buildFkontak, buildForwardContext } from '../../Library/utils.js';
+import { loadConfigImage, buildFkontak, buildForwardContext, toBoldSans } from '../../Library/utils.js';
+import { ButtonV2 } from '../../Library/MessageBuilder.js';
+import { getMenuStyle } from '../../System/menustyle.js';
 import { getProcessUptime } from '../../Library/system.js';
 import { isSelfModeOn } from '../../System/selfmode.js';
 import { checkPremiumUser } from '../../Core/permissions.js';
@@ -67,11 +69,10 @@ function buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem) {
     let limit = '-';
     let daftar = '❌ Belum';
     try {
-        const ud = db.getUser(senderJid);
         const isReg = db.isRegistered(senderJid);
         if (isOwn) {
             akses = '👑 Owner';
-            limit = '9.000.000.000.000';
+            limit = '♾️ Unlimited';
             daftar = isReg ? '✅ Sudah' : '❌ Belum';
         } else if (isReg) {
             akses = isPrem ? '💎 Premium' : '👤 User';
@@ -80,26 +81,24 @@ function buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem) {
         }
     } catch {  }
     let txt = `${getGreeting()}, *${pushname}!* ✨\n\n`;
-    txt += `🔖 ⌞ INFO BOT ⌝\n`;
+    txt += `🔖 ⌞ ${toBoldSans('INFO BOT')} ⌝\n`;
     txt += `🔖 ⌞ Name     : ${config.botName} ⌝\n`;
     txt += `🔖 ⌞ Version  : ${config.botVersion} ⌝\n`;
     txt += `🔖 ⌞ Uptime   : ${uptime} ⌝\n`;
     txt += `🔖 ⌞ Owner    : ${config.ownerName} ⌝\n`;
     txt += `🔖 ⌞ Mode     : ${mode} ⌝\n`;
     txt += `🔖 ⌞ Commands : ${totalCommands} ⌝\n\n`;
-    txt += `🔖 ⌞ INFO USER ⌝\n`;
+    txt += `🔖 ⌞ ${toBoldSans('INFO USER')} ⌝\n`;
     txt += `🔖 ⌞ Nama   : ${pushname} ⌝\n`;
     txt += `🔖 ⌞ Akses  : ${akses} ⌝\n`;
     txt += `🔖 ⌞ Limit  : ${limit} ⌝\n`;
     txt += `🔖 ⌞ Daftar : ${daftar} ⌝\n\n`;
-    for (const data of Object.values(menuLists)) {
-        txt += `🔖 ⌞ ${data.emoji} ${data.title} ⌝\n`;
-        for (const cmd of data.commands) txt += `🔖 ⌞ ${cmd} ⌝\n`;
-        txt += '\n';
+    for (const key of Object.keys(menuLists)) {
+        txt += `🔖 ⌞ ${toBoldSans(`menu ${key}`)} ⌝\n`;
     }
     return txt.trim();
 }
-function buildSectionsV3(menuLists) {
+function buildSectionsV1Style(menuLists) {
     return [
         {
             title: 'KATEGORI UTAMA',
@@ -110,7 +109,7 @@ function buildSectionsV3(menuLists) {
         },
     ];
 }
-async function sendMenuV3(conn, jid, imgBuf, bodyText, fkontak, ctx, menuLists) {
+async function sendMenuV1Style(conn, jid, imgBuf, bodyText, fkontak, ctx, menuLists) {
     const media = await baileys.prepareWAMessageMedia({ image: imgBuf }, { upload: conn.waUploadToServer });
     const imgMsg = media?.imageMessage;
     await conn.relayMessage(
@@ -133,7 +132,7 @@ async function sendMenuV3(conn, jid, imgBuf, bodyText, fkontak, ctx, menuLists) 
                     buttons: [
                         {
                             name: 'single_select',
-                            buttonParamsJson: JSON.stringify({ title: 'PILIH MENU', sections: buildSectionsV3(menuLists) }),
+                            buttonParamsJson: JSON.stringify({ title: 'PILIH MENU', sections: buildSectionsV1Style(menuLists) }),
                         },
                         { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Beli Sekarang', id: '.sc' }) },
                         { name: 'cta_call', buttonParamsJson: JSON.stringify({ display_text: 'Telepon Sekarang', phone_number: OWNER_CALL_NUMBER }) },
@@ -145,7 +144,46 @@ async function sendMenuV3(conn, jid, imgBuf, bodyText, fkontak, ctx, menuLists) 
         { messageId: conn.generateMessageTag() }
     );
 }
-const handler = async (m, { conn, command, isOwner }) => {
+async function resolveThumbnail(conn, senderJid) {
+    try {
+        const url = await conn.profilePictureUrl(senderJid, 'image');
+        if (url) return url;
+    } catch { }
+    try {
+        const botJid = (conn.user?.id?.split(':')[0] || '') + '@s.whatsapp.net';
+        const botUrl = await conn.profilePictureUrl(botJid, 'image');
+        if (botUrl) return botUrl;
+    } catch { }
+    return null;
+}
+async function sendMenuV2Style(conn, m, bodyText, senderJid) {
+    const thumbnail = await resolveThumbnail(conn, senderJid);
+    const btn = new ButtonV2(conn)
+        .setTitle(config.botName || 'Bot')
+        .setSubtitle(config.botVersion || '')
+        .setBody('-')
+        .setFooter(bodyText)
+        .addButton(' All Menu', '.menu');
+    if (thumbnail) btn.setThumbnail(thumbnail);
+    const msg = await btn.build(m.chat, { userJid: conn.user?.id });
+    await conn.relayMessage(m.chat, msg.message, {
+        messageId: msg.key.id,
+        additionalNodes: [
+            {
+                tag: 'biz',
+                attrs: {},
+                content: [
+                    {
+                        tag: 'interactive',
+                        attrs: { type: 'native_flow', v: '1' },
+                        content: [{ tag: 'native_flow', attrs: { v: '9', name: 'mixed' } }],
+                    },
+                ],
+            },
+        ],
+    });
+}
+const handler = async (m, { conn, command, args, isOwner }) => {
     try {
         const menuLists = buildMenuLists();
         const pushname = String(m.pushName || 'User');
@@ -155,15 +193,24 @@ const handler = async (m, { conn, command, isOwner }) => {
         const imgBuf = await loadConfigImage(config.menuImage);
         const fkontak = await buildFkontak(conn, config);
         const ctx = buildForwardContext(config);
-        if (command.startsWith('menu_')) {
-            const cat = command.replace('menu_', '');
+        // Kategori bisa datang dari tombol (".menu_owner") ATAU diketik manual ("menu owner")
+        const cat = command.startsWith('menu_')
+            ? command.replace('menu_', '')
+            : (command === 'menu' && args?.[0] ? args[0].toLowerCase() : null);
+        if (cat) {
             const data = menuLists[cat];
-            if (!data) return m.reply('❌ Kategori tidak ditemukan');
+            if (!data) return m.reply(`❌ Kategori "${cat}" tidak ditemukan`);
             const body = buildCategoryBody(data);
-            return sendMenuV3(conn, m.chat, imgBuf, body, fkontak, ctx, menuLists);
+            if (getMenuStyle() === 'v2') {
+                return sendMenuV2Style(conn, m, body, senderJid);
+            }
+            return sendMenuV1Style(conn, m.chat, imgBuf, body, fkontak, ctx, menuLists);
         }
         const body = buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem);
-        await sendMenuV3(conn, m.chat, imgBuf, body, fkontak, ctx, menuLists);
+        if (getMenuStyle() === 'v2') {
+            return sendMenuV2Style(conn, m, body, senderJid);
+        }
+        await sendMenuV1Style(conn, m.chat, imgBuf, body, fkontak, ctx, menuLists);
     } catch (e) {
         console.error('[MENU ERROR]', e);
         await m.reply(`❌ Error: ${e.message}`);
