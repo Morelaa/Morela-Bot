@@ -20,10 +20,22 @@ const config = {
     // dan metadata stiker (mis. "_© Morela Bot_"). Beda dari botName, ganti
     // nilai ini saja, semua fitur yang menampilkan teks copyright otomatis ikut berubah.
 
+    stickerPackName: 'Morelaa',
+    // Nama pack PERMANEN untuk semua fitur yang mengirim sticker pack WA
+    // (.stikertele dan .stickersearch). Isi dengan teks apapun (mis.
+    // 'Sticker Pack Morela') untuk selalu pakai nama ini di semua pack,
+    // menggantikan judul asli dari sumbernya.
+    // Kosongkan '' untuk pakai judul asli dari sumber masing-masing:
+    // - .stikertele: judul dari Telegram (branding bot pembuatnya otomatis
+    //   dibersihkan, mis. "Judul :: @fStikBot" -> "Judul")
+    // - .stickersearch: judul dari getstickerpack.com
+    // Custom nama per-command (.stikertele <url> | Nama) tetap bisa dipakai
+    // dan akan menang di atas nilai ini.
+
     version: '0.0.1',
     // Versi internal bot (ditampilkan lewat botVersion di menu; field ini sendiri belum dipakai di kode).
 
-    mainOwner: '628xxxxxxx',
+    mainOwner: 'SENSOR_MAINOWNER',
     // Nomor WhatsApp main owner (format angka saja, tanpa +). Selalu dianggap owner
     // tertinggi di semua pengecekan permission, terlepas dari isi owners.
 
@@ -44,10 +56,10 @@ const config = {
     sessionDir: path.join(__dirname, 'session'),
     // Folder tempat menyimpan file kredensial/sesi WhatsApp (auth state Baileys).
 
-    pairingNumber: '628xxxxxxxxxx',
+    pairingNumber: 'SENSOR_PAIRINGNUMBER',
     // Nomor WhatsApp bot yang dipakai untuk minta pairing code saat login pertama kali.
 
-    pairingCustomCode: 'MORELAXZ',
+    pairingCustomCode: 'SENSOR_PAIRINGCUSTOMCODE',
     // Kode custom untuk pairing code (biar gampang diingat/dibaca user saat pairing).
 
     thumbnail: 'https://cdn.ornzora.eu.cc/b815ef37-1be8-4b37-b522-16c445ef3fbd-upload-1781387499469.jpg',
@@ -60,17 +72,17 @@ const config = {
     // Path gambar yang dikirim di gate "belum terdaftar" (saat user belum .daftar/.register).
 
     apiKeys: {
-        neoxr: 'YOUR_API_KEY',
-        imgbb: 'YOUR_API_KEY',
+        neoxr: 'SENSOR_NEOXR',
+        imgbb: 'SENSOR_IMGBB',
         // Daftar gratis di https://api.imgbb.com/ untuk dapat key ini.
         // Daftar gratis di https://api.neoxr.eu/ untuk dapat key ini.
     },
 
-    githubToken: '',
-    // Token GitHub untuk fitur backup ke repo (belum dipakai plugin manapun saat ini, isi kalau perlu).
+    githubToken: 'SENSOR_GITHUBTOKEN',
+    // Token GitHub untuk fitur backup ke repo 
 
-    githubRepo: '',
-    // Nama repo GitHub tujuan backup (belum dipakai plugin manapun saat ini, isi kalau perlu).
+    githubRepo: 'SENSOR_GITHUBREPO',
+    // Nama repo GitHub tujuan backup 
 
     ownerName: 'putra',
     // Nama owner yang tampil di menu & info kontak bot.
@@ -78,7 +90,7 @@ const config = {
     botVersion: 'v0.0.1',
     // Versi bot yang ditampilkan ke user di command menu (boleh beda format dari 'version').
 
-    channelJid: '', // isi jid saluran
+    channelJid: 'SENSOR_CHANNELJID', // isi jid saluran
     // JID channel/newsletter resmi yang dipakai untuk tampilan "forwarded dari channel".
 
     channelName: 'Kunjungi Saluran Resmi Kami ✨',
