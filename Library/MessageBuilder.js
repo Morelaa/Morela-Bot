@@ -693,14 +693,10 @@ class Carousel extends BaseBuilder {
     }
     async send(jid, options = {}) {
         const msg = this.build(jid, options);
-        // WA membuang isi carouselMessage.cards waktu bikin contextInfo.quotedMessage
-        // untuk pesan yang di-reply (WA gak punya UI quote-carousel, cuma nyimpen
-        // placeholder kosong). Jadi cache versi lengkapnya sendiri di sini, keyed by
-        // message id, biar .crm bisa ambil isi aslinya lagi nanti.
         try {
             kvSet(`crm_cache:${msg.key.id}`, msg.message);
         }
-        catch (_) { /* cache gagal bukan blocker pengiriman pesan */ }
+        catch (_) {  }
         await this.#client.relayMessage(msg.key.remoteJid, msg.message, {
             messageId: msg.key.id,
             additionalNodes: [
@@ -1051,15 +1047,11 @@ class AIRich extends BaseBuilder {
     }
     async send(jid, { forwarded, notification, includesUnifiedResponse, includesSubmessages, ...options } = {}) {
         const msg = await this.build({ forwarded, notification, includesUnifiedResponse, includesSubmessages, ...options });
-        // AIRich (botForwardedMessage/richResponseMessage) kena kasus sama seperti
-        // carouselMessage: isi unifiedResponse.data gak ikut kesalin utuh waktu WA
-        // bikin contextInfo.quotedMessage buat balasan. Cache versi lengkapnya
-        // sendiri, keyed by message id, biar .crm bisa ambil lagi.
         const messageId = options.messageId || crypto.randomBytes(16).toString('hex').toUpperCase();
         try {
             kvSet(`crm_cache:${messageId}`, msg);
         }
-        catch (_) { /* cache gagal bukan blocker pengiriman pesan */ }
+        catch (_) {  }
         await this.#client.relayMessage(jid, msg, { ...options, messageId });
         return { key: { id: messageId, remoteJid: jid, fromMe: true }, message: msg };
     }
