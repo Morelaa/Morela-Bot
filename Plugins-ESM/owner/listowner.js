@@ -2,8 +2,6 @@
 import config from '../../config.js';
 import { buildFkontak } from '../../Library/utils.js';
 import { getOwnerStyle } from '../../System/ownerstyle.js';
-
-// ── Helper bareng (dipakai v1 & v2) ─────────────────────────────────────
 function buildVcard(name, number) {
     const safeName = String(name).replace(/[\r\n]/g, ' ').trim() || number;
     return (
@@ -15,7 +13,6 @@ function buildVcard(name, number) {
         `END:VCARD`
     );
 }
-
 function getCountryInfo(num) {
     if (num.startsWith('62'))
         return { flag: '🇮🇩', name: 'Indonesia', flagPair: '🇮🇩Indonesia🇮🇩' };
@@ -35,7 +32,6 @@ function getCountryInfo(num) {
         return { flag: '🇹🇭', name: 'Thailand', flagPair: '🇹🇭Thailand🇹🇭' };
     return { flag: '🌐', name: 'International', flagPair: '🌐International🌐' };
 }
-
 function formatPhone(num) {
     if (num.startsWith('62')) {
         const r = num.slice(2);
@@ -46,11 +42,9 @@ function formatPhone(num) {
     }
     return `+${num}`;
 }
-
 function collectOwnerNumbers() {
     const mainOwnerNumber = String(config.mainOwner || '').replace(/\D/g, '');
     const additionalOwners = Array.isArray(config.owners) ? config.owners : [];
-
     const seen = new Set();
     const allNums = [];
     if (mainOwnerNumber) {
@@ -66,23 +60,18 @@ function collectOwnerNumbers() {
     }
     return { mainOwnerNumber, allNums };
 }
-
-// ── v1: contact card (vCard) polos, di-quote kartu "Kontak: <botName>" ─
 async function sendOwnerV1(m, conn, mainOwnerNumber, allNums) {
     const mainOwnerName = config.ownerName
         ? `${config.ownerName} (Main Owner)`
         : `${config.botName || 'Bot'} — Main Owner`;
-
     const contacts = allNums.map((num) => {
         const isMain = num === mainOwnerNumber;
         const name = isMain ? mainOwnerName : `Owner ${allNums.indexOf(num)}`;
         return { displayName: name, vcard: buildVcard(name, num) };
     });
-
     const displayName = contacts.length > 1
         ? `${contacts.length} Owner ${String(config.botName || 'Bot')}`
         : contacts[0].displayName;
-
     const fkontak = await buildFkontak(conn, config);
     const contextInfo = {
         quotedMessage: fkontak.message,
@@ -90,11 +79,9 @@ async function sendOwnerV1(m, conn, mainOwnerNumber, allNums) {
         stanzaId: fkontak.key.id,
         remoteJid: fkontak.key.remoteJid,
     };
-
     const messageContent = contacts.length > 1
         ? { contactsArrayMessage: { displayName, contacts, contextInfo } }
         : { contactMessage: { displayName, vcard: contacts[0].vcard, contextInfo } };
-
     try {
         const { generateWAMessageFromContent } = await import('@itsliaaa/baileys');
         const generated = generateWAMessageFromContent(m.chat, messageContent, { userJid: conn.user?.id ?? '' });
@@ -104,22 +91,17 @@ async function sendOwnerV1(m, conn, mainOwnerNumber, allNums) {
         await conn.sendMessage(m.chat, { contacts: { displayName, contacts } }, { quoted: m.raw });
     }
 }
-
-// ── v2: interactive booking card (native flow), gaya "profile info" ────
 async function sendOwnerV2(m, conn, mainOwnerNumber, allNums) {
     const now = new Date();
     const end = new Date(now.getTime() + 10 * 60000);
-
     const tagLines = allNums.map((num) => `      ◦ @${num}`).join('\n');
     const mentionedJid = allNums.map((num) => `${num}@s.whatsapp.net`);
-
     const buttons = allNums.map((num, i) => {
         const isMain = num === mainOwnerNumber;
         const country = getCountryInfo(num);
         const phone = formatPhone(num);
         const name = isMain ? (config.ownerName || 'Main Owner') : `Owner ${i}`;
         const status = isMain ? `_Real Owner_` : `_Owner_`;
-
         if (isMain) {
             return {
                 name: 'booking_confirmation',
@@ -160,9 +142,7 @@ async function sendOwnerV2(m, conn, mainOwnerNumber, allNums) {
             }),
         };
     });
-
     const fkontak = await buildFkontak(conn, config);
-
     const messageContent = {
         interactiveMessage: {
             header: {
@@ -191,7 +171,6 @@ async function sendOwnerV2(m, conn, mainOwnerNumber, allNums) {
             },
         },
     };
-
     try {
         const { generateWAMessageFromContent } = await import('@itsliaaa/baileys');
         const generated = generateWAMessageFromContent(
@@ -202,20 +181,15 @@ async function sendOwnerV2(m, conn, mainOwnerNumber, allNums) {
         await conn.relayMessage(m.chat, generated.message, { messageId: generated.key.id });
     }
     catch (_err) {
-        // Fallback: kalau device penerima gak support native flow, jatuhkan ke v1.
         await sendOwnerV1(m, conn, mainOwnerNumber, allNums);
     }
 }
-
 const handler = async (m, { conn }) => {
     const { mainOwnerNumber, allNums } = collectOwnerNumbers();
-
     if (!mainOwnerNumber) {
         return m.reply('❌ Main owner belum diatur di config.js');
     }
-
     const style = getOwnerStyle();
-
     if (style === 'v2') {
         await sendOwnerV2(m, conn, mainOwnerNumber, allNums);
     }
@@ -223,9 +197,7 @@ const handler = async (m, { conn }) => {
         await sendOwnerV1(m, conn, mainOwnerNumber, allNums);
     }
 };
-
 handler.help = ['listowner', 'owner', 'daftarowner'];
 handler.tags = ['owner'];
 handler.command = /^(listowner|listowners|owner|daftarowner)$/i;
-
 export default handler;
