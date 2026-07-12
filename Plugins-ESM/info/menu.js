@@ -1,5 +1,4 @@
 'use strict';
-
 import * as baileys from '@itsliaaa/baileys';
 import config from '../../config.js';
 import pluginManager from '../_pluginmanager.js';
@@ -8,10 +7,8 @@ import { getProcessUptime } from '../../Library/system.js';
 import { isSelfModeOn } from '../../System/selfmode.js';
 import { checkPremiumUser } from '../../Core/permissions.js';
 import db from '../../Database/db.js';
-
 const OWNER_WA = `https://wa.me/${config.mainOwner}`;
 const OWNER_CALL_NUMBER = `+${config.pairingNumber || config.mainOwner}`;
-
 const CATEGORY_META = {
     ai: { emoji: '🤖', title: 'AI MENU' },
     downloader: { emoji: '📥', title: 'DOWNLOADER' },
@@ -24,11 +21,9 @@ const CATEGORY_META = {
     owner: { emoji: '👑', title: 'OWNER' },
 };
 const CATEGORY_ORDER = ['ai', 'downloader', 'sticker', 'maker', 'tools', 'games', 'info', 'admin', 'owner'];
-
 function slugCat(tag) {
     return String(tag || 'lainnya').toLowerCase();
 }
-
 function buildMenuLists() {
     const grouped = {};
     for (const plugin of pluginManager.getAllPlugins()) {
@@ -46,7 +41,6 @@ function buildMenuLists() {
     }
     return lists;
 }
-
 function getGreeting() {
     const h = new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta', hour: 'numeric', hour12: false });
     const hour = parseInt(h, 10);
@@ -56,23 +50,19 @@ function getGreeting() {
     if (hour < 18) return '🌤️ Selamat Sore';
     return '🌙 Selamat Malam';
 }
-
 function buildMenuBody(menuLists) {
     return Object.values(menuLists).map((d) => `🔖 ⌞ ${d.title.toLowerCase()} ⌝`).join('\n');
 }
-
 function buildCategoryBody(data) {
     let txt = `🔖 ⌞ ${data.emoji} ${data.title} ⌝\n\n`;
     for (const cmd of data.commands) txt += `🔖 ⌞ ${cmd} ⌝\n`;
     return txt;
 }
-
 function buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem) {
     const uptime = getProcessUptime();
     const mode = isSelfModeOn() ? 'Self' : 'Public';
     let totalCommands = 0;
     Object.values(menuLists).forEach((d) => (totalCommands += d.commands.length));
-
     let akses = '👤 User';
     let limit = '-';
     let daftar = '❌ Belum';
@@ -89,9 +79,7 @@ function buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem) {
             daftar = '✅ Sudah';
         }
     } catch {  }
-
     let txt = `${getGreeting()}, *${pushname}!* ✨\n\n`;
-
     txt += `🔖 ⌞ INFO BOT ⌝\n`;
     txt += `🔖 ⌞ Name     : ${config.botName} ⌝\n`;
     txt += `🔖 ⌞ Version  : ${config.botVersion} ⌝\n`;
@@ -99,22 +87,18 @@ function buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem) {
     txt += `🔖 ⌞ Owner    : ${config.ownerName} ⌝\n`;
     txt += `🔖 ⌞ Mode     : ${mode} ⌝\n`;
     txt += `🔖 ⌞ Commands : ${totalCommands} ⌝\n\n`;
-
     txt += `🔖 ⌞ INFO USER ⌝\n`;
     txt += `🔖 ⌞ Nama   : ${pushname} ⌝\n`;
     txt += `🔖 ⌞ Akses  : ${akses} ⌝\n`;
     txt += `🔖 ⌞ Limit  : ${limit} ⌝\n`;
     txt += `🔖 ⌞ Daftar : ${daftar} ⌝\n\n`;
-
     for (const data of Object.values(menuLists)) {
         txt += `🔖 ⌞ ${data.emoji} ${data.title} ⌝\n`;
         for (const cmd of data.commands) txt += `🔖 ⌞ ${cmd} ⌝\n`;
         txt += '\n';
     }
-
     return txt.trim();
 }
-
 function buildSectionsV3(menuLists) {
     return [
         {
@@ -126,11 +110,9 @@ function buildSectionsV3(menuLists) {
         },
     ];
 }
-
 async function sendMenuV3(conn, jid, imgBuf, bodyText, fkontak, ctx, menuLists) {
     const media = await baileys.prepareWAMessageMedia({ image: imgBuf }, { upload: conn.waUploadToServer });
     const imgMsg = media?.imageMessage;
-
     await conn.relayMessage(
         jid,
         {
@@ -163,7 +145,6 @@ async function sendMenuV3(conn, jid, imgBuf, bodyText, fkontak, ctx, menuLists) 
         { messageId: conn.generateMessageTag() }
     );
 }
-
 const handler = async (m, { conn, command, isOwner }) => {
     try {
         const menuLists = buildMenuLists();
@@ -171,11 +152,9 @@ const handler = async (m, { conn, command, isOwner }) => {
         const senderJid = m.sender;
         const isOwn = !!isOwner;
         const isPrem = checkPremiumUser(senderJid);
-
         const imgBuf = await loadConfigImage(config.menuImage);
         const fkontak = await buildFkontak(conn, config);
         const ctx = buildForwardContext(config);
-
         if (command.startsWith('menu_')) {
             const cat = command.replace('menu_', '');
             const data = menuLists[cat];
@@ -183,7 +162,6 @@ const handler = async (m, { conn, command, isOwner }) => {
             const body = buildCategoryBody(data);
             return sendMenuV3(conn, m.chat, imgBuf, body, fkontak, ctx, menuLists);
         }
-
         const body = buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem);
         await sendMenuV3(conn, m.chat, imgBuf, body, fkontak, ctx, menuLists);
     } catch (e) {
@@ -191,10 +169,8 @@ const handler = async (m, { conn, command, isOwner }) => {
         await m.reply(`❌ Error: ${e.message}`);
     }
 };
-
 handler.help = ['menu'];
 handler.tags = ['info'];
 handler.noLimit = true;
 handler.command = /^(menu|help|menu_ai|menu_downloader|menu_sticker|menu_maker|menu_tools|menu_games|menu_info|menu_admin|menu_owner)$/i;
-
 export default handler;
