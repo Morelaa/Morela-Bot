@@ -1,5 +1,4 @@
 'use strict';
-
 const handler = async (m, { text }) => {
     await m.reply(`✅ Test plugin bekerja!\n\nText: ${text || 'kosong'}`);
 };
