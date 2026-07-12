@@ -201,8 +201,18 @@ export async function handleMessage(sock, rawMsg) {
         events.emitLogged(EVENTS.MESSAGE_IN, { chat: m.chat, sender: m.sender });
         stats.increment('messages_processed');
 
-        const groupMeta = m.isGroup ? globalThis.__botStore__?.getGroupMetadata(m.chat) : null;
-        const participants = groupMeta?.participants;
+        let groupMeta = m.isGroup ? globalThis.__botStore__?.getGroupMetadata(m.chat) : null;
+        let participants = groupMeta?.participants;
+        if (m.isGroup && (!participants || !participants.length)) {
+            try {
+                groupMeta = await sock.groupMetadata(m.chat);
+                participants = groupMeta?.participants;
+                globalThis.__botStore__?.setGroupMetadata(m.chat, groupMeta);
+            }
+            catch (err) {
+                logError('Gagal fetch metadata grup live (fallback cache kosong):', err?.message || err);
+            }
+        }
         if (participants)
             autoMapParticipantLids(participants);
         const shouldContinue = await runMiddlewares(m, { sock, participants, groupMeta });
