@@ -3,12 +3,10 @@ import chalk from 'chalk';
 import gradient from 'gradient-string';
 import figlet from 'figlet';
 import { DateTime } from 'luxon';
-
 const g        = gradient(['#22d3ee', '#38bdf8', '#818cf8', '#a855f7']);
 const borderFx = gradient(['#22d3ee', '#3b82f6', '#818cf8', '#a855f7']);
 const mintFx   = gradient(['#10b981', '#2dd4bf', '#38bdf8']);
 const warmFx   = gradient(['#f59e0b', '#f97316', '#ef4444']);
-
 const k = {
   p:  chalk.hex('#A855F7'),
   s:  chalk.hex('#22D3EE'),
@@ -28,7 +26,6 @@ const k = {
   or: chalk.hex('#FB923C'),
   lm: chalk.hex('#A3E635'),
 };
-
 const SYM = {
   ok:   k.ok('✓'),
   no:   k.no('✕'),
@@ -39,20 +36,17 @@ const SYM = {
   bar:  k.d('│'),
   cmd:  k.cy('⚡'),
 };
-
 function formatTime(fmt = 'HH:mm:ss') {
   return DateTime.now().setZone('Asia/Jakarta').toFormat(fmt);
 }
 function ts() { return k.d(formatTime('HH:mm:ss')); }
 function dt() { return k.d(formatTime('dd/MM/yyyy')); }
-
 function pad(label, n = 13) {
   return String(label).toLowerCase().padEnd(n);
 }
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
-
 const SPINNER_FRAMES = ['⠋','⠙','⠹','⠸','⠼','⠴','⠦','⠧','⠇','⠏'];
 const ANSI = {
   clearLine:  '\u001B[2K',
@@ -60,7 +54,6 @@ const ANSI = {
   hideCursor: '\u001B[?25l',
   showCursor: '\u001B[?25h',
 };
-
 function supportsInlineAnimation() {
   if (process.env.OURIN_FORCE_ANIMATION === 'true') return true;
   if (process.env.OURIN_NO_ANIMATION  === 'true')   return false;
@@ -81,7 +74,6 @@ function setCursorHidden(hidden) {
   if (!supportsInlineAnimation()) return;
   process.stdout.write(hidden ? ANSI.hideCursor : ANSI.showCursor);
 }
-
 function pill(text, tone = 'info') {
   const tones = {
     info:    ['#0f172a', '#67e8f9'],
@@ -96,7 +88,6 @@ function pill(text, tone = 'info') {
   const [bg, fg] = tones[tone] || tones.info;
   return chalk.bgHex(bg).hex(fg).bold(` ${String(text).toLowerCase()} `);
 }
-
 function renderDetail(kind, detail = '') {
   const text = String(detail);
   if (!text)                  return '';
@@ -106,7 +97,6 @@ function renderDetail(kind, detail = '') {
   if (kind === 'debug')       return k.db(text);
   return chalk.whiteBright(text);
 }
-
 function writeLog(kind, label, detail = '') {
   const map = {
     info:    { icon: SYM.info, tone: 'info'    },
@@ -120,7 +110,6 @@ function writeLog(kind, label, detail = '') {
   const detailText = detail ? ` ${renderDetail(kind, detail)}` : '';
   console.log(`  ${meta.icon} ${pill(label, meta.tone)}${detailText}`);
 }
-
 export const logger = {
   info:    (label, detail = '') => writeLog('info',    label, detail),
   success: (label, detail = '') => writeLog('success', label, detail),
@@ -131,7 +120,6 @@ export const logger = {
   tag:     (label, msg, detail = '') =>
     console.log(`  ${SYM.info} ${pill(label, 'accent')} ${chalk.whiteBright(msg)}${detail ? ` ${k.d(detail)}` : ''}`),
 };
-
 export function createSpinner(label = 'system', text = 'loading', options = {}) {
   let frame   = 0;
   let timer   = null;
@@ -140,7 +128,6 @@ export function createSpinner(label = 'system', text = 'loading', options = {}) 
   let currentText = String(text);
   const interval  = options.interval || 80;
   const tone      = options.tone     || 'info';
-
   const render = () => {
     if (!inline) return;
     const glyph = g(SPINNER_FRAMES[frame % SPINNER_FRAMES.length]);
@@ -148,7 +135,6 @@ export function createSpinner(label = 'system', text = 'loading', options = {}) 
     process.stdout.write(`  ${glyph} ${pill(label, tone)} ${chalk.whiteBright(currentText)} ${k.d('·')} ${borderFx('live')}`);
     frame += 1;
   };
-
   return {
     start() {
       if (active) return;
@@ -176,14 +162,12 @@ export function createSpinner(label = 'system', text = 'loading', options = {}) 
     isActive() { return active; },
   };
 }
-
 export async function spinText(label, text, options = {}) {
   const spinner = createSpinner(label, text, options);
   spinner.start();
   await sleep(options.duration || 700);
   spinner.stop();
 }
-
 export async function typeLine(text, options = {}) {
   const indent   = options.indent || '  ';
   const delay    = options.delay  ?? 12;
@@ -201,7 +185,6 @@ export async function typeLine(text, options = {}) {
   process.stdout.write('\n');
   setCursorHidden(false);
 }
-
 export async function runLoader(text = 'memuat sistem', options = {}) {
   const label    = options.label  || 'boot';
   const duration = options.duration || 900;
@@ -223,7 +206,6 @@ export async function runLoader(text = 'memuat sistem', options = {}) {
   process.stdout.write('\n');
   setCursorHidden(false);
 }
-
 export async function playBootSequence(info = {}) {
   const { name = 'MORELA', version = '2.0.0', mode = 'public' } = info;
   console.clear();
@@ -239,7 +221,6 @@ export async function playBootSequence(info = {}) {
   });
   console.log('');
 }
-
 const TYPE_MAP = {
   imageMessage:               ['Gambar',          '#34D399'],
   videoMessage:               ['Video',           '#60A5FA'],
@@ -265,14 +246,12 @@ const TYPE_MAP = {
   groupInviteMessage:         ['Undangan Grup',   '#A855F7'],
   productMessage:             ['Produk',          '#34D399'],
 };
-
 function getTypeTag(msgType, isNewsletter) {
   if (isNewsletter) return chalk.hex('#F59E0B')('CH');
   const entry = TYPE_MAP[msgType];
   if (entry)         return chalk.hex(entry[1])(entry[0]);
   return k.d('Pesan Biasa');
 }
-
 function getRoleTag(info) {
   if (info.isOwner)   return chalk.hex('#F87171').bold('OWNER');
   if (info.isPartner) return chalk.hex('#FB923C').bold('PARTNER');
@@ -280,7 +259,6 @@ function getRoleTag(info) {
   if (info.isAdmin)   return chalk.hex('#60A5FA').bold('ADMIN');
   return k.d('MEMBER');
 }
-
 function getDeviceTag(device) {
   if (!device) return k.d('???');
   const d = device.toLowerCase();
@@ -290,7 +268,6 @@ function getDeviceTag(device) {
   if (d.includes('desktop') || d.includes('windows')) return k.in('Desktop');
   return k.d(device);
 }
-
 export function getDeviceHint(msgId) {
   if (!msgId) return null;
   if (msgId.length > 22)          return 'Android';
@@ -298,37 +275,28 @@ export function getDeviceHint(msgId) {
   if (msgId.startsWith('BAE5'))   return 'Web';
   return null;
 }
-
 export function logMessage(info) {
   const {
     chatType, groupName, pushName, sender, message,
     messageType, isNewsletter,
     isOwner, isPremium, isPartner, isAdmin, device,
   } = info;
-
   if (!message || message.trim() === '' || !sender) return;
-
   const isGroup = chatType === 'group';
   const isNL    = chatType === 'newsletter';
   const num     = sender.replace('@s.whatsapp.net', '').replace('@lid', '');
-
   let msg = message.replace(/\n/g, ' ').substring(0, 70) + (message.length > 70 ? '...' : '');
-
   const time = formatTime('HH:mm:ss');
   const date = formatTime('dd/MM/yyyy');
-
   const typeTag = getTypeTag(messageType || '', isNewsletter || isNL || false);
   const roleTag = getRoleTag({ isOwner, isPremium, isPartner, isAdmin });
   const devTag  = getDeviceTag(device || null);
-
   const chatTag = isNL
     ? chalk.bold.white('Ini pesan dari saluran ')  + chalk.hex('#F59E0B').bold(groupName || 'Channel')
     : isGroup
       ? chalk.bold.white('Ini pesan dari grup ')   + chalk.hex('#9000ff').bold(groupName || 'Group')
       : chalk.bold.white('Ini pesan dari private chat ') + chalk.hex('#ff0000').bold(pushName || 'User');
-
   const br = borderFx;
-
   console.log('');
   console.log(`  ${br('╭─〔')} ${chatTag} ${br('〕───⬣')}`);
   console.log(`  ${k.bd('│')} ${k.t('👤')} Nama: ${chalk.whiteBright(pushName || 'User')}`);
@@ -340,11 +308,9 @@ export function logMessage(info) {
   console.log(`  ${k.bd('│')} ${k.t('💬')} ${chalk.whiteBright(msg)}`);
   console.log(`  ${br('╰───────⬣')}`);
 }
-
 export function logPlugin(name, category) {
   console.log(`  ${k.bd('├─')} ${chalk.whiteBright(name)} ${pill(category, 'primary')}`);
 }
-
 export function logConnection(status, info = '') {
   const w     = 52;
   const label = status === 'connected'
@@ -354,20 +320,17 @@ export function logConnection(status, info = '') {
       : chalk.hex('#FB7185').bold('○ Disconnected');
   const line   = borderFx('═'.repeat(w));
   const detail = info ? chalk.whiteBright(info) : k.d('-');
-
   console.log('');
   console.log(line);
   console.log(`  ${label} ${k.d('—')} ${detail}`);
   console.log(line);
 }
-
 export function logErrorBox(title, message) {
   console.log('');
   console.log(`  ${pill('error', 'error')} ${chalk.hex('#fda4af').bold(title)}`);
   console.log(`  ${k.bd('│')} ${chalk.gray(message)}`);
   console.log('');
 }
-
 export function printBanner(mini = false) {
   if (mini) { console.log(''); return; }
   console.log('');
@@ -379,13 +342,11 @@ export function printBanner(mini = false) {
   console.log(`  ${borderFx('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')}`);
   console.log('');
 }
-
 export function printStartup(info = {}) {
   const { name = 'morela', version = '2.0.0', mode = 'public' } = info;
   console.log(`  ${pill(name, 'primary')} ${k.d('v' + version)} ${k.d('·')} ${mintFx(String(mode))}`);
   console.log('');
 }
-
 export function createBanner(lines) {
   const maxLen = Math.max(...lines.map(l => l.length));
   const padded = lines.map(l => l.padEnd(maxLen));
@@ -395,15 +356,12 @@ export function createBanner(lines) {
   res += borderFx(`╰${'─'.repeat(maxLen + 2)}╯`);
   return res;
 }
-
 export function divider() {
   console.log(borderFx('─'.repeat(54)));
 }
-
 export function getTimestamp() {
   return k.d(formatTime('HH:mm:ss'));
 }
-
 export const theme = {
   ...k,
   primary: k.p, secondary: k.s, accent: k.a, text: k.t,
@@ -411,7 +369,6 @@ export const theme = {
   warning: k.wn, info: k.in, debug: k.db, border: k.bd,
   tag: k.tg, pill, rainbow: g, borderFx, mintFx, warmFx,
 };
-
 export default {
   logger, createSpinner, spinText, typeLine, runLoader, playBootSequence,
   getDeviceHint, logMessage, logPlugin, logConnection, logErrorBox,
