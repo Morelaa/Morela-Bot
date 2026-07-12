@@ -6,7 +6,6 @@ import { buildFkontak, buildForwardContext } from '../Library/utils.js';
 import { logError, logWarn } from './logutil.js';
 import { isUnbranded } from './brandcontext.js';
 import { getReplyStyle } from '../System/replystyle.js';
-
 let thumbCache = null;
 async function getDocThumb() {
     if (thumbCache)
@@ -21,13 +20,11 @@ async function getDocThumb() {
     }
     return thumbCache;
 }
-
 function isBrandableContent(content) {
     if (!content || content.react || content.delete || content.poll || content.edit)
         return false;
     return true;
 }
-
 function isPureText(content) {
     return (!!content.text &&
         !content.image &&
@@ -40,23 +37,18 @@ function isPureText(content) {
         !content.footer &&
         !(content.mentions?.length));
 }
-
 export function extendSocket(sock) {
     const originalSendMessage = sock.sendMessage.bind(sock);
     sock.sendMessage = async (jid, content, options = {}) => {
         if (!config.brandedReplies || !isBrandableContent(content) || isUnbranded()) {
             return originalSendMessage(jid, content, options);
         }
-
         const fkontak = await buildFkontak(sock, config);
-
         if (isPureText(content)) {
             try {
                 const thumb = await getDocThumb();
-
                 const quotedRef = fkontak;
                 const style = getReplyStyle();
-
                 const messageContent = style === 'v2'
                     ? {
                         viewOnceMessage: {
@@ -119,7 +111,6 @@ export function extendSocket(sock) {
                             },
                         },
                     };
-
                 const msgId = await sock.relayMessage(jid, messageContent, {});
                 return {
                     key: { remoteJid: jid, fromMe: true, id: msgId },
@@ -131,16 +122,13 @@ export function extendSocket(sock) {
                 logWarn('Gagal kirim styled text, fallback ke sendMessage biasa:', err?.message);
             }
         }
-
         const isSticker = !!content.sticker;
         const isAudio = !!content.audio;
         if (!isSticker && !isAudio && !options.quoted) {
             options = { ...options, quoted: fkontak };
         }
-
         return originalSendMessage(jid, content, options);
     };
-
     sock.safeSend = async (jid, content, options = {}, { retries = 2 } = {}) => {
         let lastErr;
         for (let attempt = 0; attempt <= retries; attempt++) {
@@ -156,11 +144,9 @@ export function extendSocket(sock) {
         logError('safeSend menyerah setelah retry:', lastErr?.message);
         throw lastErr;
     };
-
     sock.reply = async (jid, text, quotedMsg, options = {}) => {
         return sock.safeSend(jid, { text, ...options }, { quoted: quotedMsg });
     };
-
     sock.setTyping = async (jid, type = 'composing') => {
         try {
             await sock.presenceSubscribe(jid);
@@ -169,7 +155,6 @@ export function extendSocket(sock) {
         catch {
         }
     };
-
     sock.downloadMedia = async (msg) => {
         try {
             return await downloadMediaMessage(msg, 'buffer', {}, { reuploadRequest: sock.updateMediaMessage });
@@ -179,7 +164,6 @@ export function extendSocket(sock) {
             return null;
         }
     };
-
     sock.reactSafe = async (jid, msgKey, emoji) => {
         try {
             await sock.sendMessage(jid, { react: { text: emoji, key: msgKey } });
@@ -187,7 +171,6 @@ export function extendSocket(sock) {
         catch {
         }
     };
-
     sock.isInGroup = async (groupJid) => {
         try {
             await sock.groupMetadata(groupJid);
@@ -197,8 +180,6 @@ export function extendSocket(sock) {
             return false;
         }
     };
-
     return sock;
 }
-
 export default extendSocket;
