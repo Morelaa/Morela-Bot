@@ -6,27 +6,15 @@ import os from 'os';
 import crypto from 'crypto';
 import { spawn } from 'child_process';
 import webpmux from 'node-webpmux';
-
 export async function imageToWebp(buffer) {
     return sharp(buffer)
         .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
         .webp({ quality: 90 })
         .toBuffer();
 }
-
-// PENTING: video/animasi HARUS dikonversi lewat file fisik di disk, bukan
-// stream/pipe. WebP adalah container RIFF yang butuh nulis-ulang ("seek
-// back") field ukuran total file setelah semua frame animasi selesai
-// di-encode. Kalau outputnya di-pipe (non-seekable), ffmpeg tetap exit
-// sukses tapi field ukuran RIFF-nya ketinggalan 0x00000000 — hasilnya
-// korup dan ditolak sharp/libwebp dengan pesan:
-// "Input buffer has corrupt header: webp: unable to parse image"
-// Stiker statis (1 frame) gak kena karena gak butuh backpatch itu, jadi
-// bug ini gampang lolos kalau cuma dites pakai gambar diam.
 const TMP_DIR = path.join(os.tmpdir(), 'morela_sticker_tmp');
 if (!fs.existsSync(TMP_DIR))
     fs.mkdirSync(TMP_DIR, { recursive: true });
-
 export function videoToWebp(buffer, { fps = 10, duration = 6 } = {}) {
     return new Promise((resolve, reject) => {
         const id = crypto.randomBytes(6).toString('hex');
@@ -36,9 +24,7 @@ export function videoToWebp(buffer, { fps = 10, duration = 6 } = {}) {
             try { fs.unlinkSync(inputPath); } catch { }
             try { fs.unlinkSync(outputPath); } catch { }
         };
-
         fs.writeFileSync(inputPath, buffer);
-
         const args = [
             '-i', inputPath,
             '-t', String(duration),
@@ -50,17 +36,14 @@ export function videoToWebp(buffer, { fps = 10, duration = 6 } = {}) {
             '-vsync', '0',
             '-y', outputPath,
         ];
-
         const ff = spawn('ffmpeg', args);
         let stderr = '';
         ff.stderr?.on('data', (d) => { stderr += d.toString(); });
-
         const timer = setTimeout(() => {
             ff.kill();
             cleanup();
             reject(new Error('ffmpeg timeout'));
         }, 30000);
-
         ff.on('close', (code) => {
             clearTimeout(timer);
             if (code === 0) {
@@ -88,7 +71,6 @@ function slugify(str) {
         .replace(/[^a-z0-9]+/g, '')
         || 'bot';
 }
-
 export async function addStickerMetadata(webpBuffer, { packName = 'Sticker', authorName = 'Bot' } = {}) {
     const img = new webpmux.Image();
     await img.load(webpBuffer);
