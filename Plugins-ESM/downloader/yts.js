@@ -2,7 +2,6 @@
 import yts from 'yt-search';
 import { renderYtsCard } from '../../Library/canvas-yts.js';
 import config from '../../config.js';
-
 function formatNum(n) {
     if (!n) return '0';
     const num = parseInt(String(n).replace(/\D/g, '')) || 0;
@@ -11,16 +10,12 @@ function formatNum(n) {
     if (num >= 1_000) return Math.floor(num / 1_000) + 'K';
     return num.toString();
 }
-
 const handler = async (m, { conn, text }) => {
     if (!text) { await m.reply('Contoh: .yts lady gaga'); return; }
-
     try {
         const res = await yts(text);
         const rawVideos = res.all.filter((v) => v.type === 'video');
-
         if (!rawVideos.length) { await m.reply('Tidak ditemukan hasil untuk: ' + text); return; }
-
         const videos = rawVideos.slice(0, 15).map((v) => ({
             title: v.title || 'Unknown Title',
             channel: v.author?.name || 'Unknown',
@@ -29,7 +24,6 @@ const handler = async (m, { conn, text }) => {
             ago: v.ago || '',
             url: v.url,
         }));
-
         const listVideos = videos.slice(0, 9);
         const rows = listVideos.flatMap((v, idx) => [
             {
@@ -45,11 +39,9 @@ const handler = async (m, { conn, text }) => {
                 id: '.ytmp3 ' + v.url,
             },
         ]);
-
         const top = videos[0];
         const views = Number(top.views).toLocaleString('id-ID');
         const q = text.charAt(0).toUpperCase() + text.slice(1);
-
         let imageBuffer = null;
         try {
             imageBuffer = await renderYtsCard({
@@ -61,7 +53,6 @@ const handler = async (m, { conn, text }) => {
                 uploadedAgo: top.ago,
             });
         } catch {}
-
         const caption =
 `┌──「 *YouTube Search* 」
 │
@@ -78,7 +69,6 @@ const handler = async (m, { conn, text }) => {
 │
 └─────────────────────
 _Ketuk tombol untuk pilih video atau audio_ 👇`;
-
         const { Button } = await import('../../Library/MessageBuilder.js');
         const btn = new Button(conn);
         if (imageBuffer) btn.setImage(imageBuffer);
@@ -91,15 +81,12 @@ _Ketuk tombol untuk pilih video atau audio_ 👇`;
         );
         rows.forEach((r) => btn.makeRow(r.header, r.title, r.description, r.id));
         await btn.send(m.chat, { quoted: m.raw });
-
     } catch (err) {
         console.error('[YTS ERROR]', err);
         await m.reply('Error: ' + err.message);
     }
 };
-
 handler.help = ['yts <judul lagu/video>'];
 handler.tags = ['downloader'];
 handler.command = /^(yts|ytsearch)$/i;
-
 export default handler;
