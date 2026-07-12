@@ -101,7 +101,6 @@ class PluginManager {
         }
         return null;
     }
-
     async addPlugin(pluginRelPath, code) {
         const filePath = path.join(__dirname, `${pluginRelPath}.js`);
         const resolved = path.resolve(filePath);
@@ -128,7 +127,6 @@ class PluginManager {
             return { success: true, command: String(handler.command), filePath };
         }
         catch (err) {
-
             if (backup !== null) {
                 fs.writeFileSync(filePath, backup, 'utf8');
                 try {
