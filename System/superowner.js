@@ -1,25 +1,19 @@
 'use strict';
-
 import util from 'util';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { checkMainOwner } from '../Core/permissions.js';
 import { logError } from '../Core/logutil.js';
-
 const execPromise = promisify(exec);
-
 const RESTART_CMD_RE = /\b(pm2\s+(restart|stop|reload|kill)|systemctl\s+restart|kill\s+-9\s+\$\$|reboot)\b/i;
 const INVISIBLE_CHARS_RE = /[\u200e\u200f\u200b\u200d\u2028\u2029\ufeff\u00a0]/g;
 const MAX_OUTPUT = 3500;
-
 function cleanCode(raw) {
     return raw.replace(INVISIBLE_CHARS_RE, ' ').trim();
 }
-
 function truncate(str) {
     return str.length > MAX_OUTPUT ? str.slice(0, MAX_OUTPUT) + '\n\n…(terpotong)' : str;
 }
-
 async function runEval(code, m, sock) {
     const conn = sock; void conn;
     try {
@@ -33,12 +27,10 @@ async function runEval(code, m, sock) {
         throw e1;
     }
 }
-
 export async function handleSuperOwnerShortcut(m, participants, sock) {
     const body = (typeof m?.text === 'string' ? m.text : m?.body || '').trim();
     if (!body)
         return false;
-
     if (!body.startsWith('>') && !body.startsWith('$'))
         return false;
     if (!checkMainOwner(m, participants))
