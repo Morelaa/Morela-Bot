@@ -5,12 +5,9 @@ import fs from 'fs';
 import path from 'path';
 import ffmpeg from 'fluent-ffmpeg';
 import config from '../../config.js';
-
 const NEOXR_KEY = config.apiKeys.neoxr;
-
 const TEMP_DIR = path.join(process.cwd(), 'media', 'temp');
 if (!fs.existsSync(TEMP_DIR)) fs.mkdirSync(TEMP_DIR, { recursive: true });
-
 const toWebp = (buffer) =>
     new Promise((resolve, reject) => {
         const stamp = Date.now() + Math.random();
@@ -39,7 +36,6 @@ const toWebp = (buffer) =>
             ])
             .save(output);
     });
-
 const handler = async (m, { conn, text, usedPrefix, command }) => {
     if (!text) {
         await m.reply(
@@ -55,31 +51,23 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
         );
         return;
     }
-
     await m.reply(`🎨 Generating stiker...\n📝 *${text}*`);
-
     try {
         const res = await axios.get('https://api.neoxr.eu/api/sticker-gen', {
             params: { q: text, apikey: NEOXR_KEY },
             timeout: 60000,
         });
-
         if (!res.data?.status) throw new Error(res.data?.message || 'API gagal');
-
         const images = res.data?.data?.image || [];
         if (!images.length) throw new Error('Tidak ada gambar yang dihasilkan');
-
         const webpBuffers = [];
         for (const url of images) {
             const imgBuf = await axios.get(url, { responseType: 'arraybuffer', timeout: 30000 })
                 .then(r => Buffer.from(r.data));
             webpBuffers.push(await toWebp(imgBuf));
         }
-
         if (!webpBuffers.length) throw new Error('Semua gambar gagal dikonversi');
-
         const packName = text.length > 30 ? text.slice(0, 27) + '...' : text;
-
         await conn.sendMessage(m.chat, {
             stickerPack: {
                 name: packName,
@@ -94,15 +82,12 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
                 })),
             },
         }, { quoted: m.raw });
-
     } catch (e) {
         await m.reply(`❌ Gagal: ${e.message}`);
     }
 };
-
 handler.help = ['stickergen <deskripsi>'];
 handler.tags = ['sticker'];
 handler.command = /^(stickergen|sgai|buatstiker|genstiker)$/i;
 handler.limit = true;
-
 export default handler;
