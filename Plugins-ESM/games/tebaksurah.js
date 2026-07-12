@@ -3,18 +3,14 @@ import path from 'path';
 import fs from 'fs';
 import { execSync } from 'child_process';
 import config from '../../config.js';
-
 const TIMEOUT_MS = 90_000;
 const activeSessions = new Map();
-
 function mp3ToOpus(mp3Buffer) {
     const tempDir = path.join(process.cwd(), 'media', 'temp');
     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-
     const stamp = Date.now();
     const mp3Path = path.join(tempDir, `${stamp}_ts.mp3`);
     const oggPath = path.join(tempDir, `${stamp}_ts.ogg`);
-
     try {
         fs.writeFileSync(mp3Path, mp3Buffer);
         execSync(
@@ -27,7 +23,6 @@ function mp3ToOpus(mp3Buffer) {
         if (fs.existsSync(oggPath)) fs.unlinkSync(oggPath);
     }
 }
-
 function normalize(str) {
     return str
         .toUpperCase()
@@ -35,26 +30,22 @@ function normalize(str) {
         .replace(/[^A-Z0-9]/g, '')
         .trim();
 }
-
 const handler = async (m, { conn }) => {
     const existing = activeSessions.get(m.chat);
     if (existing && existing.expireAt > Date.now()) {
         await m.reply(`⚠️ *Game Sedang Berlangsung!*\n\nMasih ada game Tebak Surah di sini.\nSelesaikan dulu atau ketik *nyerah* untuk menyerah.`);
         return;
     }
-
     try {
         const res = await fetch('https://api.deline.web.id/game/tebaksurah');
         const data = await res.json();
         if (!data?.status || !data?.result) throw new Error('Gagal ambil soal');
-
         const r = data.result;
         const surah = r.surah;
         const ayahNum = r.numberInSurah;
         const qari = r.edition?.englishName || 'Alafasy';
         const jawabanEn = surah.englishName.toUpperCase();
         const jawabanAr = surah.name.replace(/سُورَةُ\s*/g, '').trim();
-
         activeSessions.set(m.chat, {
             jawabanEn,
             jawabanAr,
@@ -67,7 +58,6 @@ const handler = async (m, { conn }) => {
             lastWrong: {},
             expireAt: Date.now() + TIMEOUT_MS,
         });
-
         await conn.sendMessage(m.chat, {
             text:
 `╭──「 🕌 *Tebak Surah* 」
@@ -85,10 +75,8 @@ const handler = async (m, { conn }) => {
 ╰─────────────────────
 _© ${config.copyrightName}_`
         }, { quoted: m.raw });
-
         const audioRes = await fetch(r.audio, { headers: { 'User-Agent': 'Mozilla/5.0' } });
         const mp3Buffer = Buffer.from(await audioRes.arrayBuffer());
-
         let audioBuffer, mimetype, ptt;
         try {
             audioBuffer = mp3ToOpus(mp3Buffer);
@@ -99,9 +87,7 @@ _© ${config.copyrightName}_`
             mimetype = 'audio/mpeg';
             ptt = false;
         }
-
         await conn.sendMessage(m.chat, { audio: audioBuffer, mimetype, ptt }, { quoted: m.raw });
-
         setTimeout(async () => {
             const s = activeSessions.get(m.chat);
             if (s && s.expireAt <= Date.now()) {
@@ -113,46 +99,36 @@ _© ${config.copyrightName}_`
                 } catch {}
             }
         }, TIMEOUT_MS + 500);
-
     } catch (e) {
         await m.reply(`❌ Gagal ambil soal: ${e.message}`);
     }
 };
-
 handler.help = ['tebaksurah'];
 handler.tags = ['games'];
 handler.command = /^(tebaksurah|ts)$/i;
-
 handler.onText = async (m) => {
     const session = activeSessions.get(m.chat);
     if (!session) return false;
     if (session.expireAt <= Date.now()) return false;
-
     const raw = m.body.trim();
     if (raw.startsWith('.') || raw.startsWith('!')) return false;
     const tebakan = raw.toUpperCase();
-
     if (tebakan === 'NYERAH') {
         activeSessions.delete(m.chat);
         await m.reply(`🏳️ *Menyerah!* Surahnya: *${session.surahName}* (${session.surahAr})\n\nKetik *.tebaksurah* untuk soal baru!`);
         return true;
     }
-
     const isBenar = normalize(tebakan) === normalize(session.jawabanEn) || raw === session.jawabanAr;
-
     if (isBenar) {
         activeSessions.delete(m.chat);
         await m.reply(`🎉 *Benar!* Surahnya *${session.surahName}* (${session.surahAr}), artinya "${session.translation}".\n\nKetik *.tebaksurah* untuk soal baru!`);
         return true;
     }
-
     const lastWrong = session.lastWrong[m.sender] || 0;
     if (Date.now() - lastWrong < 5000) return true;
     session.lastWrong[m.sender] = Date.now();
-
     const sisaDetik = Math.max(0, Math.ceil((session.expireAt - Date.now()) / 1000));
     await m.reply(`❌ *${raw}* bukan jawabannya~ (sisa ${sisaDetik} detik)\n\nCoba lagi atau ketik *nyerah* 💪`);
     return true;
 };
-
 export default handler;
