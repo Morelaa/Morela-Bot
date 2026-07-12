@@ -1,9 +1,7 @@
 'use strict';
 import { getReplyStyle, setReplyStyle } from '../../System/replystyle.js';
-
 const handler = async (m, { text }) => {
     const arg = (text || '').trim().toLowerCase();
-
     if (!arg) {
         const current = getReplyStyle();
         await m.reply(`🎨 Reply style saat ini: *${current}*\n\n` +
@@ -12,12 +10,10 @@ const handler = async (m, { text }) => {
             `Pakai: .setreplystyle v1 / .setreplystyle v2`);
         return;
     }
-
     if (arg !== 'v1' && arg !== 'v2') {
         await m.reply('Format salah. Pakai: .setreplystyle v1 / .setreplystyle v2');
         return;
     }
-
     const updated = setReplyStyle(arg);
     await m.reply(`✅ Reply style diganti ke *${updated}*.`);
 };
