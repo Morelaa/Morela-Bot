@@ -78,7 +78,7 @@ Plugin juga bisa punya `handler.onText(m, { conn })` untuk menangkap pesan tanpa
 
 ## Fitur Welcome & Goodbye
 
-Diimplementasikan di `Plugins-ESM/admin/welcome.js` dan `Plugins-ESM/admin/goodbye.js`, dipicu otomatis dari event `group-participants.update` di `Core/store.js`. Tampilan pakai `ButtonV2` (card + thumbnail + 2 tombol), sama seperti gaya v2.
+Diimplementasikan di `Plugins-ESM/admin/welcome.js` dan `Plugins-ESM/admin/goodbye.js`, dipicu otomatis dari event `group-participants.update` di `Core/store.js`. Tampilan pakai `ButtonV2` (card + thumbnail + 2 tombol).
 
 - Gambar thumbnail: coba ambil foto profil member yang join/keluar dulu; kalau kosong/private/gagal, otomatis fallback pakai foto profil bot sendiri.
 - Tombol welcome: **Menu** (`.menu`) dan **Daftar** (`.daftar`).
@@ -100,7 +100,6 @@ Semua command di atas khusus admin grup (`handler.admin = true`, `handler.group 
 
 - **`.ytmp3` / `.ytmp4` / `.tiktok`**: isi `apiKeys.neoxr` (daftar di https://api.neoxr.eu).
 - **`media/menu.jpg`**: belum disertakan, tambahkan sendiri kalau mau menu bergambar.
-- **`githubToken` / `githubRepo`**: belum dipakai plugin manapun saat ini.
 
 ⚠️ Semua nilai sensitif (nomor owner, API key) ada langsung di `config.js`. Kalau mau push ke repo publik, kosongkan dulu atau masukkan `config.js` ke `.gitignore`.
 
