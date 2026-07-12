@@ -13,7 +13,6 @@ export function setSelfMode(enabled) {
 export function toggleSelfMode() {
     return setSelfMode(!isSelfModeOn());
 }
-
 export function shouldBlockNonOwner(isOwnerSender) {
     return isSelfModeOn() && !isOwnerSender;
 }
