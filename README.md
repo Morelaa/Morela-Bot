@@ -33,6 +33,7 @@ System/       → self mode, private mode, pengecekan owner
 Library/      → resolve LID/JID, MessageBuilder, sticker, canvas, util lain
 Database/     → SQLite (better-sqlite3): users, groups, group_members, dll
 Plugins-ESM/  → semua command, per folder kategori (owner/admin/tools/games/dst)
+              → termasuk admin/welcome.js & admin/goodbye.js (fitur welcome/goodbye, lihat bagian di bawah)
 data/         → file database SQLite + soal game JSON
 media/        → aset gambar (register.jpg disertakan, tambahkan sendiri kalau perlu)
 session/      → kredensial login WhatsApp (auto-generate, path diatur lewat config.sessionDir)
@@ -73,6 +74,27 @@ Plugin juga bisa punya `handler.onText(m, { conn })` untuk menangkap pesan tanpa
 `Core/store.js` otomatis nulis ke database setiap ada perubahan di grup:
 - Member join/keluar/promote/demote → tabel `group_members` (`Database/groupMembers.js`)
 - Kalau bot sendiri yang dikick/keluar/dipromote/didemote → status `botInGroup`/`isBotAdmin` tersimpan di tabel `groups`
+- Kalau member (bukan bot) join/keluar dan fitur welcome/goodbye grup itu aktif → otomatis kirim pesan welcome/goodbye (lihat bagian di bawah)
+
+## Fitur Welcome & Goodbye
+
+Diimplementasikan di `Plugins-ESM/admin/welcome.js` dan `Plugins-ESM/admin/goodbye.js`, dipicu otomatis dari event `group-participants.update` di `Core/store.js`. Tampilan pakai `ButtonV2` (card + thumbnail + 2 tombol), sama seperti gaya v2.
+
+- Gambar thumbnail: coba ambil foto profil member yang join/keluar dulu; kalau kosong/private/gagal, otomatis fallback pakai foto profil bot sendiri.
+- Tombol welcome: **Menu** (`.menu`) dan **Daftar** (`.daftar`).
+- Tombol goodbye: **Menu** (`.menu`) dan **Profil** (`.profil <nomor>`).
+- Status disimpan per-grup di kolom `settings` tabel `groups` (`settings.welcome` / `settings.goodbye`, lewat `upsertGroupSettings`).
+
+| Command | Kegunaan |
+|---|---|
+| `.welcome on` / `.welcome off` | Aktif/nonaktifkan welcome otomatis di grup ini |
+| `.welcome` / `.welcome status` | Cek status welcome |
+| `.welcome @user` / `.teswelcome @user` | Kirim contoh pesan welcome manual (buat testing) |
+| `.goodbye on` / `.goodbye off` | Aktif/nonaktifkan goodbye otomatis di grup ini |
+| `.goodbye` / `.goodbye status` | Cek status goodbye |
+| `.goodbye @user` / `.tesgoodbye @user` | Kirim contoh pesan goodbye manual (buat testing) |
+
+Semua command di atas khusus admin grup (`handler.admin = true`, `handler.group = true`).
 
 ## Konfigurasi Tambahan
 
