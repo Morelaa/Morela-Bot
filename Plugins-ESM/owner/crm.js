@@ -1,7 +1,6 @@
 'use strict';
 import { get as kvGet } from '../../Database/kvstore.js';
 import store from '../../Core/store.js';
-
 const handler = async (m, { conn, command, args }) => {
     if (!m.quoted) {
         return m.reply(
@@ -13,24 +12,15 @@ const handler = async (m, { conn, command, args }) => {
             `_Mendukung: button, media, sticker, text, dll_`
         );
     }
-
     const quotedId = m.quoted?.key?.id;
     const quotedChat = m.quoted?.key?.remoteJid || m.chat;
-
-    // Lapis 1: cache internal untuk carousel/button yang dikirim MessageBuilder
-    // sendiri (kvSet di Carousel.send()/AIRich.send()), karena pesan itu dikirim
-    // lewat relayMessage() langsung jadi gak lewat messages.upsert biasa.
     let rawQuotedMessage = null;
     if (quotedId) {
         try {
             rawQuotedMessage = kvGet(`crm_cache:${quotedId}`, null);
         }
-        catch (_) { /* ignore, lanjut ke lapis berikutnya */ }
+        catch (_) {  }
     }
-
-    // Lapis 2: message store mentah (menangkap SEMUA pesan lewat messages.upsert,
-    // termasuk carousel/interactive dari bot lain di grup). Ini yang bikin cards
-    // tetap lengkap, beda dengan contextInfo.quotedMessage yang WA potong.
     if (!rawQuotedMessage && quotedId) {
         try {
             const cached = store.getMessage(quotedChat, quotedId);
@@ -38,22 +28,17 @@ const handler = async (m, { conn, command, args }) => {
                 rawQuotedMessage = cached.message;
             }
         }
-        catch (_) { /* ignore, lanjut ke fallback */ }
+        catch (_) {  }
     }
-
-    // Lapis 3 (fallback terakhir): contextInfo.quotedMessage bawaan WA — bisa
-    // kepotong untuk carouselMessage/tipe interaktif tertentu.
     if (!rawQuotedMessage) {
         rawQuotedMessage = m.quoted.message;
     }
-
     if (!rawQuotedMessage) {
         return m.reply(
             `❌ Tidak dapat mengambil raw message.\n` +
             `Coba gunakan *.rawjson* untuk melihat struktur quoted.`
         );
     }
-
     if (command === 'rawjson' || command === 'rawijson') {
         const json = JSON.stringify(rawQuotedMessage, null, 2);
         if (json.length > 3500) {
@@ -73,7 +58,6 @@ const handler = async (m, { conn, command, args }) => {
         }
         return;
     }
-
     let targetJid = m.chat;
     if (args[0]) {
         const argJid = args[0].trim();
@@ -87,11 +71,6 @@ const handler = async (m, { conn, command, args }) => {
             return m.reply(`❌ JID tidak valid: \`${argJid}\`\n\nContoh:\n• \`628xxx\` → nomor WA\n• \`120363xxx@g.us\` → grup`);
         }
     }
-
-    // interactiveMessage (button/list/carousel) wajib disertai stanza
-    // biz > interactive > native_flow, kalau tidak WA tidak akan merender-nya
-    // di sisi penerima — khusus carouselMessage ini strict, beda dengan
-    // buttonsMessage biasa yang masih ditoleransi tanpa node ini.
     const isInteractive = !!rawQuotedMessage?.interactiveMessage;
     const interactiveNodes = [
         {
@@ -106,7 +85,6 @@ const handler = async (m, { conn, command, args }) => {
             ],
         },
     ];
-
     try {
         const { generateWAMessageFromContent } = await import('@itsliaaa/baileys');
         const generatedMsg = generateWAMessageFromContent(targetJid, rawQuotedMessage, { userJid: conn.user?.id ?? '' });
@@ -140,7 +118,6 @@ const handler = async (m, { conn, command, args }) => {
             return;
         }
     }
-
     try {
         const json = JSON.stringify(rawQuotedMessage, null, 2);
         const mtype = m.quoted?.type ?? 'unknown';
