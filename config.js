@@ -65,7 +65,7 @@ const config = {
     thumbnail: 'https://cdn.ornzora.eu.cc/b815ef37-1be8-4b37-b522-16c445ef3fbd-upload-1781387499469.jpg',
     // URL gambar thumbnail default (dipakai untuk preview link/konten tertentu).
 
-    menuImage: 'https://athars.space/uploads/9d7a372f.jpg',
+    menuImage: 'https://athars.space/uploads/7abef2f4.jpg',
     // URL gambar header yang tampil di command menu.
 
     registerImage: path.join(__dirname, 'media', 'register.jpg'),
