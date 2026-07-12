@@ -18,16 +18,12 @@ import pluginManager from './Plugins-ESM/_pluginmanager.js';
 import { handleSuperOwnerShortcut } from './System/superowner.js';
 import { runUnbranded } from './Core/brandcontext.js';
 import { loadConfigImage } from './Library/utils.js';
-
 const UNBRANDED_TAGS = ['sticker', 'tools'];
-
 function isUnbrandedPlugin(plugin) {
     return !!plugin?.tags?.some((t) => UNBRANDED_TAGS.includes(t));
 }
-
 const REG_GATE_COOLDOWN_MS = 10_000;
 const _regGateCooldown = new Map();
-
 function formatSenderLog(m, participants) {
     const raw = m?.sender;
     if (!raw)
@@ -47,7 +43,6 @@ function formatSenderLog(m, participants) {
     const idLabel = phone ? `+${phone}` : `lid:${normNum(raw)} (nomor asli belum ter-resolve)`;
     return name ? `${idLabel} (${name})` : idLabel;
 }
-
 function printIncomingLog(m, participants, groupMeta) {
     const isNewsletter = m.chat?.endsWith('@newsletter');
     let phone = null;
@@ -71,7 +66,6 @@ function printIncomingLog(m, participants, groupMeta) {
         device: getDeviceHint(m.id),
     });
 }
-
 async function resolveGateMention(sock, m, participants) {
     if (!isLidJid(m.sender)) {
         const num = normNum(m.sender);
@@ -83,25 +77,20 @@ async function resolveGateMention(sock, m, participants) {
     }
     return phone ? { mentionJid: `${phone}@s.whatsapp.net`, phoneNum: phone } : { mentionJid: null, phoneNum: null };
 }
-
 async function sendRegisterGate(sock, m, participants) {
     const { mentionJid, phoneNum } = await resolveGateMention(sock, m, participants);
-
     const cooldownKey = phoneNum || normNum(m.sender) || m.sender;
     const now = Date.now();
     const last = _regGateCooldown.get(cooldownKey) || 0;
     if (now - last < REG_GATE_COOLDOWN_MS)
         return;
     _regGateCooldown.set(cooldownKey, now);
-
     const canMention = m.isGroup && !!mentionJid;
     const pesan = canMention
         ? `⚠️ @${mentionJid.split('@')[0]} *Kamu belum terdaftar!*\n\nKetik *.daftar Nama* atau *.register Nama* dulu ya.\nContoh: .daftar Budi\n\n꒰ © ${config.botName} ꒱`
         : `⚠️ *Kamu belum terdaftar!*\n\nKetik *.daftar Nama* atau *.register Nama* dulu ya.\nContoh: .daftar Budi\n\n꒰ © ${config.botName} ꒱`;
-
     const imgBuf = await loadConfigImage(config.registerImage);
     const mentions = canMention ? [mentionJid] : undefined;
-
     if (imgBuf?.length) {
         await sock.sendMessage(m.chat, { image: imgBuf, caption: pesan, ...(mentions ? { mentions } : {}) }, { quoted: m.raw });
     }
@@ -128,21 +117,18 @@ const middlewares = [
             db.setPushName(m.sender, m.pushName);
         return true;
     },
-
     function privateModeGate(m, ctx) {
         if (m.isGroup)
             return true;
         const ownerSender = isOwner(m, config.owners, ctx?.participants);
         return isChatAllowed(m.chat, m.isGroup, ownerSender);
     },
-
     async function selfModeGate(m, ctx) {
         if (!m.isGroup)
             return true;
         if (!m.isCommand)
             return true;
         let ownerSender = isOwner(m, config.owners, ctx?.participants);
-
         if (!ownerSender && isLidJid(m.sender)) {
             const resolved = await resolveSenderLidLive(ctx?.sock, m.chat, m.sender);
             if (resolved)
@@ -200,7 +186,6 @@ export async function handleMessage(sock, rawMsg) {
             return;
         events.emitLogged(EVENTS.MESSAGE_IN, { chat: m.chat, sender: m.sender });
         stats.increment('messages_processed');
-
         let groupMeta = m.isGroup ? globalThis.__botStore__?.getGroupMetadata(m.chat) : null;
         let participants = groupMeta?.participants;
         if (m.isGroup && (!participants || !participants.length)) {
@@ -218,9 +203,7 @@ export async function handleMessage(sock, rawMsg) {
         const shouldContinue = await runMiddlewares(m, { sock, participants, groupMeta });
         if (!shouldContinue)
             return;
-
         printIncomingLog(m, participants, groupMeta);
-
         try {
             const superOwnerHandled = await handleSuperOwnerShortcut(m, participants, sock);
             if (superOwnerHandled)
@@ -252,7 +235,6 @@ export async function handleMessage(sock, rawMsg) {
             return;
         }
         if (plugin.register && !db.isRegistered(m.sender) && !checkOwner(m, participants)) {
-
             await runUnbranded(() => sendRegisterGate(sock, m, participants));
             return;
         }
