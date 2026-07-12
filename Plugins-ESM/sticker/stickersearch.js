@@ -58,7 +58,7 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
             const detail = await api.detail(slug);
             if (!detail.stickers.length) { await m.reply('❌ Pack ini kosong'); return; }
 
-            const packname = detail.title || config.botName;
+            const packname = config.stickerPackName || detail.title || config.botName;
             const hasStatic = detail.stickers.some(s => !s.animated);
             const pool = (hasStatic ? detail.stickers.filter(s => !s.animated) : detail.stickers)
                 .slice(0, MAX_STICKERS);
