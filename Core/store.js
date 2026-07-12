@@ -1,7 +1,7 @@
 'use strict';
 import { normNum } from '../Library/resolve.js';
 import events, { EVENTS } from './events.js';
-import { upsertGroupSettings } from '../Database/db.js';
+import { upsertGroupSettings, getGroup } from '../Database/db.js';
 import { recordMemberJoin, recordMemberLeave, recordMemberPromote, recordMemberDemote } from '../Database/groupMembers.js';
 import { logError } from './logutil.js';
 const MAX_MESSAGES_PER_CHAT = 100;
@@ -100,6 +100,8 @@ class Store {
             }
             const botNum = normNum(sock?.user?.id);
             const list = participants || [];
+            const groupSettings = getGroup(id)?.settings;
+            const memberCount = meta?.participants?.length || 0;
             for (const raw of list) {
                 const p = extractParticipantJid(raw);
                 if (!p)
@@ -111,11 +113,21 @@ class Store {
                         recordMemberJoin(id, p, contactName);
                         if (isBot)
                             upsertGroupSettings(id, meta?.subject ?? null, { botInGroup: true, isBotAdmin: false, joinedAt: Date.now() });
+                        else if (groupSettings?.welcome) {
+                            import('../Plugins-ESM/admin/welcome.js')
+                                .then(({ sendWelcome }) => sendWelcome(sock, id, p, meta?.subject ?? 'Group', memberCount, contactName))
+                                .catch((err) => logError('Gagal kirim welcome:', err?.message || err));
+                        }
                     }
                     else if (action === 'remove') {
                         recordMemberLeave(id, p);
                         if (isBot)
                             upsertGroupSettings(id, meta?.subject ?? null, { botInGroup: false, isBotAdmin: false, leftAt: Date.now() });
+                        else if (groupSettings?.goodbye) {
+                            import('../Plugins-ESM/admin/goodbye.js')
+                                .then(({ sendGoodbye }) => sendGoodbye(sock, id, p, meta?.subject ?? 'Group', memberCount, contactName))
+                                .catch((err) => logError('Gagal kirim goodbye:', err?.message || err));
+                        }
                     }
                     else if (action === 'promote') {
                         recordMemberPromote(id, p);
