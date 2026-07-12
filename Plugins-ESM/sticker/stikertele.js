@@ -8,28 +8,11 @@ import os from 'os';
 import { spawn } from 'child_process';
 import config from '../../config.js';
 import { sendStickerPack } from '../../Library/stickerPackHelper.js';
-
 const MAX_STICKERS = 30;
 const FGSI_KEY = 'fgsiapi-2baa6be5-6d';
 const TG_PACK_REGEX = /(?:https?:\/\/)?t\.me\/(?:addstickers|addemoji)\/([a-zA-Z0-9_]+)/;
-
-// PENTING: kenapa pakai file temp + spawn, bukan sharp/stream-piping.
-//
-// WebP adalah container RIFF yang butuh nulis-ulang header ukuran file
-// setelah semua frame animasi selesai di-encode ("seek back"). Kalau
-// output ffmpeg di-stream lewat pipe (non-seekable), ffmpeg tetap exit
-// code 0 (sukses) TAPI hasil file animasi (multi-frame) jadi korup —
-// sharp/libwebp gagal decode dengan pesan persis:
-// "Input file has corrupt header: webp: unable to parse image"
-// Stiker statis (1 frame) kebetulan lolos karena gak butuh seek-back,
-// makanya bug ini sering ketutupan kalau cuma dites pakai stiker statis.
-//
-// Nulis ke file fisik di disk (seekable) menghindari masalah ini sama
-// sekali — makanya v2 selalu berhasil walau v1 gagal total.
-
 const TMP = path.join(os.tmpdir(), 'morela_tele_sticker');
 if (!fs.existsSync(TMP)) fs.mkdirSync(TMP, { recursive: true });
-
 async function isDecodableWebp(buffer) {
     if (!Buffer.isBuffer(buffer) || buffer.length < 20)
         return false;
@@ -41,7 +24,6 @@ async function isDecodableWebp(buffer) {
         return false;
     }
 }
-
 async function downloadBuffer(url) {
     const res = await axios.get(url, {
         responseType: 'arraybuffer',
@@ -50,11 +32,6 @@ async function downloadBuffer(url) {
     });
     return Buffer.from(res.data);
 }
-
-// Konversi universal ke WebP pakai ffmpeg CLI + file fisik di disk.
-// Dipakai untuk SEMUA tipe input (statis maupun animasi) — ffmpeg
-// auto-probe isi file dari konten aslinya, jadi tetap benar walau
-// ekstensi yang kedetect keliru.
 function toWebpBuffer(inputBuf, ext) {
     return new Promise((resolve, reject) => {
         const id = crypto.randomBytes(6).toString('hex');
@@ -64,9 +41,7 @@ function toWebpBuffer(inputBuf, ext) {
             try { fs.unlinkSync(inp); } catch { }
             try { fs.unlinkSync(out); } catch { }
         };
-
         fs.writeFileSync(inp, inputBuf);
-
         const ff = spawn('ffmpeg', [
             '-i', inp,
             '-t', '6',
@@ -75,16 +50,13 @@ function toWebpBuffer(inputBuf, ext) {
             '-loop', '0', '-preset', 'default', '-an', '-vsync', '0',
             '-y', out,
         ]);
-
         let stderr = '';
         ff.stderr?.on('data', (d) => { stderr += d.toString(); });
-
         const timer = setTimeout(() => {
             ff.kill();
             cleanup();
             reject(new Error('ffmpeg timeout'));
         }, 25000);
-
         ff.on('close', (code) => {
             clearTimeout(timer);
             if (code === 0) {
@@ -106,24 +78,16 @@ function toWebpBuffer(inputBuf, ext) {
         ff.on('error', (e) => { clearTimeout(timer); cleanup(); reject(e); });
     });
 }
-
-// Nama pack yang di-generate bot pembuat sticker di Telegram biasanya
-// nempelin brandingnya sendiri, misal "Judul :: @fStikBot" atau
-// "Judul via @xxxBot". Ini dibersihin otomatis biar gak ikut kebawa ke
-// pack WA.
 function cleanPackTitle(title) {
     return String(title || '')
         .replace(/\s*(?:::|via|\|)\s*@?\w*bot\b\s*$/i, '')
         .trim() || 'Telegram Sticker';
 }
-
 const handler = async (m, { conn, args, usedPrefix, command }) => {
-    // Support: .stikertele <url> | <nama custom>
     const rawText = args.join(' ');
     const [urlPart, ...customNameParts] = rawText.split('|');
     const url = (urlPart || '').trim();
     const customName = customNameParts.join('|').trim();
-
     if (!url) {
         return m.reply(
             `🎭 *ᴛᴇʟᴇɢʀᴀᴍ sᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ*\n\n` +
@@ -141,7 +105,6 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
             `> ${usedPrefix}${command} https://t.me/addstickers/Sweetjehe3_by_fStikBot | Stiker Kesukaanku`
         );
     }
-
     if (!TG_PACK_REGEX.test(url)) {
         return m.reply(
             `❌ URL tidak valid!\n\n` +
@@ -149,19 +112,14 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
             `Contoh: *https://t.me/addstickers/NamaPack*`
         );
     }
-
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-
     try {
-        // ── Ambil data pack via fgsi API ─────────────────────────────────
         const res = await axios.get('https://fgsi.dpdns.org/api/tools/stickertelegram', {
             params: { apikey: FGSI_KEY, url },
             headers: { accept: 'application/json' },
             timeout: 60000,
         });
-
         const json = res.data;
-
         if (!json?.status || !json?.data) {
             await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply(
@@ -169,27 +127,20 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
                 `_${json?.message || 'Pastikan link valid dan pack masih tersedia.'}_`
             );
         }
-
         const data = json.data;
         const rawTitle = data.title || data.name || 'Telegram Sticker';
-        // Prioritas: custom nama per-command > nama permanen di config > judul
-        // asli Telegram (branding bot pembuat pack otomatis dibersihkan).
         const title = customName || config.telestikerPackName || cleanPackTitle(rawTitle);
         const author = data.author || data.creator || config.botName;
         const stickerType = data.sticker_type || data.type || 'regular';
-
         const stickerList = Array.isArray(data.stickers) ? data.stickers
             : Array.isArray(data.data) ? data.data
                 : Array.isArray(data.items) ? data.items
                     : [];
-
         if (!stickerList.length) {
             await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply('❌ Tidak ada stiker ditemukan dalam pack ini!');
         }
-
         const total = Math.min(stickerList.length, MAX_STICKERS);
-
         await m.reply(
             `🎭 *ᴛᴇʟᴇɢʀᴀᴍ sᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ*\n\n` +
             `╭┈┈⬡「 📦 *ɪɴꜰᴏ* 」\n` +
@@ -200,39 +151,26 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
             `╰┈┈┈┈┈┈┈┈⬡\n\n` +
             `> ⏳ Mengunduh & memproses...`
         );
-
-        // ── Download & convert semua stiker ─────────────────────────────
         const webpBuffers = [];
         const emojiList = [];
-
         for (let i = 0; i < total; i++) {
             const s = stickerList[i];
-            // fgsi pakai field dataUrl, ext, isAnimated, isVideo per stiker
             const src = s.dataUrl || s.url || s.file_url || s.file || '';
             if (!src)
                 continue;
             const ext = (s.ext || '').replace('.', '') ||
                 (src.includes('.tgs') ? 'tgs' : src.includes('.webm') ? 'webm' : 'webp');
-
             if (ext === 'tgs') {
-                // .tgs = Lottie JSON (bukan video), ffmpeg gak bisa decode
-                // langsung. Skip biar pack yang lain tetap valid.
                 console.error(`[TELESTIKER] stiker ${i + 1} dilewati: format .tgs (Lottie) belum didukung`);
                 continue;
             }
-
             try {
                 const raw = await downloadBuffer(src);
-                // SELALU lewat ffmpeg (file-based), baik statis maupun
-                // animasi — ini yang bikin hasilnya konsisten valid,
-                // sama seperti v2.
                 const buf = await toWebpBuffer(raw, ext);
-
                 if (!buf || !(await isDecodableWebp(buf))) {
                     console.error(`[TELESTIKER] stiker ${i + 1} dilewati: hasil konversi tidak valid/korup`);
                     continue;
                 }
-
                 webpBuffers.push(buf);
                 const emojiArr = Array.isArray(s.emojis) ? s.emojis.join('') : (s.emoji || s.emoticon || '⭐');
                 emojiList.push(emojiArr || '⭐');
@@ -242,18 +180,14 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
             }
             await new Promise((r) => setTimeout(r, 150));
         }
-
         if (!webpBuffers.length) {
             await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
             return m.reply('❌ Semua stiker gagal diunduh/dikonversi!');
         }
-
-        // ── Kirim sebagai sticker pack WA asli ──────────────────────────
         await sendStickerPack(conn, m.chat, webpBuffers.map((buf, i) => ({
             buffer: buf,
             emojis: [emojiList[i] || '⭐'],
         })), { name: title, publisher: author, description: `Telegram Sticker: ${title}`, quoted: m.raw });
-
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     }
     catch (error) {
@@ -262,10 +196,8 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
         await m.reply(`❌ *ᴇʀʀᴏʀ*\n\n> ${error?.message}`);
     }
 };
-
 handler.command = /^(stikertele|telesticker|tgsticker|tgpack)$/i;
 handler.help = ['stikertele <url t.me/addstickers/...>'];
 handler.tags = ['sticker'];
 handler.limit = true;
-
 export default handler;
