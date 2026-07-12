@@ -1,37 +1,85 @@
 'use strict';
 import sharp from 'sharp';
-import ffmpeg from 'fluent-ffmpeg';
-import { PassThrough, Readable } from 'stream';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import crypto from 'crypto';
+import { spawn } from 'child_process';
 import webpmux from 'node-webpmux';
+
 export async function imageToWebp(buffer) {
     return sharp(buffer)
         .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
         .webp({ quality: 90 })
         .toBuffer();
 }
+
+// PENTING: video/animasi HARUS dikonversi lewat file fisik di disk, bukan
+// stream/pipe. WebP adalah container RIFF yang butuh nulis-ulang ("seek
+// back") field ukuran total file setelah semua frame animasi selesai
+// di-encode. Kalau outputnya di-pipe (non-seekable), ffmpeg tetap exit
+// sukses tapi field ukuran RIFF-nya ketinggalan 0x00000000 — hasilnya
+// korup dan ditolak sharp/libwebp dengan pesan:
+// "Input buffer has corrupt header: webp: unable to parse image"
+// Stiker statis (1 frame) gak kena karena gak butuh backpatch itu, jadi
+// bug ini gampang lolos kalau cuma dites pakai gambar diam.
+const TMP_DIR = path.join(os.tmpdir(), 'morela_sticker_tmp');
+if (!fs.existsSync(TMP_DIR))
+    fs.mkdirSync(TMP_DIR, { recursive: true });
+
 export function videoToWebp(buffer, { fps = 10, duration = 6 } = {}) {
     return new Promise((resolve, reject) => {
-        const input = new Readable({ read() { } });
-        input.push(buffer);
-        input.push(null);
-        const output = new PassThrough();
-        const chunks = [];
-        output.on('data', (c) => chunks.push(c));
-        output.on('end', () => resolve(Buffer.concat(chunks)));
-        output.on('error', reject);
-        ffmpeg(input)
-            .inputOptions(['-t', String(duration)])
-            .outputOptions([
+        const id = crypto.randomBytes(6).toString('hex');
+        const inputPath = path.join(TMP_DIR, `vid_${id}.mp4`);
+        const outputPath = path.join(TMP_DIR, `vid_${id}.webp`);
+        const cleanup = () => {
+            try { fs.unlinkSync(inputPath); } catch { }
+            try { fs.unlinkSync(outputPath); } catch { }
+        };
+
+        fs.writeFileSync(inputPath, buffer);
+
+        const args = [
+            '-i', inputPath,
+            '-t', String(duration),
             '-vcodec', 'libwebp',
             '-vf', `fps=${fps},scale=512:512:force_original_aspect_ratio=decrease,pad=512:512:-1:-1:color=0x00000000`,
             '-loop', '0',
             '-preset', 'default',
             '-an',
             '-vsync', '0',
-            '-f', 'webp',
-        ])
-            .on('error', (err) => reject(new Error(`ffmpeg error: ${err.message}`)))
-            .pipe(output, { end: true });
+            '-y', outputPath,
+        ];
+
+        const ff = spawn('ffmpeg', args);
+        let stderr = '';
+        ff.stderr?.on('data', (d) => { stderr += d.toString(); });
+
+        const timer = setTimeout(() => {
+            ff.kill();
+            cleanup();
+            reject(new Error('ffmpeg timeout'));
+        }, 30000);
+
+        ff.on('close', (code) => {
+            clearTimeout(timer);
+            if (code === 0) {
+                try {
+                    const out = fs.readFileSync(outputPath);
+                    cleanup();
+                    resolve(out);
+                }
+                catch (e) {
+                    cleanup();
+                    reject(e);
+                }
+            }
+            else {
+                cleanup();
+                reject(new Error(`ffmpeg exit ${code}: ${stderr.slice(-300)}`));
+            }
+        });
+        ff.on('error', (e) => { clearTimeout(timer); cleanup(); reject(e); });
     });
 }
 function slugify(str) {
