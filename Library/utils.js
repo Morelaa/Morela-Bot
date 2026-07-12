@@ -1,5 +1,17 @@
 'use strict';
 import fs from 'fs';
+const BOLD_SANS_UPPER_BASE = 0x1d5d4;
+const BOLD_SANS_LOWER_BASE = 0x1d5ee;
+const BOLD_SANS_DIGIT_BASE = 0x1d7ec;
+export function toBoldSans(text) {
+    return String(text).replace(/[A-Za-z0-9]/g, (ch) => {
+        const code = ch.charCodeAt(0);
+        if (code >= 65 && code <= 90) return String.fromCodePoint(BOLD_SANS_UPPER_BASE + (code - 65));
+        if (code >= 97 && code <= 122) return String.fromCodePoint(BOLD_SANS_LOWER_BASE + (code - 97));
+        if (code >= 48 && code <= 57) return String.fromCodePoint(BOLD_SANS_DIGIT_BASE + (code - 48));
+        return ch;
+    });
+}
 const _imageBufferCache = new Map();
 const IMAGE_CACHE_TTL_MS = 5 * 60 * 1000;
 export async function loadConfigImage(source) {
