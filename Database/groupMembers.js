@@ -1,6 +1,5 @@
 'use strict';
 import db from './sqlite.js';
-
 const stmtUpsert = db.prepare(`
 	INSERT INTO group_members (group_jid, member_jid, name, role, status, joined_at, left_at, updated_at)
 	VALUES (@group_jid, @member_jid, @name, @role, @status, @joined_at, @left_at, @updated_at)
@@ -15,7 +14,6 @@ const stmtUpsert = db.prepare(`
 const stmtGet = db.prepare('SELECT * FROM group_members WHERE group_jid = ? AND member_jid = ?');
 const stmtListByGroup = db.prepare('SELECT * FROM group_members WHERE group_jid = ?');
 const stmtListActiveByGroup = db.prepare("SELECT * FROM group_members WHERE group_jid = ? AND status = 'active'");
-
 function rowToObj(row) {
     if (!row)
         return null;
@@ -30,19 +28,15 @@ function rowToObj(row) {
         updatedAt: row.updated_at,
     };
 }
-
 export function getMember(groupJid, memberJid) {
     return rowToObj(stmtGet.get(groupJid, memberJid));
 }
-
 export function listGroupMembers(groupJid) {
     return stmtListByGroup.all(groupJid).map(rowToObj);
 }
-
 export function listActiveGroupMembers(groupJid) {
     return stmtListActiveByGroup.all(groupJid).map(rowToObj);
 }
-
 export function recordMemberJoin(groupJid, memberJid, name = null) {
     const now = Date.now();
     stmtUpsert.run({
@@ -56,7 +50,6 @@ export function recordMemberJoin(groupJid, memberJid, name = null) {
         updated_at: now,
     });
 }
-
 export function recordMemberLeave(groupJid, memberJid) {
     const existing = getMember(groupJid, memberJid);
     const now = Date.now();
@@ -71,7 +64,6 @@ export function recordMemberLeave(groupJid, memberJid) {
         updated_at: now,
     });
 }
-
 export function recordMemberPromote(groupJid, memberJid) {
     const existing = getMember(groupJid, memberJid);
     const now = Date.now();
@@ -86,7 +78,6 @@ export function recordMemberPromote(groupJid, memberJid) {
         updated_at: now,
     });
 }
-
 export function recordMemberDemote(groupJid, memberJid) {
     const existing = getMember(groupJid, memberJid);
     const now = Date.now();
@@ -101,7 +92,6 @@ export function recordMemberDemote(groupJid, memberJid) {
         updated_at: now,
     });
 }
-
 export default {
     getMember,
     listGroupMembers,
