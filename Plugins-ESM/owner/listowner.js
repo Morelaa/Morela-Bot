@@ -15,22 +15,22 @@ function buildVcard(name, number) {
 }
 function getCountryInfo(num) {
     if (num.startsWith('62'))
-        return { flag: '🇮🇩', name: 'Indonesia', flagPair: '🇮🇩Indonesia🇮🇩' };
+        return { flag: '', name: 'Indonesia', flagPair: 'Indonesia' };
     if (num.startsWith('1') && num.length >= 11)
-        return { flag: '🇨🇦', name: 'Canada/US', flagPair: '🇨🇦Canada/US🇨🇦' };
+        return { flag: '', name: 'Canada/US', flagPair: 'Canada/US' };
     if (num.startsWith('44'))
-        return { flag: '🇬🇧', name: 'United Kingdom', flagPair: '🇬🇧United Kingdom🇬🇧' };
+        return { flag: '', name: 'United Kingdom', flagPair: 'United Kingdom' };
     if (num.startsWith('60'))
-        return { flag: '🇲🇾', name: 'Malaysia', flagPair: '🇲🇾Malaysia🇲🇾' };
+        return { flag: '', name: 'Malaysia', flagPair: 'Malaysia' };
     if (num.startsWith('65'))
-        return { flag: '🇸🇬', name: 'Singapore', flagPair: '🇸🇬Singapore🇸🇬' };
+        return { flag: '', name: 'Singapore', flagPair: 'Singapore' };
     if (num.startsWith('63'))
-        return { flag: '🇵🇭', name: 'Philippines', flagPair: '🇵🇭Philippines🇵🇭' };
+        return { flag: '', name: 'Philippines', flagPair: 'Philippines' };
     if (num.startsWith('84'))
-        return { flag: '🇻🇳', name: 'Vietnam', flagPair: '🇻🇳Vietnam🇻🇳' };
+        return { flag: '', name: 'Vietnam', flagPair: 'Vietnam' };
     if (num.startsWith('66'))
-        return { flag: '🇹🇭', name: 'Thailand', flagPair: '🇹🇭Thailand🇹🇭' };
-    return { flag: '🌐', name: 'International', flagPair: '🌐International🌐' };
+        return { flag: '', name: 'Thailand', flagPair: 'Thailand' };
+    return { flag: '', name: 'International', flagPair: 'International' };
 }
 function formatPhone(num) {
     if (num.startsWith('62')) {
@@ -113,13 +113,13 @@ async function sendOwnerV2(m, conn, mainOwnerNumber, allNums) {
                     phone_number: num,
                     booking_management_url: `https://wa.me/${num}`,
                     description:
-                        `*◦ 👤 Name  :*  ${name}\n` +
-                        `*◦ 📞 Number  :*  ${phone}\n` +
-                        `*◦ 💭 Bio  :*  \n` +
-                        `*◦ 👑 Status  :*  ${status}\n` +
+                        `*◦  Name  :*  ${name}\n` +
+                        `*◦  Number  :*  ${phone}\n` +
+                        `*◦  Bio  :*  \n` +
+                        `*◦  Status  :*  ${status}\n` +
                         `*◦ ${country.flag} Country  :*  ${country.name}\n`,
                     email: '',
-                    display_text: `👑 ᴍᴀɪɴ ᴏᴡɴᴇʀ`,
+                    display_text: ` ᴍᴀɪɴ ᴏᴡɴᴇʀ`,
                     display_content: {
                         display_language: 'id',
                         display_meeting_type: 'ɪɴꜰᴏʀᴍᴀᴛɪᴏɴ',
@@ -136,7 +136,7 @@ async function sendOwnerV2(m, conn, mainOwnerNumber, allNums) {
         return {
             name: 'cta_url',
             buttonParamsJson: JSON.stringify({
-                display_text: `🔮 Owner ${i}`,
+                display_text: ` Owner ${i}`,
                 url: `https://wa.me/${num}`,
                 merchant_url: `https://wa.me/${num}`,
             }),
@@ -152,7 +152,7 @@ async function sendOwnerV2(m, conn, mainOwnerNumber, allNums) {
             body: {
                 text:
                     `*乂  𝗢 𝗪 𝗡 𝗘 𝗥     ◦     𝗜 𝗡 𝗙 𝗢*\n` +
-                    `✧ Tag : \n` +
+                    ` Tag : \n` +
                     tagLines,
             },
             footer: {
@@ -187,7 +187,7 @@ async function sendOwnerV2(m, conn, mainOwnerNumber, allNums) {
 const handler = async (m, { conn }) => {
     const { mainOwnerNumber, allNums } = collectOwnerNumbers();
     if (!mainOwnerNumber) {
-        return m.reply('❌ Main owner belum diatur di config.js');
+        return m.reply(' Main owner belum diatur di config.js');
     }
     const style = getOwnerStyle();
     if (style === 'v2') {
