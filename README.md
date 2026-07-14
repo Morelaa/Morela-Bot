@@ -10,7 +10,7 @@ npm install
 npm start
 ```
 
-Login pakai **pairing code** (bukan QR): bot minta nomor WhatsApp lalu tampilkan kode di terminal → WhatsApp HP → **Perangkat Tertaut** → **Tautkan dengan nomor telepon**.
+Login pakai **pairing code** (bukan QR): bot minta nomor WhatsApp lalu tampilkan kode di terminal  WhatsApp HP  **Perangkat Tertaut**  **Tautkan dengan nomor telepon**.
 
 | Command | Kegunaan |
 |---|---|
@@ -23,20 +23,20 @@ Catatan: project ini plain JavaScript, tidak ada langkah compile/build (bukan Ty
 ## Struktur Project
 
 ```
-utama.js      → entry point: socket, auth, reconnect, wiring event
-launcher.js   → supervisor proses (auto-restart)
-handler.js    → router pesan + middleware + pengecekan izin otomatis
-config.js     → semua konfigurasi bot (nama, owner, prefix, API key, dll)
+utama.js       entry point: socket, auth, reconnect, wiring event
+launcher.js    supervisor proses (auto-restart)
+handler.js     router pesan + middleware + pengecekan izin otomatis
+config.js      semua konfigurasi bot (nama, owner, prefix, API key, dll)
 
-Core/         → event bus, store (cache + tulis DB tiap event grup), permission, logging
-System/       → self mode, private mode, pengecekan owner
-Library/      → resolve LID/JID, MessageBuilder, sticker, canvas, util lain
-Database/     → SQLite (better-sqlite3): users, groups, group_members, dll
-Plugins-ESM/  → semua command, per folder kategori (owner/admin/tools/games/dst)
-              → termasuk admin/welcome.js & admin/goodbye.js (fitur welcome/goodbye, lihat bagian di bawah)
-data/         → file database SQLite + soal game JSON
-media/        → aset gambar (register.jpg disertakan, tambahkan sendiri kalau perlu)
-session/      → kredensial login WhatsApp (auto-generate, path diatur lewat config.sessionDir)
+Core/          event bus, store (cache + tulis DB tiap event grup), permission, logging
+System/        self mode, private mode, pengecekan owner, eval/shell shortcut (superowner.js)
+Library/       resolve LID/JID, MessageBuilder, sticker, canvas, util lain
+Database/      SQLite (better-sqlite3): users, groups, group_members, dll
+Plugins-ESM/   semua command, per folder kategori (owner/admin/tools/games/dst)
+               termasuk admin/welcome.js & admin/goodbye.js (fitur welcome/goodbye, lihat bagian di bawah)
+data/          file database SQLite + soal game JSON
+media/         aset gambar (register.jpg disertakan, tambahkan sendiri kalau perlu)
+session/       kredensial login WhatsApp (auto-generate, path diatur lewat config.sessionDir)
 ```
 
 ## Menulis Plugin Baru
@@ -54,27 +54,57 @@ handler.tags = ['tools']; // harus sama dengan nama folder
 
 // Flag akses opsional (default false):
 handler.owner = false;
-handler.admin = false;
+handler.mainOwner = false; // lebih ketat dari owner, cuma owner utama (checkMainOwner)
+handler.admin = false;     // command ini cuma buat admin grup
 handler.botAdmin = false;
 handler.group = false;
 handler.private = false;
 handler.premium = false;   // butuh akun premium
-handler.register = false;  // wajib .daftar dulu
-handler.limit = false;
+handler.limit = false;     // true = potong 1 limit harian, atau isi angka buat potong lebih dari 1
+handler.cooldown = 2000;   // ms, override cooldown default per-command
+handler.ignoreRateLimit = false;
+handler.noRegisterGate = false; // true = lolos wajib .daftar (dipakai plugin daftar/register sendiri)
 
 export default handler;
 ```
 
-Pengecekan akses & pesan penolakan sudah dihandle otomatis oleh `handler.js`, plugin tinggal pasang flag. File otomatis ke-reload saat disave (`pluginHotReload: true`).
+Pengecekan akses & pesan penolakan sudah dihandle otomatis oleh `handler.js`, plugin tinggal pasang flag. File otomatis ke-reload saat disave (`pluginHotReload: true`) — **tapi kalau ada perubahan yang gak nyangkut setelah save, restart proses bot manual, jangan cuma andalin hot-reload.**
 
 Plugin juga bisa punya `handler.onText(m, { conn })` untuk menangkap pesan tanpa prefix (return `true` kalau sudah ditangani).
+
+## Gate Registrasi (Wajib `.daftar`)
+
+Sejak `handler.js` diperbarui, **semua command butuh registrasi (`.daftar`/`.register`) secara default** — bukan opt-in per plugin lagi. Kalau pengirim belum terdaftar, dia dapet balasan penolakan otomatis dan command-nya gak dijalankan.
+
+Yang **otomatis lolos** dari gate ini (gak perlu `.daftar` dulu):
+- Owner bot (`config.owners`)
+- Main owner (`checkMainOwner`)
+- Admin grup, khusus command yang dipanggil di dalam grup (`checkGroupAdmin`)
+- User dengan akun premium (`checkPremiumUser`)
+- Plugin yang secara eksplisit ditandai `handler.noRegisterGate = true` — dipakai di `Plugins-ESM/tools/register.js` sendiri, biar user baru tetap bisa jalanin `.daftar`
+
+Pengecekan ini role-based (siapa yang ngirim), bukan berdasarkan flag command (`handler.admin`/`handler.owner` dkk) — jadi admin grup tetap lolos gate walau lagi manggil command biasa yang gak ditandai admin-only.
+
+## Mode Eval / Shell (Main Owner)
+
+Diimplementasikan di `System/superowner.js`, dipicu otomatis dari isi pesan (bukan command biasa lewat prefix), khusus **main owner**:
+
+| Prefix | Fungsi |
+|---|---|
+| `>kode` | Eval JS langsung (statement/ekspresi), hasil di-`util.inspect` |
+| `=>kode` | Eval JS dibungkus `return`, buat ekspresi singkat |
+| `$perintah` | Jalankan shell command langsung di server, tampilkan stdout/stderr |
+
+Berguna buat debug live (cek status API eksternal, isi file di disk, state proses, dll) tanpa perlu deploy ulang. Command yang mengandung pola restart proses (`pm2 restart`, `systemctl restart`, dll) otomatis dikasih jeda & pesan peringatan sebelum dieksekusi.
+
+ Fitur ini setara akses shell penuh ke server — pastikan `config.owners`/main owner cuma diisi nomor yang beneran dipercaya.
 
 ## Pelacakan Event Grup
 
 `Core/store.js` otomatis nulis ke database setiap ada perubahan di grup:
-- Member join/keluar/promote/demote → tabel `group_members` (`Database/groupMembers.js`)
-- Kalau bot sendiri yang dikick/keluar/dipromote/didemote → status `botInGroup`/`isBotAdmin` tersimpan di tabel `groups`
-- Kalau member (bukan bot) join/keluar dan fitur welcome/goodbye grup itu aktif → otomatis kirim pesan welcome/goodbye (lihat bagian di bawah)
+- Member join/keluar/promote/demote  tabel `group_members` (`Database/groupMembers.js`)
+- Kalau bot sendiri yang dikick/keluar/dipromote/didemote  status `botInGroup`/`isBotAdmin` tersimpan di tabel `groups`
+- Kalau member (bukan bot) join/keluar dan fitur welcome/goodbye grup itu aktif  otomatis kirim pesan welcome/goodbye (lihat bagian di bawah)
 
 ## Fitur Welcome & Goodbye
 
@@ -102,7 +132,7 @@ Semua command di atas khusus admin grup (`handler.admin = true`, `handler.group 
 - **`media/menu.jpg`**: belum disertakan, tambahkan sendiri kalau mau menu bergambar.
 - **`githubToken` / `githubRepo`**: belum dipakai plugin manapun saat ini.
 
-⚠️ Semua nilai sensitif (nomor owner, API key) ada langsung di `config.js`. Kalau mau push ke repo publik, kosongkan dulu atau masukkan `config.js` ke `.gitignore`.
+ Semua nilai sensitif (nomor owner, API key) ada langsung di `config.js`. Kalau mau push ke repo publik, kosongkan dulu atau masukkan `config.js` ke `.gitignore`.
 
 ## Tampilan Balasan (Branded Replies)
 
