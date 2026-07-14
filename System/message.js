@@ -70,6 +70,7 @@ export function serializeMessage(raw, sock) {
         sender,
         fromMe,
         pushName: raw.pushName || '',
+        message: raw.message,
         type,
         text,
         body,
