@@ -4,11 +4,11 @@ import store from '../../Core/store.js';
 const handler = async (m, { conn, command, args }) => {
     if (!m.quoted) {
         return m.reply(
-            `❌ *Harus reply pesan dulu!*\n\n` +
+            ` *Harus reply pesan dulu!*\n\n` +
             `Cara pakai:\n` +
-            `• Reply pesan → ketik *.crm*\n` +
-            `• Reply pesan → ketik *.crm <jid>* (kirim ke chat lain)\n` +
-            `• Reply pesan → ketik *.rawjson* (lihat raw JSON)\n\n` +
+            `• Reply pesan  ketik *.crm*\n` +
+            `• Reply pesan  ketik *.crm <jid>* (kirim ke chat lain)\n` +
+            `• Reply pesan  ketik *.rawjson* (lihat raw JSON)\n\n` +
             `_Mendukung: button, media, sticker, text, dll_`
         );
     }
@@ -35,7 +35,7 @@ const handler = async (m, { conn, command, args }) => {
     }
     if (!rawQuotedMessage) {
         return m.reply(
-            `❌ Tidak dapat mengambil raw message.\n` +
+            ` Tidak dapat mengambil raw message.\n` +
             `Coba gunakan *.rawjson* untuk melihat struktur quoted.`
         );
     }
@@ -46,12 +46,12 @@ const handler = async (m, { conn, command, args }) => {
                 document: Buffer.from(json),
                 mimetype: 'application/json',
                 fileName: `${Date.now()}.json`,
-                caption: `📄 *Raw Quoted Message JSON*\n\nmtype: \`${m.quoted?.type ?? 'unknown'}\`\nsize: ${json.length} chars`,
+                caption: ` *Raw Quoted Message JSON*\n\nmtype: \`${m.quoted?.type ?? 'unknown'}\`\nsize: ${json.length} chars`,
             }, { quoted: m.raw });
         }
         else {
             await m.reply(
-                `📄 *Raw Quoted Message*\n` +
+                ` *Raw Quoted Message*\n` +
                 `mtype: \`${m.quoted?.type ?? 'unknown'}\`\n\n` +
                 `\`\`\`json\n${json}\n\`\`\``
             );
@@ -68,7 +68,7 @@ const handler = async (m, { conn, command, args }) => {
             targetJid = argJid;
         }
         else {
-            return m.reply(`❌ JID tidak valid: \`${argJid}\`\n\nContoh:\n• \`628xxx\` → nomor WA\n• \`120363xxx@g.us\` → grup`);
+            return m.reply(` JID tidak valid: \`${argJid}\`\n\nContoh:\n• \`628xxx\`  nomor WA\n• \`120363xxx@g.us\`  grup`);
         }
     }
     const isInteractive = !!rawQuotedMessage?.interactiveMessage;
@@ -94,9 +94,9 @@ const handler = async (m, { conn, command, args }) => {
         await conn.relayMessage(targetJid, generatedMsg.message, relayOptions);
         if (targetJid !== m.chat) {
             await m.reply(
-                `✅ *Berhasil relay pesan!*\n\n` +
-                `📨 Tipe: \`${m.quoted?.type ?? 'unknown'}\`\n` +
-                `📍 Tujuan: \`${targetJid}\``
+                ` *Berhasil relay pesan!*\n\n` +
+                ` Tipe: \`${m.quoted?.type ?? 'unknown'}\`\n` +
+                ` Tujuan: \`${targetJid}\``
             );
         }
     }
@@ -105,14 +105,14 @@ const handler = async (m, { conn, command, args }) => {
             const fallbackOptions = isInteractive ? { additionalNodes: interactiveNodes } : {};
             await conn.relayMessage(targetJid, rawQuotedMessage, fallbackOptions);
             if (targetJid !== m.chat) {
-                await m.reply(`✅ Relay berhasil\n📍 Tujuan: \`${targetJid}\``);
+                await m.reply(` Relay berhasil\n Tujuan: \`${targetJid}\``);
             }
         }
         catch (err2) {
             await m.reply(
-                `❌ *Relay gagal!*\n\n` +
+                ` *Relay gagal!*\n\n` +
                 `Error: ${err2?.message || err2}\n\n` +
-                `💡 Coba *.rawjson* untuk lihat struktur pesan,\n` +
+                ` Coba *.rawjson* untuk lihat struktur pesan,\n` +
                 `lalu relay manual via \`>\` eval.`
             );
             return;
@@ -128,7 +128,7 @@ const handler = async (m, { conn, command, args }) => {
         }, { quoted: m.raw });
     }
     catch (jsonErr) {
-        await m.reply(`⚠️ Relay sukses tapi gagal kirim JSON:\n${jsonErr?.message || jsonErr}`);
+        await m.reply(` Relay sukses tapi gagal kirim JSON:\n${jsonErr?.message || jsonErr}`);
     }
 };
 handler.command = /^(crm|rawjson|rawijson)$/i;
