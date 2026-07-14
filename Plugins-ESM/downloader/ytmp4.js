@@ -10,10 +10,10 @@ function extractVideoId(url) {
 const handler = async (m, { conn, args }) => {
     const url = args[0];
     if (!url || !/(youtube\.com|youtu\.be)/.test(url)) {
-        await m.reply('❌ Kasih link YouTube yang valid.\nContoh: .ytmp4 https://youtu.be/xxxxx');
+        await m.reply(' Kasih link YouTube yang valid.\nContoh: .ytmp4 https://youtu.be/xxxxx');
         return;
     }
-    await conn.sendMessage(m.chat, { react: { text: '📥', key: m.key } });
+    await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
     let videoOut;
     try {
         const videoId = extractVideoId(url);
@@ -47,18 +47,18 @@ const handler = async (m, { conn, args }) => {
         const videoRes = await axios.get(dlUrl, { responseType: 'arraybuffer', timeout: 120000 });
         fs.writeFileSync(videoOut, Buffer.from(videoRes.data));
         const sizeMB = fs.statSync(videoOut).size / 1024 / 1024;
-        await conn.sendMessage(m.chat, { react: { text: '📤', key: m.key } });
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
         await conn.sendMessage(m.chat, {
             video: fs.readFileSync(videoOut),
-            caption: `🎬 *${title}*\n👤 ${channel}\n📊 ${sizeMB.toFixed(2)} MB`,
+            caption: ` *${title}*\n ${channel}\n ${sizeMB.toFixed(2)} MB`,
             thumbnail: thumbUrl ? { url: thumbUrl } : undefined,
         }, { quoted: m.raw });
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     }
     catch (err) {
         console.error('[YTMP4 ERROR]', err);
-        await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } }).catch(() => {});
-        await m.reply('❌ Gagal download video: ' + err.message);
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } }).catch(() => {});
+        await m.reply(' Gagal download video: ' + err.message);
     }
     finally {
         try { if (videoOut && fs.existsSync(videoOut)) fs.unlinkSync(videoOut); } catch {}
