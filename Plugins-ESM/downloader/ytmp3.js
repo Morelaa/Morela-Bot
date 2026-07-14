@@ -10,10 +10,10 @@ function extractVideoId(url) {
 const handler = async (m, { conn, args }) => {
     const url = args[0];
     if (!url || !/(youtube\.com|youtu\.be)/.test(url)) {
-        await m.reply('❌ Kasih link YouTube yang valid.\nContoh: .ytmp3 https://youtu.be/xxxxx');
+        await m.reply(' Kasih link YouTube yang valid.\nContoh: .ytmp3 https://youtu.be/xxxxx');
         return;
     }
-    await conn.sendMessage(m.chat, { react: { text: '📥', key: m.key } });
+    await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
     let audioOut;
     try {
         const videoId = extractVideoId(url);
@@ -47,10 +47,10 @@ const handler = async (m, { conn, args }) => {
         const audioRes = await axios.get(dlUrl, { responseType: 'arraybuffer', timeout: 120000 });
         fs.writeFileSync(audioOut, Buffer.from(audioRes.data));
         const sizeMB = fs.statSync(audioOut).size / 1024 / 1024;
-        await conn.sendMessage(m.chat, { react: { text: '📤', key: m.key } });
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
         await conn.sendMessage(m.chat, {
             image: { url: thumbUrl || 'https://i.ytimg.com/vi/default/maxresdefault.jpg' },
-            caption: `🎵 *${title}*\n👤 ${channel}\n📊 ${sizeMB.toFixed(2)} MB`,
+            caption: ` *${title}*\n ${channel}\n ${sizeMB.toFixed(2)} MB`,
         }, { quoted: m.raw });
         await conn.sendMessage(m.chat, {
             audio: fs.readFileSync(audioOut),
@@ -61,8 +61,8 @@ const handler = async (m, { conn, args }) => {
     }
     catch (err) {
         console.error('[YTMP3 ERROR]', err);
-        await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } }).catch(() => { });
-        await m.reply('❌ Gagal download audio: ' + err.message);
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } }).catch(() => { });
+        await m.reply(' Gagal download audio: ' + err.message);
     }
     finally {
         try { if (audioOut && fs.existsSync(audioOut)) fs.unlinkSync(audioOut); } catch { }
