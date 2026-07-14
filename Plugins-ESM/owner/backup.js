@@ -33,7 +33,7 @@ const handler = async (m, { conn }) => {
     const zipPath = path.join(config.rootDir, zipName);
     const ownerJid = getMainOwnerJid();
     if (!ownerJid) {
-        return m.reply('❌ config.mainOwner belum diisi, gak tau mau kirim backup ke nomor mana.');
+        return m.reply(' config.mainOwner belum diisi, gak tau mau kirim backup ke nomor mana.');
     }
     try {
         await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
@@ -48,7 +48,7 @@ const handler = async (m, { conn }) => {
         archive.glob('**/*', { cwd: config.rootDir, ignore: IGNORE_GLOBS });
         await archive.finalize();
         await done;
-        await conn.sendMessage(m.chat, { react: { text: '🗜️', key: m.key } });
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
         const stats = fs.statSync(zipPath);
         const size = fmtSize(stats.size);
         const duration = ((Date.now() - start) / 1000).toFixed(1);
@@ -56,17 +56,17 @@ const handler = async (m, { conn }) => {
             document: fs.readFileSync(zipPath),
             fileName: zipName,
             mimetype: 'application/zip',
-            caption: `✅ *Backup Bot ${config.botName}*\n\n💾 Size: ${size}\n⏱️ Waktu: ${duration}s`,
+            caption: ` *Backup Bot ${config.botName}*\n\n Size: ${size}\n Waktu: ${duration}s`,
         });
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         if (m.chat !== ownerJid) {
-            await m.reply(`✅ Backup selesai (${size}, ${duration}s) — dikirim ke DM main owner.`);
+            await m.reply(` Backup selesai (${size}, ${duration}s) — dikirim ke DM main owner.`);
         }
     }
     catch (err) {
         console.error('[BACKUP ERROR]', err);
-        await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } }).catch(() => { });
-        await m.reply(`❌ *Backup Gagal!*\n\n${err?.message || err}`);
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } }).catch(() => { });
+        await m.reply(` *Backup Gagal!*\n\n${err?.message || err}`);
     }
     finally {
         try {
