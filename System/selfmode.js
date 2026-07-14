@@ -1,19 +1,75 @@
 'use strict';
+import { getGroup, updateGroup, getAllGroups } from '../Database/db.js';
 import * as kv from '../Database/kvstore.js';
 import config from '../config.js';
-const KEY = 'selfmode:enabled';
-export function isSelfModeOn() {
-    const val = kv.get(KEY);
-    return val === undefined ? config.defaultSelfMode : val === true || val === 'true';
+
+const KEY_GLOBAL = 'selfmode:global';
+
+function readGlobal() {
+    const val = kv.get(KEY_GLOBAL);
+    return val === undefined ? !!config.defaultSelfMode : val === true || val === 'true';
 }
-export function setSelfMode(enabled) {
-    kv.set(KEY, !!enabled);
-    return isSelfModeOn();
+function writeGlobal(active) {
+    try { kv.set(KEY_GLOBAL, !!active); } catch { }
 }
-export function toggleSelfMode() {
-    return setSelfMode(!isSelfModeOn());
+
+/**
+ * Cek apakah grup ini dalam self mode.
+ * Logic:
+ *  - Jika global OFF  cek flag selfmode per-grup
+ *  - Jika global ON   self mode aktif KECUALI grup yang eksplisit di-set selfmode=false
+ *    (dikecualikan via .selfstatus_toggle)
+ */
+export function isSelfMode(groupJid) {
+    if (!groupJid) return false;
+    const groupData = getGroup(groupJid);
+    if (isSelfModeGlobal()) {
+        if (groupData && groupData.settings?.selfmode === false) return false;
+        return true;
+    }
+    return groupData?.settings?.selfmode ?? false;
 }
-export function shouldBlockNonOwner(isOwnerSender) {
-    return isSelfModeOn() && !isOwnerSender;
+
+export function setSelfMode(groupJid, value) {
+    if (!groupJid) return false;
+    updateGroup(groupJid, { selfmode: Boolean(value) });
+    return Boolean(value);
 }
-export default { isSelfModeOn, setSelfMode, toggleSelfMode, shouldBlockNonOwner };
+
+export function isSelfModeGlobal() {
+    return readGlobal();
+}
+
+/**
+ * Set global self mode ON/OFF.
+ * Jika applyToAll = true  update flag selfmode semua grup sesuai value.
+ * Jika value = false dan applyToAll = true  reset semua grup ke public (hapus pengecualian).
+ */
+export function setSelfModeGlobal(value, applyToAll = true) {
+    writeGlobal(value);
+    if (!applyToAll) return 0;
+    const groups = getAllGroups();
+    let count = 0;
+    for (const jid of Object.keys(groups)) {
+        updateGroup(jid, { selfmode: value });
+        count++;
+    }
+    return count;
+}
+
+export function toggleSelfModeGlobal() {
+    return setSelfModeGlobal(!isSelfModeGlobal());
+}
+
+export function shouldBlockNonOwner(groupJid, isOwnerSender) {
+    return isSelfMode(groupJid) && !isOwnerSender;
+}
+
+export default {
+    isSelfMode,
+    setSelfMode,
+    isSelfModeGlobal,
+    setSelfModeGlobal,
+    toggleSelfModeGlobal,
+    shouldBlockNonOwner,
+};
