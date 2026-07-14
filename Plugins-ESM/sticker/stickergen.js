@@ -39,9 +39,9 @@ const toWebp = (buffer) =>
 const handler = async (m, { conn, text, usedPrefix, command }) => {
     if (!text) {
         await m.reply(
-            `🎨 *STICKER GENERATOR AI*\n\n` +
+            ` *STICKER GENERATOR AI*\n\n` +
             `> Generate stiker AI dari deskripsi teks!\n\n` +
-            `╭──「 📌 Cara Pakai 」\n` +
+            `╭──「  Cara Pakai 」\n` +
             `│ ${usedPrefix}${command} <deskripsi>\n` +
             `╰─────────────────\n\n` +
             `*Contoh:*\n` +
@@ -51,7 +51,7 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
         );
         return;
     }
-    await m.reply(`🎨 Generating stiker...\n📝 *${text}*`);
+    await m.reply(` Generating stiker...\n *${text}*`);
     try {
         const res = await axios.get('https://api.neoxr.eu/api/sticker-gen', {
             params: { q: text, apikey: NEOXR_KEY },
@@ -77,13 +77,13 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
                 cover: webpBuffers[0],
                 stickers: webpBuffers.map(buf => ({
                     sticker: buf,
-                    emojis: ['🎨'],
+                    emojis: [''],
                     accessibilityLabel: packName,
                 })),
             },
         }, { quoted: m.raw });
     } catch (e) {
-        await m.reply(`❌ Gagal: ${e.message}`);
+        await m.reply(` Gagal: ${e.message}`);
     }
 };
 handler.help = ['stickergen <deskripsi>'];
