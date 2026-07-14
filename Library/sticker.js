@@ -78,7 +78,7 @@ export async function addStickerMetadata(webpBuffer, { packName = 'Sticker', aut
         'sticker-pack-id': `com.${slugify(packName)}.${Date.now()}`,
         'sticker-pack-name': packName,
         'sticker-pack-publisher': authorName,
-        emojis: ['🤖'],
+        emojis: [''],
     };
     const exifAttr = Buffer.from([0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x41, 0x57, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00]);
     const jsonBuffer = Buffer.from(JSON.stringify(json), 'utf-8');
