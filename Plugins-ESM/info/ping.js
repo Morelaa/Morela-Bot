@@ -12,7 +12,7 @@ const handler = async (m, { conn }) => {
     if (Number.isNaN(latency) || latency < 0) {
         latency = Math.floor(Math.random() * 20) + 1;
     }
-    await m.reply(`🏓 *Pong!*\nLatency: ${latency}ms\nUptime proses: ${getProcessUptime()}`);
+    await m.reply(` *Pong!*\nLatency: ${latency}ms\nUptime proses: ${getProcessUptime()}`);
 };
 handler.help = ['ping'];
 handler.tags = ['info'];
