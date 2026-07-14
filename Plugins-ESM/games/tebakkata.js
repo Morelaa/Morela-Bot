@@ -18,7 +18,7 @@ const activeSessions = new Map();
 const handler = async (m, { conn }) => {
     const existing = activeSessions.get(m.chat);
     if (existing && existing.expireAt > Date.now()) {
-        await m.reply(`⚠️ *Game Sedang Berlangsung!*\n\nMasih ada game Tebak Kata di sini.\nSelesaikan dulu atau ketik *nyerah* untuk menyerah.`);
+        await m.reply(` *Game Sedang Berlangsung!*\n\nMasih ada game Tebak Kata di sini.\nSelesaikan dulu atau ketik *nyerah* untuk menyerah.`);
         return;
     }
     const bank = loadSoal();
@@ -37,15 +37,15 @@ const handler = async (m, { conn }) => {
     });
     await conn.sendMessage(m.chat, {
         text:
-`╭──「 💡 *Tebak Kata* 」
+`╭──「  *Tebak Kata* 」
 │
-│  ⏰ *Waktu*  » 60 detik
+│   *Waktu*  » 60 detik
 │
-├──「 🔍 *Petunjuk Kata* 」
+├──「  *Petunjuk Kata* 」
 │
 │  ${item.soal}
 │
-├──「 🔤 *Format Jawaban* 」
+├──「  *Format Jawaban* 」
 │
 │  ${hint}  (${jawaban.length} huruf)
 │
@@ -61,7 +61,7 @@ _© ${config.copyrightName}_`
             activeSessions.delete(m.chat);
             try {
                 await conn.sendMessage(m.chat, {
-                    text: `⏰ Waktu habis! Petunjuk: *${s.soal}*\nJawabannya: *${s.jawaban}*`
+                    text: ` Waktu habis! Petunjuk: *${s.soal}*\nJawabannya: *${s.jawaban}*`
                 });
             } catch {}
         }
@@ -80,19 +80,19 @@ handler.onText = async (m, { conn }) => {
     const tebakan = raw.toUpperCase();
     if (tebakan === 'NYERAH') {
         activeSessions.delete(m.chat);
-        await m.reply(`🏳️ *Menyerah!* Jawabannya: *${session.jawaban}*\n\nKetik *.tebakkata* untuk soal baru!`);
+        await m.reply(` *Menyerah!* Jawabannya: *${session.jawaban}*\n\nKetik *.tebakkata* untuk soal baru!`);
         return true;
     }
     if (tebakan === session.jawaban) {
         activeSessions.delete(m.chat);
-        await m.reply(`🎉 *Benar!* Jawabannya *${session.jawaban}*. Mantap!\n\nKetik *.tebakkata* untuk soal baru!`);
+        await m.reply(` *Benar!* Jawabannya *${session.jawaban}*. Mantap!\n\nKetik *.tebakkata* untuk soal baru!`);
         return true;
     }
     const lastWrong = session.lastWrong[m.sender] || 0;
     if (Date.now() - lastWrong < 5000) return true;
     session.lastWrong[m.sender] = Date.now();
     const sisaDetik = Math.max(0, Math.ceil((session.expireAt - Date.now()) / 1000));
-    await m.reply(`❌ *${tebakan}* bukan jawabannya~ (sisa ${sisaDetik} detik)\n\nCoba lagi atau ketik *nyerah* 💪`);
+    await m.reply(` *${tebakan}* bukan jawabannya~ (sisa ${sisaDetik} detik)\n\nCoba lagi atau ketik *nyerah* `);
     return true;
 };
 export default handler;
