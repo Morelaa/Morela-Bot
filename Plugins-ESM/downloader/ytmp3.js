@@ -71,6 +71,5 @@ const handler = async (m, { conn, args }) => {
 handler.help = ['ytmp3 <link YouTube>'];
 handler.tags = ['downloader'];
 handler.command = /^(ytmp3|yta|mp3)$/i;
-handler.register = true;
 handler.limit = true;
 export default handler;
