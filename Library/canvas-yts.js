@@ -77,7 +77,7 @@ export async function renderYtsCard(data) {
     y += 35;
     ctx.font = '16px sans-serif';
     ctx.fillStyle = '#888888';
-    const metaParts = [`👁 ${formatViews(views)} views`, uploadedAgo].filter(Boolean);
+    const metaParts = [` ${formatViews(views)} views`, uploadedAgo].filter(Boolean);
     ctx.fillText(metaParts.join('  •  '), 30, y);
     return canvas.toBuffer('image/png');
 }
