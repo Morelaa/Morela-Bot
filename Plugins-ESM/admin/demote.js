@@ -23,10 +23,10 @@ const handler = async (m, { conn, args, participants }) => {
     }
     try {
         await conn.groupParticipantsUpdate(m.chat, [targetP.id], 'demote');
-        await m.reply({ text: `✅ @${targetP.id.split('@')[0]} diturunkan jadi member biasa.`, mentions: [targetP.id] });
+        await m.reply({ text: ` @${targetP.id.split('@')[0]} diturunkan jadi member biasa.`, mentions: [targetP.id] });
     }
     catch (err) {
-        await m.reply(`❌ Gagal demote: ${err?.message || err}`);
+        await m.reply(` Gagal demote: ${err?.message || err}`);
     }
 };
 handler.help = ['demote @user'];
