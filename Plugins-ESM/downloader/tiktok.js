@@ -56,7 +56,7 @@ const handler = async (m, { conn, args }) => {
     const url = args[0];
     if (!url || !TT_URL_REGEX.test(url)) {
         await m.reply(
-            '❌ Kasih link TikTok yang valid.\n' +
+            ' Kasih link TikTok yang valid.\n' +
             'Contoh:\n' +
             '• .tiktok https://vt.tiktok.com/xxx\n' +
             '• .tiktok https://vm.tiktok.com/xxx\n' +
@@ -67,16 +67,16 @@ const handler = async (m, { conn, args }) => {
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
     try {
         const data = await fetchNeoxr(url);
-        await conn.sendMessage(m.chat, { react: { text: '📥', key: m.key } });
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
         const videoBuf = await downloadVideo(data.playUrl);
         const sizeMB = (videoBuf.length / 1024 / 1024).toFixed(2);
         const caption =
-            `🎵 *TikTok*\n` +
+            ` *TikTok*\n` +
             `${data.author}${data.uniqueId ? ` (@${data.uniqueId})` : ''}\n` +
             `${data.desc.slice(0, 80)}${data.desc.length > 80 ? '...' : ''}\n` +
-            `👁️ ${numFmt(data.views)}  ❤️ ${numFmt(data.likes)}  💬 ${numFmt(data.comments)}\n` +
-            `⏱️ ${fmtDuration(data.duration)}  📦 ${sizeMB} MB` +
-            (data.music ? `\n🎵 ${data.music.slice(0, 50)}${data.music.length > 50 ? '...' : ''}` : '');
+            ` ${numFmt(data.views)}   ${numFmt(data.likes)}   ${numFmt(data.comments)}\n` +
+            ` ${fmtDuration(data.duration)}   ${sizeMB} MB` +
+            (data.music ? `\n ${data.music.slice(0, 50)}${data.music.length > 50 ? '...' : ''}` : '');
         await conn.sendMessage(m.chat, {
             video: videoBuf,
             caption,
@@ -86,8 +86,8 @@ const handler = async (m, { conn, args }) => {
     }
     catch (err) {
         console.error('[TT]', err.message);
-        await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } }).catch(() => { });
-        await m.reply(`❌ Gagal download: ${err.message}`);
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } }).catch(() => { });
+        await m.reply(` Gagal download: ${err.message}`);
     }
 };
 handler.help = ['tiktok <link tiktok>'];
