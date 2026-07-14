@@ -45,7 +45,7 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
     }
     const token = config.githubToken;
     if (!token) {
-        return m.reply('❌ Token GitHub belum diisi di config.js (field "githubToken").');
+        return m.reply(' Token GitHub belum diisi di config.js (field "githubToken").');
     }
     try {
         await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
@@ -107,14 +107,14 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         await m.reply(
             `「 PUSH GIT SUCCESS 」\n\n` +
-            `📁 Repo    : ${login}/${repoName}\n` +
-            `🔒 Private : ${isPrivate}\n` +
-            `📦 Files   : ${total}\n` +
-            `🌐 https://github.com/${login}/${repoName}`
+            ` Repo    : ${login}/${repoName}\n` +
+            ` Private : ${isPrivate}\n` +
+            ` Files   : ${total}\n` +
+            ` https://github.com/${login}/${repoName}`
         );
     } catch (e) {
-        await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        m.reply(`❌ Error:\n${e.response?.data?.message || e.message}`);
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
+        m.reply(` Error:\n${e.response?.data?.message || e.message}`);
     }
 };
 handler.help = ['pushgit <repo>|<true/false>'];
