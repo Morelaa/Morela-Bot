@@ -27,14 +27,14 @@ const k = {
   lm: chalk.hex('#A3E635'),
 };
 const SYM = {
-  ok:   k.ok('✓'),
-  no:   k.no('✕'),
+  ok:   k.ok(''),
+  no:   k.no(''),
   wn:   k.wn('▲'),
   info: k.in('◈'),
   dot:  k.d('•'),
   arr:  k.p('»'),
   bar:  k.d('│'),
-  cmd:  k.cy('⚡'),
+  cmd:  k.cy(''),
 };
 function formatTime(fmt = 'HH:mm:ss') {
   return DateTime.now().setZone('Asia/Jakarta').toFormat(fmt);
@@ -199,7 +199,7 @@ export async function runLoader(text = 'memuat sistem', options = {}) {
     const bar    = `${mintFx('█'.repeat(filled))}${chalk.hex('#1e293b')('█'.repeat(empty))}`;
     clearCurrentLine();
     process.stdout.write(
-      `  ${k.cy('⚡')} ${pill(label, 'accent')} ${chalk.whiteBright(text)} ${bar} ${chalk.hex('#a3e635').bold(String(Math.round(ratio * 100)).padStart(3) + '%')}`
+      `  ${k.cy('')} ${pill(label, 'accent')} ${chalk.whiteBright(text)} ${bar} ${chalk.hex('#a3e635').bold(String(Math.round(ratio * 100)).padStart(3) + '%')}`
     );
     if (step < steps) await sleep(Math.max(20, Math.floor(duration / steps)));
   }
@@ -299,13 +299,13 @@ export function logMessage(info) {
   const br = borderFx;
   console.log('');
   console.log(`  ${br('╭─〔')} ${chatTag} ${br('〕───⬣')}`);
-  console.log(`  ${k.bd('│')} ${k.t('👤')} Nama: ${chalk.whiteBright(pushName || 'User')}`);
-  console.log(`  ${k.bd('│')} ${k.t('📞')} Nomor: +${chalk.hex('#67e8f9')(num)}`);
-  console.log(`  ${k.bd('│')} ${k.t('📅')} Tanggal/Waktu: ${k.d(date)} ${chalk.whiteBright(time)}`);
-  console.log(`  ${k.bd('│')} ${k.t('📱')} Device: ${devTag}`);
-  console.log(`  ${k.bd('│')} ${k.t('💬')} Tipe Pesan: ${k.d('[')}${typeTag}${k.d(']')}`);
-  console.log(`  ${k.bd('│')} ${k.t('🏷')} Role: ${roleTag}`);
-  console.log(`  ${k.bd('│')} ${k.t('💬')} ${chalk.whiteBright(msg)}`);
+  console.log(`  ${k.bd('│')} ${k.t('')} Nama: ${chalk.whiteBright(pushName || 'User')}`);
+  console.log(`  ${k.bd('│')} ${k.t('')} Nomor: +${chalk.hex('#67e8f9')(num)}`);
+  console.log(`  ${k.bd('│')} ${k.t('')} Tanggal/Waktu: ${k.d(date)} ${chalk.whiteBright(time)}`);
+  console.log(`  ${k.bd('│')} ${k.t('')} Device: ${devTag}`);
+  console.log(`  ${k.bd('│')} ${k.t('')} Tipe Pesan: ${k.d('[')}${typeTag}${k.d(']')}`);
+  console.log(`  ${k.bd('│')} ${k.t('')} Role: ${roleTag}`);
+  console.log(`  ${k.bd('│')} ${k.t('')} ${chalk.whiteBright(msg)}`);
   console.log(`  ${br('╰───────⬣')}`);
 }
 export function logPlugin(name, category) {
