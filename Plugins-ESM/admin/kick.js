@@ -23,10 +23,10 @@ const handler = async (m, { conn, args, participants }) => {
     }
     try {
         await conn.groupParticipantsUpdate(m.chat, [targetP.id], 'remove');
-        await m.reply({ text: `✅ Berhasil kick @${targetP.id.split('@')[0]}`, mentions: [targetP.id] });
+        await m.reply({ text: ` Berhasil kick @${targetP.id.split('@')[0]}`, mentions: [targetP.id] });
     }
     catch (err) {
-        await m.reply(`❌ Gagal kick: ${err?.message || err}`);
+        await m.reply(` Gagal kick: ${err?.message || err}`);
     }
 };
 handler.help = ['kick @user'];
