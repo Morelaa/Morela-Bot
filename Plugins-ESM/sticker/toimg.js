@@ -13,7 +13,7 @@ const handler = async (m, { conn }) => {
         return;
     }
     const png = await sharp(buffer).png().toBuffer();
-    await conn.sendMessage(m.chat, { image: png, caption: '✅ Berhasil diubah jadi gambar.' }, { quoted: m.raw });
+    await conn.sendMessage(m.chat, { image: png, caption: ' Berhasil diubah jadi gambar.' }, { quoted: m.raw });
 };
 handler.help = ['toimg'];
 handler.tags = ['sticker'];
