@@ -2,7 +2,7 @@
 import config from './config.js';
 import { serializeMessage } from './System/message.js';
 import { isDuplicateMessage, isRateLimited } from './Core/cache.js';
-import { evaluatePluginAccess, checkOwner, checkGroupAdmin, checkBotAdmin, checkPremiumUser } from './Core/permissions.js';
+import { evaluatePluginAccess, checkOwner, checkMainOwner, checkGroupAdmin, checkBotAdmin, checkPremiumUser } from './Core/permissions.js';
 import { isFlooding } from './Library/antiabuse.js';
 import { shouldBlockNonOwner } from './System/selfmode.js';
 import { isChatAllowed } from './System/privatemode.js';
@@ -87,8 +87,8 @@ async function sendRegisterGate(sock, m, participants) {
     _regGateCooldown.set(cooldownKey, now);
     const canMention = m.isGroup && !!mentionJid;
     const pesan = canMention
-        ? `⚠️ @${mentionJid.split('@')[0]} *Kamu belum terdaftar!*\n\nKetik *.daftar Nama* atau *.register Nama* dulu ya.\nContoh: .daftar Budi\n\n꒰ © ${config.botName} ꒱`
-        : `⚠️ *Kamu belum terdaftar!*\n\nKetik *.daftar Nama* atau *.register Nama* dulu ya.\nContoh: .daftar Budi\n\n꒰ © ${config.botName} ꒱`;
+        ? ` @${mentionJid.split('@')[0]} *Kamu belum terdaftar!*\n\nKetik *.daftar Nama* atau *.register Nama* dulu ya.\nContoh: .daftar Budi\n\n꒰ © ${config.botName} ꒱`
+        : ` *Kamu belum terdaftar!*\n\nKetik *.daftar Nama* atau *.register Nama* dulu ya.\nContoh: .daftar Budi\n\n꒰ © ${config.botName} ꒱`;
     const imgBuf = await loadConfigImage(config.registerImage);
     const mentions = canMention ? [mentionJid] : undefined;
     if (imgBuf?.length) {
@@ -100,21 +100,32 @@ async function sendRegisterGate(sock, m, participants) {
 }
 const DEFAULT_COOLDOWN_MS = 2000;
 const DENY_MESSAGES = {
-    owner_only: '⛔ Command ini cuma buat owner bot.',
-    main_owner_only: '⛔ Command ini cuma buat owner utama.',
-    admin_only: '⛔ Command ini cuma buat admin grup.',
-    group_only: '⛔ Command ini cuma bisa dipakai di grup.',
-    private_only: '⛔ Command ini cuma bisa dipakai di chat pribadi.',
-    premium_required: '⛔ Fitur ini butuh akun premium.',
-    bot_not_admin: '⚠️ Bot harus jadi admin dulu di grup ini.',
+    owner_only: ' Command ini cuma buat owner bot.',
+    main_owner_only: ' Command ini cuma buat owner utama.',
+    admin_only: ' Command ini cuma buat admin grup.',
+    group_only: ' Command ini cuma bisa dipakai di grup.',
+    private_only: ' Command ini cuma bisa dipakai di chat pribadi.',
+    premium_required: ' Fitur ini butuh akun premium.',
+    bot_not_admin: ' Bot harus jadi admin dulu di grup ini.',
 };
 const middlewares = [
     function dedup(m) {
         return !isDuplicateMessage(m.id);
     },
-    function updateUserRecord(m) {
-        if (m.pushName)
-            db.setPushName(m.sender, m.pushName);
+    function updateUserRecord(m, ctx) {
+        if (!m.pushName)
+            return true;
+        db.setPushName(m.sender, m.pushName);
+        if (isLidJid(m.sender)) {
+            const phone = resolveLidToPhone(m.sender) || mapSenderLid(m.sender, ctx?.participants);
+            if (phone)
+                db.setPushName(phone, m.pushName);
+        }
+        else {
+            const num = normNum(m.sender);
+            if (num)
+                db.setPushName(num, m.pushName);
+        }
         return true;
     },
     function privateModeGate(m, ctx) {
@@ -134,12 +145,18 @@ const middlewares = [
             if (resolved)
                 ownerSender = isOwner(m, config.owners, ctx?.participants);
         }
-        return !shouldBlockNonOwner(ownerSender);
+        return !shouldBlockNonOwner(m.chat, ownerSender);
     },
     function antiFlood(m) {
         if (m.fromMe)
             return true;
         return !isFlooding(m.sender);
+    },
+    function bannedGate(m) {
+        if (m.fromMe)
+            return true;
+        const user = db.getUser(m.sender);
+        return !user?.banned;
     },
 ];
 async function runMiddlewares(m, ctx) {
@@ -170,8 +187,8 @@ async function executeCommand(sock, m, plugin, extra) {
         const isDev = config.env !== 'production';
         try {
             await m.reply(isDev
-                ? `❌ Command *${m.command}* error:\n\`\`\`${err?.message || err}\`\`\``
-                : `❌ Terjadi kesalahan saat menjalankan command ini. Sudah dicatat, coba lagi nanti.`);
+                ? ` Command *${m.command}* error:\n\`\`\`${err?.message || err}\`\`\``
+                : ` Terjadi kesalahan saat menjalankan command ini. Sudah dicatat, coba lagi nanti.`);
         }
         catch {
         }
@@ -212,16 +229,20 @@ export async function handleMessage(sock, rawMsg) {
         catch (err) {
             logError('Superowner shortcut error:', err?.stack || err?.message);
         }
-        if (m.body) {
-            for (const plugin of pluginManager.getTextListeners()) {
-                try {
-                    const handled = await plugin.onText(m, { conn: sock });
-                    if (handled)
-                        break;
-                }
-                catch (err) {
-                    logError(`onText plugin "${plugin.filePath}" error:`, err?.message);
-                }
+        // Catatan: sebelumnya di-gate `if (m.body)`, tapi itu bikin fitur proteksi
+        // (antilink/antivirtex/anticatalog/antigrup) tidak pernah jalan untuk pesan
+        // media tanpa caption (gambar/video/dokumen/sticker/interactive), padahal
+        // itu justru yang paling sering dipakai buat kirim bug/virtex. Jadi listener
+        // pasif tetap dipanggil tiap pesan; masing-masing plugin cek sendiri apa
+        // yang mereka butuhkan (m.mtype, m.message, dll).
+        for (const plugin of pluginManager.getTextListeners()) {
+            try {
+                const handled = await plugin.onText(m, { conn: sock, participants, groupMeta });
+                if (handled)
+                    break;
+            }
+            catch (err) {
+                logError(`onText plugin "${plugin.filePath}" error:`, err?.message);
             }
         }
         if (!m.isCommand || !m.command) {
@@ -234,7 +255,14 @@ export async function handleMessage(sock, rawMsg) {
         if (!plugin.ignoreRateLimit && isRateLimited(m.sender, m.command, cooldownMs)) {
             return;
         }
-        if (plugin.register && !db.isRegistered(m.sender) && !checkOwner(m, participants)) {
+        const isOwnerSender = checkOwner(m, participants);
+        const isAdminSender = m.isGroup ? checkGroupAdmin(m, participants) : false;
+        const exemptFromRegisterGate = plugin.noRegisterGate ||
+            isOwnerSender ||
+            checkMainOwner(m, participants) ||
+            isAdminSender ||
+            checkPremiumUser(m.sender);
+        if (!exemptFromRegisterGate && !db.isRegistered(m.sender)) {
             await runUnbranded(() => sendRegisterGate(sock, m, participants));
             return;
         }
@@ -244,7 +272,7 @@ export async function handleMessage(sock, rawMsg) {
             const isPremium = checkPremiumUser(m.sender);
             const limitResult = usagelimit.checkAndConsume(m.sender, { isPremium, cost });
             if (!limitResult.allowed) {
-                await m.reply(`⚠️ Limit harian kamu sudah habis (${limitResult.used}/${limitResult.limit}). Coba lagi besok atau upgrade ke premium.`);
+                await m.reply(` Limit harian kamu sudah habis (${limitResult.used}/${limitResult.limit}). Coba lagi besok atau upgrade ke premium.`);
                 return;
             }
         }
@@ -269,8 +297,8 @@ export async function handleMessage(sock, rawMsg) {
             command: m.command,
             participants,
             groupMeta,
-            isOwner: checkOwner(m, participants),
-            isAdmin: m.isGroup ? checkGroupAdmin(m, participants) : false,
+            isOwner: isOwnerSender,
+            isAdmin: isAdminSender,
             isBotAdmin: m.isGroup ? await checkBotAdmin(sock, m.chat, participants) : false,
         };
         if (isUnbrandedPlugin(plugin)) {
