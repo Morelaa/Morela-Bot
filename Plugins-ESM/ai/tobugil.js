@@ -37,9 +37,9 @@ const handler = async (m, { conn }) => {
     const media = findMediaMessage(m);
     if (!media || media.type !== 'imageMessage') {
         await m.reply(
-            '🖼️ *BUGIL*\n\n' +
+            ' *BUGIL*\n\n' +
             '> Ubah foto jadi bugil.\n\n' +
-            '╭──「 📌 Cara Pakai 」\n' +
+            '╭──「  Cara Pakai 」\n' +
             '│ Kirim gambar dengan caption .bugil\n' +
             '│ atau reply gambar dengan .bugil\n' +
             '╰─────────────────'
@@ -57,14 +57,14 @@ const handler = async (m, { conn }) => {
             .then((r) => Buffer.from(r.data));
         await conn.sendMessage(
             m.chat,
-            { image: resultBuf, caption: '✅ Berhasil dibugilin bang' },
+            { image: resultBuf, caption: ' Berhasil dibugilin bang' },
             { quoted: m.raw }
         );
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (err) {
         console.error('[BUGIL]', err.message);
-        await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } }).catch(() => {});
-        await m.reply(`❌ Gagal: ${err.message}`);
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } }).catch(() => {});
+        await m.reply(` Gagal: ${err.message}`);
     }
 };
 handler.help = ['bugil'];
