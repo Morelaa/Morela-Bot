@@ -23,10 +23,10 @@ const handler = async (m, { conn, args, participants }) => {
     }
     try {
         await conn.groupParticipantsUpdate(m.chat, [targetP.id], 'promote');
-        await m.reply({ text: `✅ @${targetP.id.split('@')[0]} sekarang jadi admin.`, mentions: [targetP.id] });
+        await m.reply({ text: ` @${targetP.id.split('@')[0]} sekarang jadi admin.`, mentions: [targetP.id] });
     }
     catch (err) {
-        await m.reply(`❌ Gagal promote: ${err?.message || err}`);
+        await m.reply(` Gagal promote: ${err?.message || err}`);
     }
 };
 handler.help = ['promote @user'];
