@@ -68,7 +68,7 @@ const handler = async (m, { conn, text }) => {
 │  Diupload » ${top.ago || '-'}
 │
 └─────────────────────
-_Ketuk tombol untuk pilih video atau audio_ 👇`;
+_Ketuk tombol untuk pilih video atau audio_ `;
         const { Button } = await import('../../Library/MessageBuilder.js');
         const btn = new Button(conn);
         if (imageBuffer) btn.setImage(imageBuffer);
