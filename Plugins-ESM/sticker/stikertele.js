@@ -90,15 +90,15 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
     const customName = customNameParts.join('|').trim();
     if (!url) {
         return m.reply(
-            `🎭 *ᴛᴇʟᴇɢʀᴀᴍ sᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ*\n\n` +
-            `> Download sticker pack Telegram → kirim sebagai pack WA asli!\n\n` +
-            `╭┈┈⬡「 📋 *ᴄᴀʀᴀ ᴘᴀᴋᴀɪ* 」\n` +
+            ` *ᴛᴇʟᴇɢʀᴀᴍ sᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ*\n\n` +
+            `> Download sticker pack Telegram  kirim sebagai pack WA asli!\n\n` +
+            `╭┈┈⬡「  *ᴄᴀʀᴀ ᴘᴀᴋᴀɪ* 」\n` +
             `┃ ${usedPrefix}${command} <url>\n` +
             `┃ ${usedPrefix}${command} <url> | <nama custom>\n` +
             `╰┈┈┈┈┈┈┈┈⬡\n\n` +
             `*ᴄᴀʀᴀ ᴅᴀᴘᴀᴛ ᴜʀʟ:*\n` +
             `> 1. Buka pack di Telegram\n` +
-            `> 2. Klik ••• → Share\n` +
+            `> 2. Klik •••  Share\n` +
             `> 3. Copy link t.me/addstickers/...\n\n` +
             `*ᴄᴏɴᴛᴏʜ:*\n` +
             `> ${usedPrefix}${command} https://t.me/addstickers/Sweetjehe3_by_fStikBot\n` +
@@ -107,7 +107,7 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
     }
     if (!TG_PACK_REGEX.test(url)) {
         return m.reply(
-            `❌ URL tidak valid!\n\n` +
+            ` URL tidak valid!\n\n` +
             `Gunakan link Telegram sticker pack.\n` +
             `Contoh: *https://t.me/addstickers/NamaPack*`
         );
@@ -121,9 +121,9 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
         });
         const json = res.data;
         if (!json?.status || !json?.data) {
-            await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+            await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
             return m.reply(
-                `❌ Gagal mengambil sticker pack!\n\n` +
+                ` Gagal mengambil sticker pack!\n\n` +
                 `_${json?.message || 'Pastikan link valid dan pack masih tersedia.'}_`
             );
         }
@@ -137,19 +137,19 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
                 : Array.isArray(data.items) ? data.items
                     : [];
         if (!stickerList.length) {
-            await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply('❌ Tidak ada stiker ditemukan dalam pack ini!');
+            await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
+            return m.reply(' Tidak ada stiker ditemukan dalam pack ini!');
         }
         const total = Math.min(stickerList.length, MAX_STICKERS);
         await m.reply(
-            `🎭 *ᴛᴇʟᴇɢʀᴀᴍ sᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ*\n\n` +
-            `╭┈┈⬡「 📦 *ɪɴꜰᴏ* 」\n` +
-            `┃ 📝 *Title:* ${title}\n` +
-            `┃ 👤 *Author:* ${author}\n` +
-            `┃ 🎬 *Type:* ${stickerType}\n` +
-            `┃ 📊 *Total:* ${total} stiker\n` +
+            ` *ᴛᴇʟᴇɢʀᴀᴍ sᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ*\n\n` +
+            `╭┈┈⬡「  *ɪɴꜰᴏ* 」\n` +
+            `┃  *Title:* ${title}\n` +
+            `┃  *Author:* ${author}\n` +
+            `┃  *Type:* ${stickerType}\n` +
+            `┃  *Total:* ${total} stiker\n` +
             `╰┈┈┈┈┈┈┈┈⬡\n\n` +
-            `> ⏳ Mengunduh & memproses...`
+            `>  Mengunduh & memproses...`
         );
         const webpBuffers = [];
         const emojiList = [];
@@ -172,8 +172,8 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
                     continue;
                 }
                 webpBuffers.push(buf);
-                const emojiArr = Array.isArray(s.emojis) ? s.emojis.join('') : (s.emoji || s.emoticon || '⭐');
-                emojiList.push(emojiArr || '⭐');
+                const emojiArr = Array.isArray(s.emojis) ? s.emojis.join('') : (s.emoji || s.emoticon || '');
+                emojiList.push(emojiArr || '');
             }
             catch (e) {
                 console.error(`[TELESTIKER] stiker ${i + 1} gagal:`, e?.message);
@@ -181,19 +181,19 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
             await new Promise((r) => setTimeout(r, 150));
         }
         if (!webpBuffers.length) {
-            await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-            return m.reply('❌ Semua stiker gagal diunduh/dikonversi!');
+            await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
+            return m.reply(' Semua stiker gagal diunduh/dikonversi!');
         }
         await sendStickerPack(conn, m.chat, webpBuffers.map((buf, i) => ({
             buffer: buf,
-            emojis: [emojiList[i] || '⭐'],
+            emojis: [emojiList[i] || ''],
         })), { name: title, publisher: author, description: `Telegram Sticker: ${title}`, quoted: m.raw });
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     }
     catch (error) {
         console.error('[TELESTIKER] Error:', error?.message);
-        await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } }).catch(() => { });
-        await m.reply(`❌ *ᴇʀʀᴏʀ*\n\n> ${error?.message}`);
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } }).catch(() => { });
+        await m.reply(` *ᴇʀʀᴏʀ*\n\n> ${error?.message}`);
     }
 };
 handler.command = /^(stikertele|telesticker|tgsticker|tgpack)$/i;
