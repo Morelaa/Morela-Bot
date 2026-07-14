@@ -245,7 +245,6 @@ const handler = async (m, { conn }) => {
 handler.help = ['hd <reply foto>'];
 handler.tags = ['tools'];
 handler.command = /^hd$/i;
-handler.register = true;
 handler.limit = true;
 
 export default handler;
