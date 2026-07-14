@@ -6,6 +6,9 @@ const stmtIncrementBy = db.prepare(`
 	INSERT INTO usage_limit (jid, date, used) VALUES (?, ?, ?)
 	ON CONFLICT(jid, date) DO UPDATE SET used = used + ?
 `);
+const stmtGetAllToday = db.prepare('SELECT jid, used FROM usage_limit WHERE date = ?');
+const stmtDeleteByJid = db.prepare('DELETE FROM usage_limit WHERE jid = ?');
+const stmtDeleteAll = db.prepare('DELETE FROM usage_limit');
 function today() {
     return new Date().toISOString().slice(0, 10);
 }
@@ -24,4 +27,18 @@ export function checkAndConsume(jid, { isPremium = false, limit = config.default
     incrementUsage(jid, cost);
     return { allowed: true, used: used + cost, limit };
 }
-export default { getUsedToday, incrementUsage, checkAndConsume };
+// Ambil pemakaian limit HARI INI untuk semua jid yang pernah pakai command ber-limit.
+export function getAllUsageToday() {
+    return stmtGetAllToday.all(today());
+}
+// Reset limit satu user (hapus semua histori usage_limit miliknya).
+export function resetUsage(jid) {
+    const res = stmtDeleteByJid.run(jid);
+    return res.changes > 0;
+}
+// Reset limit SEMUA user (kosongkan seluruh tabel usage_limit).
+export function resetAllUsage() {
+    const res = stmtDeleteAll.run();
+    return res.changes;
+}
+export default { getUsedToday, incrementUsage, checkAndConsume, getAllUsageToday, resetUsage, resetAllUsage };
