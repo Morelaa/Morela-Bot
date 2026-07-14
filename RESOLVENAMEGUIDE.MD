@@ -10,7 +10,7 @@ Resolve nama: bot mencari nama dari database lalu menuliskannya sebagai teks bia
 
 ```js
 await conn.sendMessage(m.chat, {
-  text: `Halo @${phoneNum} 👋`,
+  text: `Halo @${phoneNum} `,
   mentions: [phoneJid]
 });
 ```
@@ -117,7 +117,7 @@ const handler = async (m, { conn, args, participants }) => {
   if (!targetP) return m.reply('Member tidak ditemukan di grup ini.');
 
   await conn.groupParticipantsUpdate(m.chat, [targetP.id], 'remove');
-  await m.reply({ text: `✅ Berhasil kick @${targetP.id.split('@')[0]}`, mentions: [targetP.id] });
+  await m.reply({ text: ` Berhasil kick @${targetP.id.split('@')[0]}`, mentions: [targetP.id] });
 };
 handler.command = /^(kick|tendang)$/i;
 handler.admin = true;
