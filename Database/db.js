@@ -131,6 +131,18 @@ export function upsertGroupSettings(jid, name, settingsPatch = {}) {
     stmtUpsertGroup.run({ jid, name: name ?? null, settings: JSON.stringify(merged) });
     return merged;
 }
+const stmtGetAllGroups = db.prepare('SELECT * FROM groups');
+export function getAllGroups() {
+    const rows = stmtGetAllGroups.all();
+    const out = {};
+    for (const row of rows) {
+        out[row.jid] = { ...row, settings: JSON.parse(row.settings || '{}') };
+    }
+    return out;
+}
+export function updateGroup(jid, patch = {}) {
+    return upsertGroupSettings(jid, null, patch);
+}
 export function isBotInGroup(jid) {
     const g = getGroup(jid);
     if (!g)
@@ -140,6 +152,18 @@ export function isBotInGroup(jid) {
 export function isBotAdminInGroup(jid) {
     const g = getGroup(jid);
     return !!g?.settings?.isBotAdmin;
+}
+const stmtDeleteGroup = db.prepare('DELETE FROM groups WHERE jid = ?');
+export function deleteGroup(jid) {
+    stmtDeleteGroup.run(jid);
+}
+const stmtGetAllUsersRaw = db.prepare('SELECT * FROM users');
+export function getAllUsersRaw() {
+    const rows = stmtGetAllUsersRaw.all();
+    const out = {};
+    for (const row of rows)
+        out[row.jid] = row;
+    return out;
 }
 export default {
     getPhoneByLid,
@@ -159,6 +183,10 @@ export default {
     setBanned,
     getGroup,
     upsertGroupSettings,
+    getAllGroups,
+    updateGroup,
     isBotInGroup,
     isBotAdminInGroup,
+    deleteGroup,
+    getAllUsersRaw,
 };
