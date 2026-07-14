@@ -76,6 +76,9 @@ const config = {
         imgbb: 'SENSOR_IMGBB',
         // Daftar gratis di https://api.imgbb.com/ untuk dapat key ini.
         // Daftar gratis di https://api.neoxr.eu/ untuk dapat key ini.
+
+        evelyne: 'FreeLimit',
+        // Key gratis untuk api-evelyne.vercel.app, dipakai fitur brat (.bratruromiya, .brattren).
     },
 
     githubToken: 'SENSOR_GITHUBTOKEN',
