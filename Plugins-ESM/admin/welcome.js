@@ -41,14 +41,14 @@ export async function sendWelcome(sock, groupJid, memberJid, groupName, memberCo
         (phone ? getPushName(phone) : null) ||
         userNum;
     const bodyText =
-        `Halo @${userNum} 👋\n\n` +
-        `Selamat datang di grup *${groupName}* 🌸` +
+        `Halo @${userNum} \n\n` +
+        `Selamat datang di grup *${groupName}* ` +
         (username && username !== userNum ? `\nNama: *${username}*` : '');
     try {
         const thumb = await resolveThumbnail(sock, safeJid);
         const btn = new ButtonV2(sock)
             .setTitle(groupName)
-            .setSubtitle(`👥 Member ke-${memberCount}`)
+            .setSubtitle(` Member ke-${memberCount}`)
             .setBody(bodyText)
             .setFooter(footer)
             .setContextInfo({ mentionedJid: [phoneJid] });
@@ -57,7 +57,7 @@ export async function sendWelcome(sock, groupJid, memberJid, groupName, memberCo
         btn.addButton('Daftar', '.daftar');
         const msg = await btn.build(groupJid, { userJid: sock.user?.id });
         await sock.relayMessage(groupJid, msg.message, { messageId: msg.key.id });
-        console.log(`[WELCOME] ✅ ${username} (@${userNum}) | pp=${!!thumb}`);
+        console.log(`[WELCOME]  ${username} (@${userNum}) | pp=${!!thumb}`);
     } catch (e) {
         console.error('[WELCOME] ButtonV2 error:', e?.message);
         try {
@@ -74,23 +74,23 @@ const handler = async (m, { conn, args, participants, groupMeta }) => {
         const current = !!groupData?.settings?.welcome;
         if (!mode || mode === 'status' || mode === 'cek') {
             return m.reply(
-                `👋 *WELCOME STATUS*\n\n` +
-                `Welcome : ${current ? '🟢 AKTIF' : '🔴 NONAKTIF'}\n\n` +
+                ` *WELCOME STATUS*\n\n` +
+                `Welcome : ${current ? ' AKTIF' : ' NONAKTIF'}\n\n` +
                 `• *.welcome on/off* — atur welcome\n` +
                 `• *.welcome @tag* / *.teswelcome @tag* — test manual`
             );
         }
         if (mode === 'on') {
-            if (current) return m.reply('⚠️ Welcome sudah aktif!');
+            if (current) return m.reply(' Welcome sudah aktif!');
             upsertGroupSettings(from, groupMeta?.subject ?? null, { welcome: true });
-            return m.reply('✅ *Welcome Diaktifkan!* 🎉');
+            return m.reply(' *Welcome Diaktifkan!* ');
         }
         if (mode === 'off') {
-            if (!current) return m.reply('⚠️ Welcome sudah nonaktif!');
+            if (!current) return m.reply(' Welcome sudah nonaktif!');
             upsertGroupSettings(from, groupMeta?.subject ?? null, { welcome: false });
-            return m.reply('✅ *Welcome Dinonaktifkan!*');
+            return m.reply(' *Welcome Dinonaktifkan!*');
         }
-        return m.reply('❌ Gunakan: .welcome on / off / status / @tag');
+        return m.reply(' Gunakan: .welcome on / off / status / @tag');
     }
     try {
         const meta = groupMeta || (await conn.groupMetadata(from));
@@ -98,15 +98,15 @@ const handler = async (m, { conn, args, participants, groupMeta }) => {
         const memberCount = meta.participants?.length || 0;
         const targetJid = m.mentionedJid[0];
         const safeTarget = sanitizeJid(targetJid);
-        if (!safeTarget) return m.reply('❌ JID target tidak valid!');
+        if (!safeTarget) return m.reply(' JID target tidak valid!');
         const list = participants || meta.participants;
         const participant = findParticipant(list, safeTarget);
         const pushname = participant?.notify || participant?.name || null;
         await sendWelcome(conn, from, safeTarget, groupName, memberCount, pushname);
-        m.reply('✅ Welcome test terkirim!');
+        m.reply(' Welcome test terkirim!');
     } catch (e) {
         console.error('[WELCOME CMD ERROR]', e?.message);
-        m.reply(`❌ Error: ${e?.message}`);
+        m.reply(` Error: ${e?.message}`);
     }
 };
 handler.help = ['welcome on', 'welcome off', 'welcome @tag', 'teswelcome @tag'];
