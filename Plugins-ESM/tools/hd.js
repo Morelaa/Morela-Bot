@@ -171,13 +171,13 @@ const handler = async (m, { conn }) => {
 
     if (!media || media.type !== 'imageMessage') {
         return m.reply(
-            `╭──「 🖼️ *HD Upscaler* 」\n│\n│  Kirim atau reply foto dengan\n│  caption *.hd*\n│\n│  📌 Engine: Imglarger → PicsArt\n│  📐 Scale : 4x\n│\n╰─────────────────────`
+            `╭──「  *HD Upscaler* 」\n│\n│  Kirim atau reply foto dengan\n│  caption *.hd*\n│\n│   Engine: Imglarger  PicsArt\n│   Scale : 4x\n│\n╰─────────────────────`
         );
     }
 
     const img = media.message;
     if ((img.fileLength || 0) > 10 * 1024 * 1024) {
-        return m.reply('❌ Gambar terlalu besar! Maksimal *10MB*');
+        return m.reply(' Gambar terlalu besar! Maksimal *10MB*');
     }
 
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
@@ -187,11 +187,11 @@ const handler = async (m, { conn }) => {
         buffer = await downloadMessageMedia(m, conn);
         if (!buffer || !buffer.length) throw new Error('Buffer kosong');
     } catch (e) {
-        await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        return m.reply(`❌ Gagal download gambar\n\n${e.message}`);
+        await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
+        return m.reply(` Gagal download gambar\n\n${e.message}`);
     }
 
-    await conn.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
+    await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
 
     let resultBuffer;
     let methodUsed = 'Imglarger';
@@ -203,9 +203,9 @@ const handler = async (m, { conn }) => {
         try {
             resultBuffer = await new PicsArtUpscaler().upscale(buffer, 4);
         } catch (e2) {
-            await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
+            await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
             return m.reply(
-                `╭──「 ❌ *Kedua Engine Gagal* 」\n│\n│  Imglarger : ${e1.message}\n│  PicsArt   : ${e2.message}\n│\n╰─────────────────────`
+                `╭──「  *Kedua Engine Gagal* 」\n│\n│  Imglarger : ${e1.message}\n│  PicsArt   : ${e2.message}\n│\n╰─────────────────────`
             );
         }
     }
@@ -221,7 +221,7 @@ const handler = async (m, { conn }) => {
         .catch(() => config.thumbnail);
 
     await new AIRich(conn)
-        .setTitle(`🖼️ HD Upscaler | ${methodUsed} | ${sizeBefore} KB → ${sizeAfter} KB`)
+        .setTitle(` HD Upscaler | ${methodUsed} | ${sizeBefore} KB  ${sizeAfter} KB`)
         .addProduct({
             title: '',
             brand: config.botName,
