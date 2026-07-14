@@ -7,18 +7,18 @@ const handler = async (m, { conn, text }) => {
         return;
     }
     const users = db.prepare('SELECT jid FROM users').all();
-    await m.reply(`📢 Mengirim broadcast ke ${users.length} user...`);
+    await m.reply(` Mengirim broadcast ke ${users.length} user...`);
     let success = 0;
     for (const { jid } of users) {
         try {
-            await conn.sendMessage(jid, { text: `📢 *Broadcast*\n\n${text}` });
+            await conn.sendMessage(jid, { text: ` *Broadcast*\n\n${text}` });
             success++;
         }
         catch {
         }
         await sleep(300);
     }
-    await m.reply(`✅ Broadcast selesai. Terkirim ke ${success}/${users.length} user.`);
+    await m.reply(` Broadcast selesai. Terkirim ke ${success}/${users.length} user.`);
 };
 handler.help = ['broadcast <pesan>'];
 handler.tags = ['owner'];
