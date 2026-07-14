@@ -41,14 +41,14 @@ export async function sendGoodbye(sock, groupJid, memberJid, groupName, memberCo
         (phone ? getPushName(phone) : null) ||
         userNum;
     const bodyText =
-        `Sampai jumpa @${userNum} 👋\n\n` +
-        `Semoga ketemu lagi di grup *${groupName}* 🌸` +
+        `Sampai jumpa @${userNum} \n\n` +
+        `Semoga ketemu lagi di grup *${groupName}* ` +
         (username && username !== userNum ? `\nNama: *${username}*` : '');
     try {
         const thumb = await resolveThumbnail(sock, safeJid);
         const btn = new ButtonV2(sock)
             .setTitle(groupName)
-            .setSubtitle(`👥 Sisa ${memberCount} member`)
+            .setSubtitle(` Sisa ${memberCount} member`)
             .setBody(bodyText)
             .setFooter(footer)
             .setContextInfo({ mentionedJid: [phoneJid] });
@@ -57,7 +57,7 @@ export async function sendGoodbye(sock, groupJid, memberJid, groupName, memberCo
         btn.addButton('Profil', `.profil ${userNum}`);
         const msg = await btn.build(groupJid, { userJid: sock.user?.id });
         await sock.relayMessage(groupJid, msg.message, { messageId: msg.key.id });
-        console.log(`[GOODBYE] ✅ ${username} (@${userNum}) | pp=${!!thumb}`);
+        console.log(`[GOODBYE]  ${username} (@${userNum}) | pp=${!!thumb}`);
     } catch (e) {
         console.error('[GOODBYE] ButtonV2 error:', e?.message);
         try {
@@ -74,23 +74,23 @@ const handler = async (m, { conn, args, participants, groupMeta }) => {
         const current = !!groupData?.settings?.goodbye;
         if (!mode || mode === 'status' || mode === 'cek') {
             return m.reply(
-                `👋 *GOODBYE STATUS*\n\n` +
-                `Goodbye : ${current ? '🟢 AKTIF' : '🔴 NONAKTIF'}\n\n` +
+                ` *GOODBYE STATUS*\n\n` +
+                `Goodbye : ${current ? ' AKTIF' : ' NONAKTIF'}\n\n` +
                 `• *.goodbye on/off* — atur goodbye\n` +
                 `• *.goodbye @tag* / *.tesgoodbye @tag* — test manual`
             );
         }
         if (mode === 'on') {
-            if (current) return m.reply('⚠️ Goodbye sudah aktif!');
+            if (current) return m.reply(' Goodbye sudah aktif!');
             upsertGroupSettings(from, groupMeta?.subject ?? null, { goodbye: true });
-            return m.reply('✅ *Goodbye Diaktifkan!* 👋');
+            return m.reply(' *Goodbye Diaktifkan!* ');
         }
         if (mode === 'off') {
-            if (!current) return m.reply('⚠️ Goodbye sudah nonaktif!');
+            if (!current) return m.reply(' Goodbye sudah nonaktif!');
             upsertGroupSettings(from, groupMeta?.subject ?? null, { goodbye: false });
-            return m.reply('✅ *Goodbye Dinonaktifkan!*');
+            return m.reply(' *Goodbye Dinonaktifkan!*');
         }
-        return m.reply('❌ Gunakan: .goodbye on / off / status / @tag');
+        return m.reply(' Gunakan: .goodbye on / off / status / @tag');
     }
     try {
         const meta = groupMeta || (await conn.groupMetadata(from));
@@ -98,15 +98,15 @@ const handler = async (m, { conn, args, participants, groupMeta }) => {
         const memberCount = meta.participants?.length || 0;
         const targetJid = m.mentionedJid[0];
         const safeTarget = sanitizeJid(targetJid);
-        if (!safeTarget) return m.reply('❌ JID target tidak valid!');
+        if (!safeTarget) return m.reply(' JID target tidak valid!');
         const list = participants || meta.participants;
         const participant = findParticipant(list, safeTarget);
         const pushname = participant?.notify || participant?.name || null;
         await sendGoodbye(conn, from, safeTarget, groupName, memberCount, pushname);
-        m.reply('✅ Goodbye test terkirim!');
+        m.reply(' Goodbye test terkirim!');
     } catch (e) {
         console.error('[GOODBYE CMD ERROR]', e?.message);
-        m.reply(`❌ Error: ${e?.message}`);
+        m.reply(` Error: ${e?.message}`);
     }
 };
 handler.help = ['goodbye on', 'goodbye off', 'goodbye @tag', 'tesgoodbye @tag'];
