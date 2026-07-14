@@ -153,6 +153,65 @@ class PluginManager {
     getByTag(tag) {
         return this.getAllPlugins().filter((p) => p.tags?.includes(tag));
     }
+    // Cari plugin berdasar nama file ("namafile") atau "folder/namafile" (case-insensitive, tanpa ekstensi .js).
+    findByName(name) {
+        if (!name)
+            return [];
+        const clean = name.replace(/\.js$/i, '').trim().toLowerCase();
+        if (!clean)
+            return [];
+        const results = [];
+        for (const [filePath, handler] of this.plugins.entries()) {
+            const rel = path.relative(__dirname, filePath).replace(/\\/g, '/').replace(/\.js$/i, '');
+            const base = path.basename(filePath, '.js');
+            if (rel.toLowerCase() === clean || base.toLowerCase() === clean) {
+                results.push({ filePath, handler, rel });
+            }
+        }
+        return results;
+    }
+    deletePlugin(name) {
+        const matches = this.findByName(name);
+        if (matches.length === 0) {
+            return { success: false, error: `Plugin "${name}" tidak ditemukan.` };
+        }
+        if (matches.length > 1) {
+            return {
+                success: false,
+                error: `Nama "${name}" ambigu, ditemukan di: ${matches.map((m) => m.rel).join(', ')}. Pakai format folder/nama.`,
+            };
+        }
+        const { filePath, rel } = matches[0];
+        try {
+            fs.unlinkSync(filePath);
+            this.plugins.delete(filePath);
+            logPlugin(`Plugin dihapus lewat chat: ${rel}.js`);
+            return { success: true, filePath, rel };
+        }
+        catch (err) {
+            return { success: false, error: err?.message || String(err) };
+        }
+    }
+    getPluginSource(name) {
+        const matches = this.findByName(name);
+        if (matches.length === 0) {
+            return { success: false, error: `Plugin "${name}" tidak ditemukan.` };
+        }
+        if (matches.length > 1) {
+            return {
+                success: false,
+                error: `Nama "${name}" ambigu, ditemukan di: ${matches.map((m) => m.rel).join(', ')}. Pakai format folder/nama.`,
+            };
+        }
+        const { filePath, rel } = matches[0];
+        try {
+            const code = fs.readFileSync(filePath, 'utf8');
+            return { success: true, filePath, rel, code };
+        }
+        catch (err) {
+            return { success: false, error: err?.message || String(err) };
+        }
+    }
 }
 const pluginManager = new PluginManager();
 export default pluginManager;
