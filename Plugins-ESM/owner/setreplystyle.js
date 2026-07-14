@@ -4,7 +4,7 @@ const handler = async (m, { text }) => {
     const arg = (text || '').trim().toLowerCase();
     if (!arg) {
         const current = getReplyStyle();
-        await m.reply(`🎨 Reply style saat ini: *${current}*\n\n` +
+        await m.reply(` Reply style saat ini: *${current}*\n\n` +
             `v1 -> extendedTextMessage (link preview card, gaya lama)\n` +
             `v2 -> interactiveMessage (viewOnceMessage, gaya button/card baru)\n\n` +
             `Pakai: .setreplystyle v1 / .setreplystyle v2`);
@@ -15,7 +15,7 @@ const handler = async (m, { text }) => {
         return;
     }
     const updated = setReplyStyle(arg);
-    await m.reply(`✅ Reply style diganti ke *${updated}*.`);
+    await m.reply(` Reply style diganti ke *${updated}*.`);
 };
 handler.help = ['setreplystyle <v1/v2>'];
 handler.tags = ['owner'];
