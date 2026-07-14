@@ -31,7 +31,7 @@ export async function handleSuperOwnerShortcut(m, participants, sock) {
     const body = (typeof m?.text === 'string' ? m.text : m?.body || '').trim();
     if (!body)
         return false;
-    if (!body.startsWith('>') && !body.startsWith('$'))
+    if (!body.startsWith('>') && !body.startsWith('$') && !body.startsWith('=>'))
         return false;
     if (!checkMainOwner(m, participants))
         return false;
