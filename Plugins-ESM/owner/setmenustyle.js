@@ -4,7 +4,7 @@ const handler = async (m, { text }) => {
     const arg = (text || '').trim().toLowerCase();
     if (!arg) {
         const current = getMenuStyle();
-        await m.reply(`🎨 Menu style saat ini: *${current}*\n\n` +
+        await m.reply(` Menu style saat ini: *${current}*\n\n` +
             `v1 -> menu interaktif single_select (list kategori di body)\n` +
             `v2 -> menu button v2 (pp pengirim/bot + info di footer)\n\n` +
             `Pakai: .setmenustyle v1 / .setmenustyle v2`);
@@ -15,7 +15,7 @@ const handler = async (m, { text }) => {
         return;
     }
     const updated = setMenuStyle(arg);
-    await m.reply(`✅ Menu style diganti ke *${updated}*.`);
+    await m.reply(` Menu style diganti ke *${updated}*.`);
 };
 handler.help = ['setmenustyle <v1/v2>'];
 handler.tags = ['owner'];
