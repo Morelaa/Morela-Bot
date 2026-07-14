@@ -33,7 +33,7 @@ function normalize(str) {
 const handler = async (m, { conn }) => {
     const existing = activeSessions.get(m.chat);
     if (existing && existing.expireAt > Date.now()) {
-        await m.reply(`⚠️ *Game Sedang Berlangsung!*\n\nMasih ada game Tebak Surah di sini.\nSelesaikan dulu atau ketik *nyerah* untuk menyerah.`);
+        await m.reply(` *Game Sedang Berlangsung!*\n\nMasih ada game Tebak Surah di sini.\nSelesaikan dulu atau ketik *nyerah* untuk menyerah.`);
         return;
     }
     try {
@@ -60,16 +60,16 @@ const handler = async (m, { conn }) => {
         });
         await conn.sendMessage(m.chat, {
             text:
-`╭──「 🕌 *Tebak Surah* 」
+`╭──「  *Tebak Surah* 」
 │
 │  Dengarkan audio & tebak nama surahnya!
 │
-│  📖 *Ayat ke*  » ${ayahNum}
-│  🎙️ *Qari*    » ${qari}
-│  ⏰ *Waktu*    » 90 detik
+│   *Ayat ke*  » ${ayahNum}
+│   *Qari*    » ${qari}
+│   *Waktu*    » 90 detik
 │
 │  Ketik nama surah (Inggris/Arab)
-│  💡 *Contoh:* Al-Fatihah / Al-Baqarah
+│   *Contoh:* Al-Fatihah / Al-Baqarah
 │
 │  Atau ketik *nyerah* untuk menyerah
 ╰─────────────────────
@@ -94,13 +94,13 @@ _© ${config.copyrightName}_`
                 activeSessions.delete(m.chat);
                 try {
                     await conn.sendMessage(m.chat, {
-                        text: `⏰ Waktu habis! Surah: ${s.surahName} (${s.surahAr})`
+                        text: ` Waktu habis! Surah: ${s.surahName} (${s.surahAr})`
                     });
                 } catch {}
             }
         }, TIMEOUT_MS + 500);
     } catch (e) {
-        await m.reply(`❌ Gagal ambil soal: ${e.message}`);
+        await m.reply(` Gagal ambil soal: ${e.message}`);
     }
 };
 handler.help = ['tebaksurah'];
@@ -115,20 +115,20 @@ handler.onText = async (m) => {
     const tebakan = raw.toUpperCase();
     if (tebakan === 'NYERAH') {
         activeSessions.delete(m.chat);
-        await m.reply(`🏳️ *Menyerah!* Surahnya: *${session.surahName}* (${session.surahAr})\n\nKetik *.tebaksurah* untuk soal baru!`);
+        await m.reply(` *Menyerah!* Surahnya: *${session.surahName}* (${session.surahAr})\n\nKetik *.tebaksurah* untuk soal baru!`);
         return true;
     }
     const isBenar = normalize(tebakan) === normalize(session.jawabanEn) || raw === session.jawabanAr;
     if (isBenar) {
         activeSessions.delete(m.chat);
-        await m.reply(`🎉 *Benar!* Surahnya *${session.surahName}* (${session.surahAr}), artinya "${session.translation}".\n\nKetik *.tebaksurah* untuk soal baru!`);
+        await m.reply(` *Benar!* Surahnya *${session.surahName}* (${session.surahAr}), artinya "${session.translation}".\n\nKetik *.tebaksurah* untuk soal baru!`);
         return true;
     }
     const lastWrong = session.lastWrong[m.sender] || 0;
     if (Date.now() - lastWrong < 5000) return true;
     session.lastWrong[m.sender] = Date.now();
     const sisaDetik = Math.max(0, Math.ceil((session.expireAt - Date.now()) / 1000));
-    await m.reply(`❌ *${raw}* bukan jawabannya~ (sisa ${sisaDetik} detik)\n\nCoba lagi atau ketik *nyerah* 💪`);
+    await m.reply(` *${raw}* bukan jawabannya~ (sisa ${sisaDetik} detik)\n\nCoba lagi atau ketik *nyerah* `);
     return true;
 };
 export default handler;
