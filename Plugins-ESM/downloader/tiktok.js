@@ -93,6 +93,5 @@ const handler = async (m, { conn, args }) => {
 handler.help = ['tiktok <link tiktok>'];
 handler.tags = ['downloader'];
 handler.command = /^(tiktok|tt)$/i;
-handler.register = true;
 handler.limit = true;
 export default handler;
