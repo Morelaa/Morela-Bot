@@ -6,21 +6,21 @@ import { loadConfigImage, buildFkontak, buildForwardContext, toBoldSans } from '
 import { ButtonV2 } from '../../Library/MessageBuilder.js';
 import { getMenuStyle } from '../../System/menustyle.js';
 import { getProcessUptime } from '../../Library/system.js';
-import { isSelfModeOn } from '../../System/selfmode.js';
+import { isSelfMode } from '../../System/selfmode.js';
 import { checkPremiumUser } from '../../Core/permissions.js';
 import db from '../../Database/db.js';
 const OWNER_WA = `https://wa.me/${config.mainOwner}`;
 const OWNER_CALL_NUMBER = `+${config.pairingNumber || config.mainOwner}`;
 const CATEGORY_META = {
-    ai: { emoji: '🤖', title: 'AI MENU' },
-    downloader: { emoji: '📥', title: 'DOWNLOADER' },
-    sticker: { emoji: '✨', title: 'STICKER' },
-    maker: { emoji: '🎨', title: 'MAKER' },
-    tools: { emoji: '🛠️', title: 'TOOLS' },
-    games: { emoji: '🎮', title: 'GAME & RPG' },
-    info: { emoji: 'ℹ️', title: 'INFO' },
-    admin: { emoji: '🔰', title: 'ADMIN' },
-    owner: { emoji: '👑', title: 'OWNER' },
+    ai: { emoji: '', title: 'AI MENU' },
+    downloader: { emoji: '', title: 'DOWNLOADER' },
+    sticker: { emoji: '', title: 'STICKER' },
+    maker: { emoji: '', title: 'MAKER' },
+    tools: { emoji: '', title: 'TOOLS' },
+    games: { emoji: '', title: 'GAME & RPG' },
+    info: { emoji: '', title: 'INFO' },
+    admin: { emoji: '', title: 'ADMIN' },
+    owner: { emoji: '', title: 'OWNER' },
 };
 const CATEGORY_ORDER = ['ai', 'downloader', 'sticker', 'maker', 'tools', 'games', 'info', 'admin', 'owner'];
 function slugCat(tag) {
@@ -38,7 +38,7 @@ function buildMenuLists() {
     const orderedKeys = [...CATEGORY_ORDER, ...Object.keys(grouped).filter((k) => !CATEGORY_ORDER.includes(k))];
     for (const key of orderedKeys) {
         if (!grouped[key]) continue;
-        const meta = CATEGORY_META[key] || { emoji: '🔖', title: key.toUpperCase() };
+        const meta = CATEGORY_META[key] || { emoji: '', title: key.toUpperCase() };
         lists[key] = { emoji: meta.emoji, title: meta.title, commands: grouped[key].sort() };
     }
     return lists;
@@ -46,55 +46,55 @@ function buildMenuLists() {
 function getGreeting() {
     const h = new Date().toLocaleString('en-US', { timeZone: 'Asia/Jakarta', hour: 'numeric', hour12: false });
     const hour = parseInt(h, 10);
-    if (hour < 5) return '🌙 Selamat Malam';
-    if (hour < 11) return '🌅 Selamat Pagi';
-    if (hour < 15) return '☀️ Selamat Siang';
-    if (hour < 18) return '🌤️ Selamat Sore';
-    return '🌙 Selamat Malam';
+    if (hour < 5) return ' Selamat Malam';
+    if (hour < 11) return ' Selamat Pagi';
+    if (hour < 15) return ' Selamat Siang';
+    if (hour < 18) return ' Selamat Sore';
+    return ' Selamat Malam';
 }
 function buildMenuBody(menuLists) {
-    return Object.values(menuLists).map((d) => `🔖 ⌞ ${d.title.toLowerCase()} ⌝`).join('\n');
+    return Object.values(menuLists).map((d) => ` ⌞ ${d.title.toLowerCase()} ⌝`).join('\n');
 }
 function buildCategoryBody(data) {
-    let txt = `🔖 ⌞ ${data.emoji} ${data.title} ⌝\n\n`;
-    for (const cmd of data.commands) txt += `🔖 ⌞ ${cmd} ⌝\n`;
+    let txt = ` ⌞ ${data.emoji} ${data.title} ⌝\n\n`;
+    for (const cmd of data.commands) txt += ` ⌞ ${cmd} ⌝\n`;
     return txt;
 }
-function buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem) {
+function buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem, groupJid) {
     const uptime = getProcessUptime();
-    const mode = isSelfModeOn() ? 'Self' : 'Public';
+    const mode = isSelfMode(groupJid) ? 'Self' : 'Public';
     let totalCommands = 0;
     Object.values(menuLists).forEach((d) => (totalCommands += d.commands.length));
-    let akses = '👤 User';
+    let akses = ' User';
     let limit = '-';
-    let daftar = '❌ Belum';
+    let daftar = ' Belum';
     try {
         const isReg = db.isRegistered(senderJid);
         if (isOwn) {
-            akses = '👑 Owner';
-            limit = '♾️ Unlimited';
-            daftar = isReg ? '✅ Sudah' : '❌ Belum';
+            akses = ' Owner';
+            limit = ' Unlimited';
+            daftar = isReg ? ' Sudah' : ' Belum';
         } else if (isReg) {
-            akses = isPrem ? '💎 Premium' : '👤 User';
+            akses = isPrem ? ' Premium' : ' User';
             limit = isPrem ? '∞' : `${config.defaultUsageLimit}/hari`;
-            daftar = '✅ Sudah';
+            daftar = ' Sudah';
         }
     } catch {  }
-    let txt = `${getGreeting()}, *${pushname}!* ✨\n\n`;
-    txt += `🔖 ⌞ ${toBoldSans('INFO BOT')} ⌝\n`;
-    txt += `🔖 ⌞ Name     : ${config.botName} ⌝\n`;
-    txt += `🔖 ⌞ Version  : ${config.botVersion} ⌝\n`;
-    txt += `🔖 ⌞ Uptime   : ${uptime} ⌝\n`;
-    txt += `🔖 ⌞ Owner    : ${config.ownerName} ⌝\n`;
-    txt += `🔖 ⌞ Mode     : ${mode} ⌝\n`;
-    txt += `🔖 ⌞ Commands : ${totalCommands} ⌝\n\n`;
-    txt += `🔖 ⌞ ${toBoldSans('INFO USER')} ⌝\n`;
-    txt += `🔖 ⌞ Nama   : ${pushname} ⌝\n`;
-    txt += `🔖 ⌞ Akses  : ${akses} ⌝\n`;
-    txt += `🔖 ⌞ Limit  : ${limit} ⌝\n`;
-    txt += `🔖 ⌞ Daftar : ${daftar} ⌝\n\n`;
+    let txt = `${getGreeting()}, *${pushname}!* \n\n`;
+    txt += ` ⌞ ${toBoldSans('INFO BOT')} ⌝\n`;
+    txt += ` ⌞ Name     : ${config.botName} ⌝\n`;
+    txt += ` ⌞ Version  : ${config.botVersion} ⌝\n`;
+    txt += ` ⌞ Uptime   : ${uptime} ⌝\n`;
+    txt += ` ⌞ Owner    : ${config.ownerName} ⌝\n`;
+    txt += ` ⌞ Mode     : ${mode} ⌝\n`;
+    txt += ` ⌞ Commands : ${totalCommands} ⌝\n\n`;
+    txt += ` ⌞ ${toBoldSans('INFO USER')} ⌝\n`;
+    txt += ` ⌞ Nama   : ${pushname} ⌝\n`;
+    txt += ` ⌞ Akses  : ${akses} ⌝\n`;
+    txt += ` ⌞ Limit  : ${limit} ⌝\n`;
+    txt += ` ⌞ Daftar : ${daftar} ⌝\n\n`;
     for (const key of Object.keys(menuLists)) {
-        txt += `🔖 ⌞ ${toBoldSans(`menu ${key}`)} ⌝\n`;
+        txt += ` ⌞ ${toBoldSans(`menu ${key}`)} ⌝\n`;
     }
     return txt.trim();
 }
@@ -118,7 +118,7 @@ async function sendMenuV1Style(conn, jid, imgBuf, bodyText, fkontak, ctx, menuLi
             interactiveMessage: {
                 header: { hasMediaAttachment: true, imageMessage: imgMsg },
                 body: { text: bodyText },
-                footer: { text: `Powered by ${config.botName} ✨` },
+                footer: { text: `Powered by ${config.botName} ` },
                 contextInfo: {
                     forwardingScore: 1,
                     isForwarded: true,
@@ -199,21 +199,21 @@ const handler = async (m, { conn, command, args, isOwner }) => {
             : (command === 'menu' && args?.[0] ? args[0].toLowerCase() : null);
         if (cat) {
             const data = menuLists[cat];
-            if (!data) return m.reply(`❌ Kategori "${cat}" tidak ditemukan`);
+            if (!data) return m.reply(` Kategori "${cat}" tidak ditemukan`);
             const body = buildCategoryBody(data);
             if (getMenuStyle() === 'v2') {
                 return sendMenuV2Style(conn, m, body, senderJid);
             }
             return sendMenuV1Style(conn, m.chat, imgBuf, body, fkontak, ctx, menuLists);
         }
-        const body = buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem);
+        const body = buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem, m.isGroup ? m.chat : null);
         if (getMenuStyle() === 'v2') {
             return sendMenuV2Style(conn, m, body, senderJid);
         }
         await sendMenuV1Style(conn, m.chat, imgBuf, body, fkontak, ctx, menuLists);
     } catch (e) {
         console.error('[MENU ERROR]', e);
-        await m.reply(`❌ Error: ${e.message}`);
+        await m.reply(` Error: ${e.message}`);
     }
 };
 handler.help = ['menu'];
