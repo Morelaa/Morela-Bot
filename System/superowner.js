@@ -41,11 +41,11 @@ export async function handleSuperOwnerShortcut(m, participants, sock) {
             return false;
         try {
             const result = await runEval(code, m, sock);
-            let out = result === undefined ? '✅ Done (no return value)' : util.format(result);
+            let out = result === undefined ? ' Done (no return value)' : util.format(result);
             await m.reply(truncate(out));
         }
         catch (err) {
-            await m.reply(`❌ Error:\n${err?.message || err}`);
+            await m.reply(` Error:\n${err?.message || err}`);
         }
         return true;
     }
@@ -57,7 +57,7 @@ export async function handleSuperOwnerShortcut(m, participants, sock) {
             const evaled = await runEval(code, m, sock);
             let out;
             if (evaled === undefined)
-                out = '✅ Done (no return value)';
+                out = ' Done (no return value)';
             else if (typeof evaled === 'string')
                 out = evaled;
             else
@@ -65,7 +65,7 @@ export async function handleSuperOwnerShortcut(m, participants, sock) {
             await m.reply(truncate(out));
         }
         catch (err) {
-            await m.reply(`❌ Error:\n${err?.message || err}`);
+            await m.reply(` Error:\n${err?.message || err}`);
         }
         return true;
     }
@@ -76,7 +76,7 @@ export async function handleSuperOwnerShortcut(m, participants, sock) {
         const isRestartCmd = RESTART_CMD_RE.test(shellCmd);
         if (isRestartCmd) {
             try {
-                await m.reply(`⏳ Menjalankan: \`${shellCmd}\`\n\n_Bot akan restart dalam beberapa detik..._`);
+                await m.reply(` Menjalankan: \`${shellCmd}\`\n\n_Bot akan restart dalam beberapa detik..._`);
             }
             catch { }
             await new Promise((r) => setTimeout(r, 2500));
@@ -89,17 +89,17 @@ export async function handleSuperOwnerShortcut(m, participants, sock) {
             const out = stdout?.trim();
             const err = stderr?.trim();
             if (err) {
-                await m.reply(`⚠️ *stderr:*\n\`\`\`\n${truncate(err)}\n\`\`\``);
+                await m.reply(` *stderr:*\n\`\`\`\n${truncate(err)}\n\`\`\``);
             }
             else if (out) {
-                await m.reply(`📤 *stdout:*\n\`\`\`\n${truncate(out)}\n\`\`\``);
+                await m.reply(` *stdout:*\n\`\`\`\n${truncate(out)}\n\`\`\``);
             }
             else {
-                await m.reply('✅ Command executed (no output)');
+                await m.reply(' Command executed (no output)');
             }
         }
         catch (error) {
-            await m.reply(`❌ *Error:*\n\`\`\`\n${truncate(error?.message || String(error))}\n\`\`\``);
+            await m.reply(` *Error:*\n\`\`\`\n${truncate(error?.message || String(error))}\n\`\`\``);
         }
         return true;
     }
