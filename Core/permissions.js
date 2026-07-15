@@ -2,10 +2,11 @@
 import config from '../config.js';
 import { isOwner, isMainOwner, isGroupAdmin, isSenderAdminInGroup, resolveBotAdmin, autoMapParticipantLids } from '../Library/resolve.js';
 import db from '../Database/db.js';
+import { getAllOwners } from '../System/ownerlist.js';
 export function checkOwner(m, participants) {
     if (participants)
         autoMapParticipantLids(participants);
-    return isOwner(m, config.owners, participants);
+    return isOwner(m, getAllOwners(), participants);
 }
 export function checkMainOwner(m, participants) {
     if (participants)
@@ -30,6 +31,7 @@ export function checkPremiumUser(jid) {
 }
 export async function evaluatePluginAccess(plugin, ctx) {
     const { m, participants, sock } = ctx;
+    const isOwnerOrMain = checkMainOwner(m, participants) || checkOwner(m, participants);
     if (plugin.mainOwner && !checkMainOwner(m, participants)) {
         return { allowed: false, reason: 'main_owner_only' };
     }
@@ -50,7 +52,7 @@ export async function evaluatePluginAccess(plugin, ctx) {
         if (!botIsAdmin)
             return { allowed: false, reason: 'bot_not_admin' };
     }
-    if (plugin.premium && !checkPremiumUser(m?.sender)) {
+    if (plugin.premium && !isOwnerOrMain && !checkPremiumUser(m?.sender)) {
         return { allowed: false, reason: 'premium_required' };
     }
     return { allowed: true };
