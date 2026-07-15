@@ -29,23 +29,18 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
     const fileName = meta.fileName || '';
     const isZip = /zip/i.test(mimetype) || /\.zip$/i.test(fileName);
     if (!text) {
-        return m.reply(
-            `Balas file ZIP lalu gunakan:\n\n` +
-            `${usedPrefix + command} nama-repo|true/false\n\n` +
-            `Contoh:\n` +
-            `${usedPrefix + command} my-bot|true`
-        );
+        return m.reply(`╭┈┈⬡「 *ʙᴀʟᴀꜱ ꜰɪʟᴇ ᴢɪᴘ ʟᴀʟᴜ ɢᴜɴᴀᴋᴀɴ:* 」\n┃\n┃ ✧ ${usedPrefix + command} ɴᴀᴍᴀ-ʀᴇᴘᴏ|ᴛʀᴜᴇ/ꜰᴀʟꜱᴇ\n┃\n┃ ✧ ᴄᴏɴᴛᴏʜ:\n┃ ✧ ${usedPrefix + command} ᴍʏ-ʙᴏᴛ|ᴛʀᴜᴇ\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     const [repoName, isPrivateRaw] = text.split('|').map((v) => v.trim());
-    if (!repoName) return m.reply('Nama repo tidak boleh kosong!');
-    if (!isPrivateRaw) return m.reply('Isi true/false untuk private repo');
+    if (!repoName) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɴᴀᴍᴀ ʀᴇᴘᴏ ᴛɪᴅᴀᴋ ʙᴏʟᴇʜ ᴋᴏꜱᴏɴɢ!\n╰┈┈┈┈┈┈┈┈⬡`);
+    if (!isPrivateRaw) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɪꜱɪ ᴛʀᴜᴇ/ꜰᴀʟꜱᴇ ᴜɴᴛᴜᴋ ᴘʀɪᴠᴀᴛᴇ ʀᴇᴘᴏ\n╰┈┈┈┈┈┈┈┈⬡`);
     const isPrivate = isPrivateRaw.toLowerCase() === 'true';
     if (!isZip) {
-        return m.reply('Reply file ZIP terlebih dahulu, baru ketik command ini!');
+        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ʀᴇᴘʟʏ ꜰɪʟᴇ ᴢɪᴘ ᴛᴇʀʟᴇʙɪʜ ᴅᴀʜᴜʟᴜ, ʙᴀʀᴜ ᴋᴇᴛɪᴋ ᴄᴏᴍᴍᴀɴᴅ ɪɴɪ!\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     const token = config.githubToken;
     if (!token) {
-        return m.reply(' Token GitHub belum diisi di config.js (field "githubToken").');
+        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴛᴏᴋᴇɴ ɢɪᴛʜᴜʙ ʙᴇʟᴜᴍ ᴅɪɪꜱɪ ᴅɪ ᴄᴏɴꜰɪɢ.ᴊꜱ (ꜰɪᴇʟᴅ "ɢɪᴛʜᴜʙᴛᴏᴋᴇɴ").\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     try {
         await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
@@ -105,16 +100,10 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
             total++;
         }
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-        await m.reply(
-            `「 PUSH GIT SUCCESS 」\n\n` +
-            ` Repo    : ${login}/${repoName}\n` +
-            ` Private : ${isPrivate}\n` +
-            ` Files   : ${total}\n` +
-            ` https://github.com/${login}/${repoName}`
-        );
+        await m.reply(`╭┈┈⬡「 *ᴘᴜꜱʜ ɢɪᴛ ꜱᴜᴄᴄᴇꜱꜱ 」* 」\n┃\n┃ ✧ ʀᴇᴘᴏ    : ${login}/${repoName}\n┃ ✧ ᴘʀɪᴠᴀᴛᴇ : ${isPrivate}\n┃ ✧ ꜰɪʟᴇꜱ   : ${total}\n┃ ✧ ʜᴛᴛᴘꜱ://ɢɪᴛʜᴜʙ.ᴄᴏᴍ/${login}/${repoName}\n╰┈┈┈┈┈┈┈┈⬡`);
     } catch (e) {
         await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
-        m.reply(` Error:\n${e.response?.data?.message || e.message}`);
+        m.reply(`╭┈┈⬡「 *ᴇʀʀᴏʀ:* 」\n┃ ✧ ${e.response?.data?.message || e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.help = ['pushgit <repo>|<true/false>'];
