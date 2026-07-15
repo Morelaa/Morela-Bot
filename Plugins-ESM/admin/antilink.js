@@ -79,24 +79,42 @@ const handler = async (m, { conn, args }) => {
 
     if (!mode || mode === 'status' || mode === 'cek') {
         return m.reply(
-            ` *ANTILINK STATUS*\n\n` +
-            `Grup ini: ${current ? ' AKTIF' : ' NONAKTIF'}\n\n` +
-            `Gunakan:\n` +
-            `• .antilink on  — aktifkan\n` +
-            `• .antilink off — nonaktifkan`
+            `╭┈┈⬡「 *ᴀɴᴛɪʟɪɴᴋ ꜱᴛᴀᴛᴜꜱ* 」\n` +
+            `┃\n` +
+            `┃ ✧ ɢʀᴜᴘ ɪɴɪ : ${current ? '*ᴀᴋᴛɪꜰ*' : '*ɴᴏɴᴀᴋᴛɪꜰ*'}\n` +
+            `┃\n` +
+            `┃ ✧ .ᴀɴᴛɪʟɪɴᴋ ᴏɴ  — ᴀᴋᴛɪꜰᴋᴀɴ\n` +
+            `┃ ✧ .ᴀɴᴛɪʟɪɴᴋ ᴏꜰꜰ — ɴᴏɴᴀᴋᴛɪꜰᴋᴀɴ\n` +
+            `╰┈┈┈┈┈┈┈┈⬡`
         );
     }
     if (mode === 'on' || mode === 'aktif') {
-        if (current) return m.reply(' Antilink sudah aktif di grup ini!');
+        if (current) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴀɴᴛɪʟɪɴᴋ ꜱᴜᴅᴀʜ ᴀᴋᴛɪꜰ ᴅɪ ɢʀᴜᴘ ɪɴɪ!\n╰┈┈┈┈┈┈┈┈⬡`);
         db.updateGroup(from, { antilink: true });
-        return m.reply(' *Antilink Diaktifkan!*\n\nSemua pesan berisi link akan dihapus otomatis.\nAdmin & owner dikecualikan.');
+        return m.reply(
+            `╭┈┈⬡「 *ᴀɴᴛɪʟɪɴᴋ ᴅɪᴀᴋᴛɪꜰᴋᴀɴ!* 」\n` +
+            `┃\n` +
+            `┃ ✧ ꜱᴇᴍᴜᴀ ᴘᴇꜱᴀɴ ʙᴇʀɪꜱɪ ʟɪɴᴋ ᴀᴋᴀɴ ᴅɪʜᴀᴘᴜꜱ ᴏᴛᴏᴍᴀᴛɪꜱ.\n` +
+            `┃ ✧ ᴀᴅᴍɪɴ & ᴏᴡɴᴇʀ ᴅɪᴋᴇᴄᴜᴀʟɪᴋᴀɴ.\n` +
+            `╰┈┈┈┈┈┈┈┈⬡`
+        );
     }
     if (mode === 'off' || mode === 'nonaktif') {
-        if (!current) return m.reply(' Antilink sudah nonaktif di grup ini!');
+        if (!current) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴀɴᴛɪʟɪɴᴋ ꜱᴜᴅᴀʜ ɴᴏɴᴀᴋᴛɪꜰ ᴅɪ ɢʀᴜᴘ ɪɴɪ!\n╰┈┈┈┈┈┈┈┈⬡`);
         db.updateGroup(from, { antilink: false });
-        return m.reply(' *Antilink Dinonaktifkan!*\n\nLink boleh dikirim di grup ini.');
+        return m.reply(
+            `╭┈┈⬡「 *ᴀɴᴛɪʟɪɴᴋ ᴅɪɴᴏɴᴀᴋᴛɪꜰᴋᴀɴ!* 」\n` +
+            `┃ ✧ ʟɪɴᴋ ʙᴏʟᴇʜ ᴅɪᴋɪʀɪᴍ ᴅɪ ɢʀᴜᴘ ɪɴɪ.\n` +
+            `╰┈┈┈┈┈┈┈┈⬡`
+        );
     }
-    return m.reply(' Argumen tidak valid!\n\nGunakan: .antilink on / off / status');
+    return m.reply(
+        `╭┈┈⬡「 *ᴇʀʀᴏʀ* 」\n` +
+        `┃ ✧ ᴀʀɢᴜᴍᴇɴ ᴛɪᴅᴀᴋ ᴠᴀʟɪᴅ!\n` +
+        `┃\n` +
+        `┃ ✧ ɢᴜɴᴀᴋᴀɴ: .ᴀɴᴛɪʟɪɴᴋ ᴏɴ / ᴏꜰꜰ / ꜱᴛᴀᴛᴜꜱ\n` +
+        `╰┈┈┈┈┈┈┈┈⬡`
+    );
 };
 handler.help = ['antilink on', 'antilink off', 'antilink status'];
 handler.tags = ['group', 'anti'];
