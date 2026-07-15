@@ -63,13 +63,13 @@ const handler = async (m, { conn, args }) => {
     const input = args[0];
     if (!input) {
         return m.reply(
-            `╭──「  *GitClone* 」\n│\n│  .gitclone <owner/repo atau url> [branch]\n│\n│  Contoh:\n│  .gitclone facebook/react\n│  .gitclone https://github.com/facebook/react\n│  .gitclone facebook/react main\n│\n╰─────────────────────`
+            `╭┈┈⬡「 *ɢɪᴛᴄʟᴏɴᴇ* 」\n┃\n┃ ✧ .ɢɪᴛᴄʟᴏɴᴇ <ᴏᴡɴᴇʀ/ʀᴇᴘᴏ ᴀᴛᴀᴜ ᴜʀʟ> [ʙʀᴀɴᴄʜ]\n┃\n┃ ✧ ᴄᴏɴᴛᴏʜ:\n┃ ✧ .ɢɪᴛᴄʟᴏɴᴇ ꜰᴀᴄᴇʙᴏᴏᴋ/ʀᴇᴀᴄᴛ\n┃ ✧ .ɢɪᴛᴄʟᴏɴᴇ ʜᴛᴛᴘꜱ://ɢɪᴛʜᴜʙ.ᴄᴏᴍ/ꜰᴀᴄᴇʙᴏᴏᴋ/ʀᴇᴀᴄᴛ\n┃ ✧ .ɢɪᴛᴄʟᴏɴᴇ ꜰᴀᴄᴇʙᴏᴏᴋ/ʀᴇᴀᴄᴛ ᴍᴀɪɴ\n┃\n╰┈┈┈┈┈┈┈┈⬡`
         );
     }
 
     const parsed = parseRepoInput(input);
     if (!parsed) {
-        return m.reply('Format repo nggak dikenali. Contoh: *.gitclone owner/repo*');
+        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ꜰᴏʀᴍᴀᴛ ʀᴇᴘᴏ ɴɢɢᴀᴋ ᴅɪᴋᴇɴᴀʟɪ. ᴄᴏɴᴛᴏʜ: *.ɢɪᴛᴄʟᴏɴᴇ ᴏᴡɴᴇʀ/ʀᴇᴘᴏ*\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 
     const branchArg = args[1] || parsed.branch;
@@ -94,7 +94,7 @@ const handler = async (m, { conn, args }) => {
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (e) {
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
-        await m.reply(`Gagal clone repo:\n${e.message}`);
+        await m.reply(`╭┈┈⬡「 *ɢᴀɢᴀʟ ᴄʟᴏɴᴇ ʀᴇᴘᴏ:* 」\n┃ ✧ ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 
