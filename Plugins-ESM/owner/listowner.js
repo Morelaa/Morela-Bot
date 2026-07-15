@@ -2,6 +2,7 @@
 import config from '../../config.js';
 import { buildFkontak } from '../../Library/utils.js';
 import { getOwnerStyle } from '../../System/ownerstyle.js';
+import { getExtraOwners } from '../../System/ownerlist.js';
 function buildVcard(name, number) {
     const safeName = String(name).replace(/[\r\n]/g, ' ').trim() || number;
     return (
@@ -44,7 +45,10 @@ function formatPhone(num) {
 }
 function collectOwnerNumbers() {
     const mainOwnerNumber = String(config.mainOwner || '').replace(/\D/g, '');
-    const additionalOwners = Array.isArray(config.owners) ? config.owners : [];
+    const additionalOwners = [
+        ...(Array.isArray(config.owners) ? config.owners : []),
+        ...getExtraOwners(),
+    ];
     const seen = new Set();
     const allNums = [];
     if (mainOwnerNumber) {
@@ -187,7 +191,7 @@ async function sendOwnerV2(m, conn, mainOwnerNumber, allNums) {
 const handler = async (m, { conn }) => {
     const { mainOwnerNumber, allNums } = collectOwnerNumbers();
     if (!mainOwnerNumber) {
-        return m.reply(' Main owner belum diatur di config.js');
+        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴍᴀɪɴ ᴏᴡɴᴇʀ ʙᴇʟᴜᴍ ᴅɪᴀᴛᴜʀ ᴅɪ ᴄᴏɴꜰɪɢ.ᴊꜱ\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     const style = getOwnerStyle();
     if (style === 'v2') {
