@@ -20,7 +20,7 @@ const toWebp = (input, output) =>
 
 const handler = async (m, { conn, text }) => {
     const from = m.chat;
-    if (!text?.trim()) return m.reply('Contoh:\n.stikerbrat haiii sayang');
+    if (!text?.trim()) return m.reply(`╭┈┈⬡「 *ᴄᴏɴᴛᴏʜ:* 」\n┃ ✧ .ꜱᴛɪᴋᴇʀʙʀᴀᴛ ʜᴀɪɪɪ ꜱᴀʏᴀɴɢ\n╰┈┈┈┈┈┈┈┈⬡`);
 
     await conn.sendMessage(from, { react: { text: '⏳', key: m.key } });
 
@@ -39,7 +39,7 @@ const handler = async (m, { conn, text }) => {
         await conn.sendMessage(from, { react: { text: '✅', key: m.key } });
     } catch (e) {
         console.error(e);
-        m.reply(' Gagal membuat stiker brat.');
+        m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴍᴇᴍʙᴜᴀᴛ ꜱᴛɪᴋᴇʀ ʙʀᴀᴛ.\n╰┈┈┈┈┈┈┈┈⬡`);
     } finally {
         try { fs.unlinkSync(img); } catch {}
         try { fs.unlinkSync(webp); } catch {}
