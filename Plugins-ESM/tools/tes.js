@@ -1,6 +1,10 @@
 'use strict';
 const handler = async (m, { text }) => {
-    await m.reply(` Test plugin bekerja!\n\nText: ${text || 'kosong'}`);
+    await m.reply(
+        `╭┈┈⬡「 *ᴛᴇꜱᴛ ᴘʟᴜɢɪɴ ʙᴇᴋᴇʀᴊᴀ!* 」\n` +
+        `┃ ✧ ᴛᴇxᴛ : ${text || 'ᴋᴏꜱᴏɴɢ'}\n` +
+        `╰┈┈┈┈┈┈┈┈⬡`
+    );
 };
 handler.command = /^(test|tes)$/i;
 handler.tags = ['info'];
