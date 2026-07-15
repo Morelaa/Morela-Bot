@@ -13,7 +13,7 @@ function getDownloadableTarget(m) {
 function sensorConfigJs(text) {
     const KEYS = [
         'mainOwner', 'pairingNumber', 'pairingCustomCode', 'githubToken',
-        'githubRepo', 'channelJid', 'neoxr', 'imgbb',
+        'githubRepo', 'channelJid', 'neoxr', 'imgbb', 'evelyne', 'openrouter',
     ];
     let out = text;
     for (const key of KEYS) {
