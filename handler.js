@@ -6,7 +6,7 @@ import { evaluatePluginAccess, checkOwner, checkMainOwner, checkGroupAdmin, chec
 import { isFlooding } from './Library/antiabuse.js';
 import { shouldBlockNonOwner } from './System/selfmode.js';
 import { isChatAllowed } from './System/privatemode.js';
-import { isOwner, autoMapParticipantLids, resolveSenderLidLive, isLidJid, resolveLidToPhone, mapSenderLid, normNum } from './Library/resolve.js';
+import { autoMapParticipantLids, resolveSenderLidLive, isLidJid, resolveLidToPhone, mapSenderLid, normNum } from './Library/resolve.js';
 import * as db from './Database/db.js';
 import * as chatcount from './Database/chatcount.js';
 import * as usagelimit from './Database/usagelimit.js';
@@ -60,7 +60,7 @@ function printIncomingLog(m, participants, groupMeta) {
         message: m.text || m.body,
         messageType: m.type,
         isNewsletter,
-        isOwner: isOwner(m, config.owners, participants),
+        isOwner: checkOwner(m, participants),
         isPremium: checkPremiumUser(m.sender),
         isAdmin: m.isGroup ? checkGroupAdmin(m, participants) : false,
         device: getDeviceHint(m.id),
@@ -131,7 +131,7 @@ const middlewares = [
     function privateModeGate(m, ctx) {
         if (m.isGroup)
             return true;
-        const ownerSender = isOwner(m, config.owners, ctx?.participants);
+        const ownerSender = checkOwner(m, ctx?.participants);
         return isChatAllowed(m.chat, m.isGroup, ownerSender);
     },
     async function selfModeGate(m, ctx) {
@@ -139,11 +139,11 @@ const middlewares = [
             return true;
         if (!m.isCommand)
             return true;
-        let ownerSender = isOwner(m, config.owners, ctx?.participants);
+        let ownerSender = checkOwner(m, ctx?.participants);
         if (!ownerSender && isLidJid(m.sender)) {
             const resolved = await resolveSenderLidLive(ctx?.sock, m.chat, m.sender);
             if (resolved)
-                ownerSender = isOwner(m, config.owners, ctx?.participants);
+                ownerSender = checkOwner(m, ctx?.participants);
         }
         return !shouldBlockNonOwner(m.chat, ownerSender);
     },
