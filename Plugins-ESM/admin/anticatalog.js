@@ -137,13 +137,13 @@ async function notifyOwnerDM(sock, senderJid, bugLabel, pushName) {
         const waktu = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
         await sock.sendMessage(ownerJid, {
             text:
-                `╭╌╌⬡「  *ʟᴀᴘᴏʀᴀɴ ʙᴜɢ ᴅᴍ* 」\n┃\n` +
-                `┃ Ada yang nyoba kirim bug ke bot!\n┃\n` +
-                `┃  Nama   : *${displayName}*\n` +
-                `┃  Nomor  : *+${phoneNum}*\n` +
-                `┃  Jenis  : *${bugLabel}*\n` +
-                `┃  Waktu  : *${waktu}*\n┃\n` +
-                `┃ _Pesan sudah dihapus otomatis._\n╰╌╌⬡`,
+                `╭┈┈⬡「 *ʟᴀᴘᴏʀᴀɴ ʙᴜɢ ᴅᴍ* 」\n┃\n` +
+                `┃ ✧ ᴀᴅᴀ ʏᴀɴɢ ɴʏᴏʙᴀ ᴋɪʀɪᴍ ʙᴜɢ ᴋᴇ ʙᴏᴛ!\n┃\n` +
+                `┃ ✧ ɴᴀᴍᴀ   : *${displayName}*\n` +
+                `┃ ✧ ɴᴏᴍᴏʀ  : *+${phoneNum}*\n` +
+                `┃ ✧ ᴊᴇɴɪꜱ  : *${bugLabel}*\n` +
+                `┃ ✧ ᴡᴀᴋᴛᴜ  : *${waktu}*\n┃\n` +
+                `┃ ✧ _ᴘᴇꜱᴀɴ ꜱᴜᴅᴀʜ ᴅɪʜᴀᴘᴜꜱ ᴏᴛᴏᴍᴀᴛɪꜱ._\n╰┈┈┈┈┈┈┈┈⬡`,
         });
     } catch (e) { console.error('[ANTICATALOG] Notif owner gagal:', e?.message); }
 }
@@ -164,9 +164,9 @@ async function kickImmediately(sock, m, senderJid, bugLabel) {
     const { phoneNum, mentionJid, displayName } = resolveSenderInfo(senderJid, m.pushName);
     const kickJid = await findKickableJid(sock, m.chat, senderJid);
     const kickText =
-        `╭╌╌⬡「  *ᴀɴᴛɪʙᴜɢ* 」\n┃\n┃  *Bug terdeteksi & dikick!*\n┃\n` +
-        `┃  Nama  : *${displayName}*\n┃  Kasus : *${bugLabel}*\n┃\n` +
-        `┃ _Pesan telah dihapus otomatis._\n╰╌╌⬡`;
+        `╭┈┈⬡「 *ᴀɴᴛɪʙᴜɢ* 」\n┃\n┃ ✧ *ʙᴜɢ ᴛᴇʀᴅᴇᴛᴇᴋꜱɪ & ᴅɪᴋɪᴄᴋ!*\n┃\n` +
+        `┃ ✧ ɴᴀᴍᴀ  : *${displayName}*\n┃ ✧ ᴋᴀꜱᴜꜱ : *${bugLabel}*\n┃\n` +
+        `┃ ✧ _ᴘᴇꜱᴀɴ ᴛᴇʟᴀʜ ᴅɪʜᴀᴘᴜꜱ ᴏᴛᴏᴍᴀᴛɪꜱ._\n╰┈┈┈┈┈┈┈┈⬡`;
     try { await sock.sendMessage(m.chat, { text: kickText, mentions: [mentionJid] }, { quoted: m.raw }); } catch { /* noop */ }
     if (kickJid) {
         try { await sock.groupParticipantsUpdate(m.chat, [kickJid], 'remove'); }
@@ -202,14 +202,14 @@ const handler = async (m, { conn, args }) => {
         const catStatus = settings.anticatalog ? ' Aktif' : ' Nonaktif';
         const airichStatus = settings.antiairich ? ' Aktif' : ' Nonaktif';
         return m.reply(
-            `╭╌╌⬡「  *ᴀɴᴛɪʙᴜɢ ᴄᴇɴᴛᴇʀ* 」\n┃  *${groupName}*\n┃\n` +
-            `┃  *Anti Catalog Bug* : ${catStatus}\n` +
-            `┃  *Anti AIRich Bug*  : ${airichStatus}\n┃\n` +
-            `┃  *Cara Pakai:*\n` +
-            `┃ ▸ .antibug catalog on/off\n` +
-            `┃ ▸ .antibug airich on/off\n┃\n` +
-            `┃  Pelaku bug langsung *dikick* tanpa warn.\n` +
-            `┃  Bot wajib jadi *admin* grup.\n╰╌╌⬡`
+            `╭┈┈⬡「 *ᴀɴᴛɪʙᴜɢ ᴄᴇɴᴛᴇʀ* 」\n┃ ✧ *${groupName}*\n┃\n` +
+            `┃ ✧ *ᴀɴᴛɪ ᴄᴀᴛᴀʟᴏɢ ʙᴜɢ* : ${catStatus}\n` +
+            `┃ ✧ *ᴀɴᴛɪ ᴀɪʀɪᴄʜ ʙᴜɢ*  : ${airichStatus}\n┃\n` +
+            `┃ ✧ *ᴄᴀʀᴀ ᴘᴀᴋᴀɪ:*\n` +
+            `┃ ✧ .ᴀɴᴛɪʙᴜɢ ᴄᴀᴛᴀʟᴏɢ ᴏɴ/ᴏꜰꜰ\n` +
+            `┃ ✧ .ᴀɴᴛɪʙᴜɢ ᴀɪʀɪᴄʜ ᴏɴ/ᴏꜰꜰ\n┃\n` +
+            `┃ ✧ ᴘᴇʟᴀᴋᴜ ʙᴜɢ ʟᴀɴɢꜱᴜɴɢ *ᴅɪᴋɪᴄᴋ* ᴛᴀɴᴘᴀ ᴡᴀʀɴ.\n` +
+            `┃ ✧ ʙᴏᴛ ᴡᴀᴊɪʙ ᴊᴀᴅɪ *ᴀᴅᴍɪɴ* ɢʀᴜᴘ.\n╰┈┈┈┈┈┈┈┈⬡`
         );
     }
 
@@ -218,19 +218,19 @@ const handler = async (m, { conn, args }) => {
         airich: { flagKey: 'antiairich', label: 'Anti AIRich Bug' },
     };
     const target = validSubs[sub];
-    if (!target) return m.reply('╭╌╌⬡「  *ᴇʀʀᴏʀ* 」\n┃ Gunakan: catalog atau airich\n╰╌╌⬡');
+    if (!target) return m.reply('╭┈┈⬡「 *ᴇʀʀᴏʀ* 」\n┃ ✧ ɢᴜɴᴀᴋᴀɴ: ᴄᴀᴛᴀʟᴏɢ ᴀᴛᴀᴜ ᴀɪʀɪᴄʜ\n╰┈┈┈┈┈┈┈┈⬡');
 
     if (action === 'on') {
-        if (settings[target.flagKey]) return m.reply(` *${target.label}* sudah aktif!`);
+        if (settings[target.flagKey]) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *${target.label}* ꜱᴜᴅᴀʜ ᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡`);
         db.updateGroup(from, { [target.flagKey]: true });
-        return m.reply(` *${target.label}* berhasil diaktifkan!\n\nPelaku bug akan langsung dihapus pesannya + dikick.\n_Bot harus jadi admin._`);
+        return m.reply(`╭┈┈⬡「 *${target.label}* ʙᴇʀʜᴀꜱɪʟ ᴅɪᴀᴋᴛɪꜰᴋᴀɴ!* 」\n┃\n┃ ✧ ᴘᴇʟᴀᴋᴜ ʙᴜɢ ᴀᴋᴀɴ ʟᴀɴɢꜱᴜɴɢ ᴅɪʜᴀᴘᴜꜱ ᴘᴇꜱᴀɴɴʏᴀ + ᴅɪᴋɪᴄᴋ.\n┃ ✧ _ʙᴏᴛ ʜᴀʀᴜꜱ ᴊᴀᴅɪ ᴀᴅᴍɪɴ._\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     if (action === 'off') {
-        if (!settings[target.flagKey]) return m.reply(` *${target.label}* memang sudah nonaktif!`);
+        if (!settings[target.flagKey]) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *${target.label}* ᴍᴇᴍᴀɴɢ ꜱᴜᴅᴀʜ ɴᴏɴᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡`);
         db.updateGroup(from, { [target.flagKey]: false });
-        return m.reply(` *${target.label}* berhasil dinonaktifkan!`);
+        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *${target.label}* ʙᴇʀʜᴀꜱɪʟ ᴅɪɴᴏɴᴀᴋᴛɪꜰᴋᴀɴ!\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-    return m.reply(` Gunakan: *on* atau *off*\nContoh: .antibug ${sub} on`);
+    return m.reply(`╭┈┈⬡「 *ɢᴜɴᴀᴋᴀɴ: *ᴏɴ* ᴀᴛᴀᴜ *ᴏꜰꜰ* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: .ᴀɴᴛɪʙᴜɢ ${sub} ᴏɴ\n╰┈┈┈┈┈┈┈┈⬡`);
 };
 handler.help = ['antibug', 'antibug catalog on/off', 'antibug airich on/off'];
 handler.tags = ['group', 'anti'];
