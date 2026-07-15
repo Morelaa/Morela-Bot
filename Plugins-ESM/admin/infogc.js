@@ -50,16 +50,16 @@ function buildRows(groups) {
 const handler = async (m, { conn, command, text }) => {
     if (command === 'masukgc' || command === 'joingc') {
         if (!text) {
-            return m.reply(`*Masuk Grup*\n\nFormat : .masukgc https://chat.whatsapp.com/xxxxx\n\nBot akan bergabung ke grup melalui link invite.`);
+            return m.reply(`╭┈┈⬡「 *ᴍᴀꜱᴜᴋ ɢʀᴜᴘ* 」\n┃\n┃ ✧ ꜰᴏʀᴍᴀᴛ : .ᴍᴀꜱᴜᴋɢᴄ ʜᴛᴛᴘꜱ://ᴄʜᴀᴛ.ᴡʜᴀᴛꜱᴀᴘᴘ.ᴄᴏᴍ/xxxxx\n┃\n┃ ✧ ʙᴏᴛ ᴀᴋᴀɴ ʙᴇʀɢᴀʙᴜɴɢ ᴋᴇ ɢʀᴜᴘ ᴍᴇʟᴀʟᴜɪ ʟɪɴᴋ ɪɴᴠɪᴛᴇ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         const codeMatch = text.match(/(?:chat\.whatsapp\.com\/|whatsapp\.com\/invite\/)([A-Za-z0-9_-]+)/i);
-        if (!codeMatch) return m.reply(' Link tidak valid.\nGunakan format : https://chat.whatsapp.com/XXXXXX');
+        if (!codeMatch) return m.reply(`╭┈┈⬡「 *ʟɪɴᴋ ᴛɪᴅᴀᴋ ᴠᴀʟɪᴅ.* 」\n┃ ✧ ɢᴜɴᴀᴋᴀɴ ꜰᴏʀᴍᴀᴛ : ʜᴛᴛᴘꜱ://ᴄʜᴀᴛ.ᴡʜᴀᴛꜱᴀᴘᴘ.ᴄᴏᴍ/xxxxxx\n╰┈┈┈┈┈┈┈┈⬡`);
         const inviteCode = codeMatch[1];
         try {
             await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
             const result = await conn.groupAcceptInvite(inviteCode);
             await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-            return m.reply(` *Berhasil Masuk Grup*\n\nKode : ${inviteCode}\nJid  : ${result || 'tidak tersedia'}`);
+            return m.reply(`╭┈┈⬡「 *ʙᴇʀʜᴀꜱɪʟ ᴍᴀꜱᴜᴋ ɢʀᴜᴘ* 」\n┃\n┃ ✧ ᴋᴏᴅᴇ : ${inviteCode}\n┃ ✧ ᴊɪᴅ  : ${result || 'tidak tersedia'}\n╰┈┈┈┈┈┈┈┈⬡`);
         } catch (e) {
             await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
             const msg = (e?.message || '').toLowerCase();
@@ -67,13 +67,13 @@ const handler = async (m, { conn, command, text }) => {
                 : msg.includes('not-authorized') || msg.includes('forbidden') ? 'Bot tidak diizinkan bergabung.'
                 : msg.includes('already') || msg.includes('participant') ? 'Bot sudah ada di dalam grup.'
                 : e?.message || 'Error tidak diketahui.';
-            return m.reply(` *Gagal Masuk Grup*\n\nAlasan : ${info}`);
+            return m.reply(`╭┈┈⬡「 *ɢᴀɢᴀʟ ᴍᴀꜱᴜᴋ ɢʀᴜᴘ* 」\n┃\n┃ ✧ ᴀʟᴀꜱᴀɴ : ${info}\n╰┈┈┈┈┈┈┈┈⬡`);
         }
     }
 
     if (command === 'outgc') {
         if (!text || !text.trim().endsWith('@g.us')) {
-            return m.reply('*Out Grup*\n\nFormat : .outgc <jid@g.us>\n\nGunakan .infogc dulu untuk pilih grup.');
+            return m.reply(`╭┈┈⬡「 *ᴏᴜᴛ ɢʀᴜᴘ* 」\n┃\n┃ ✧ ꜰᴏʀᴍᴀᴛ : .ᴏᴜᴛɢᴄ <ᴊɪᴅ@ɢ.ᴜꜱ>\n┃\n┃ ✧ ɢᴜɴᴀᴋᴀɴ .ɪɴꜰᴏɢᴄ ᴅᴜʟᴜ ᴜɴᴛᴜᴋ ᴘɪʟɪʜ ɢʀᴜᴘ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         const targetJid = text.trim();
         let groupName = targetJid;
@@ -83,10 +83,10 @@ const handler = async (m, { conn, command, text }) => {
             await conn.groupLeave(targetJid);
             db.deleteGroup(targetJid);
             await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
-            return m.reply(` *Bot Berhasil Keluar*\n\nNama : ${groupName}\nJid  : ${targetJid.replace('@g.us', '')}`);
+            return m.reply(`╭┈┈⬡「 *ʙᴏᴛ ʙᴇʀʜᴀꜱɪʟ ᴋᴇʟᴜᴀʀ* 」\n┃\n┃ ✧ ɴᴀᴍᴀ : ${groupName}\n┃ ✧ ᴊɪᴅ  : ${targetJid.replace('@g.us', '')}\n╰┈┈┈┈┈┈┈┈⬡`);
         } catch (e) {
             await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
-            return m.reply(` *Gagal Keluar*\n\nNama  : ${groupName}\nError : ${e?.message || 'Unknown error'}`);
+            return m.reply(`╭┈┈⬡「 *ɢᴀɢᴀʟ ᴋᴇʟᴜᴀʀ* 」\n┃\n┃ ✧ ɴᴀᴍᴀ  : ${groupName}\n┃ ✧ ᴇʀʀᴏʀ : ${e?.message || 'Unknown error'}\n╰┈┈┈┈┈┈┈┈⬡`);
         }
     }
 
@@ -150,18 +150,29 @@ const handler = async (m, { conn, command, text }) => {
         try {
             const dbGroups = db.getAllGroups();
             try {
-                const activeJids = new Set(Object.keys(await conn.groupFetchAllParticipating()));
+                const activeGroups = await conn.groupFetchAllParticipating();
+                const activeJids = new Set(Object.keys(activeGroups));
+                // Hapus grup yang sudah tidak diikuti bot lagi.
                 for (const jid of Object.keys(dbGroups)) {
                     if (!activeJids.has(jid)) {
                         db.deleteGroup(jid);
                         delete dbGroups[jid];
                     }
                 }
+                // Self-heal: grup yang menurut WhatsApp masih diikuti bot tapi belum
+                // (atau belum lengkap) tercatat di DB lokal — misalnya karena bot sempat
+                // ditambahkan saat offline dan event join tidak sempat kesimpen.
+                for (const jid of activeJids) {
+                    if (!dbGroups[jid] || dbGroups[jid]?.settings?.botInGroup !== true) {
+                        db.updateGroup(jid, { botInGroup: true });
+                        dbGroups[jid] = db.getGroup(jid) || dbGroups[jid];
+                    }
+                }
             } catch { /* non-fatal */ }
             const jids = Object.keys(dbGroups);
             if (!jids.length) {
                 await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
-                return m.reply('Bot tidak berada di grup manapun.');
+                return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ʙᴏᴛ ᴛɪᴅᴀᴋ ʙᴇʀᴀᴅᴀ ᴅɪ ɢʀᴜᴘ ᴍᴀɴᴀᴘᴜɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
             }
             const results = await Promise.allSettled(
                 jids.slice(0, 50).map(async (jid) => {
@@ -176,11 +187,11 @@ const handler = async (m, { conn, command, text }) => {
             groupList = results.filter((r) => r.status === 'fulfilled').map((r) => r.value).sort((a, b) => a.name.localeCompare(b.name));
         } catch (e) {
             await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
-            return m.reply(`Gagal mengambil daftar grup : ${e?.message}`);
+            return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴍᴇɴɢᴀᴍʙɪʟ ᴅᴀꜰᴛᴀʀ ɢʀᴜᴘ : ${e?.message}\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         if (!groupList.length) {
             await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
-            return m.reply('Bot tidak berada di grup manapun.');
+            return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ʙᴏᴛ ᴛɪᴅᴀᴋ ʙᴇʀᴀᴅᴀ ᴅɪ ɢʀᴜᴘ ᴍᴀɴᴀᴘᴜɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         const MAX_PER_SECTION = 10;
         const sections = [];
