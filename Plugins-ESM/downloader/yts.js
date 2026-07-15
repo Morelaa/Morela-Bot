@@ -11,7 +11,7 @@ function formatNum(n) {
     return num.toString();
 }
 const handler = async (m, { conn, text }) => {
-    if (!text) { await m.reply('Contoh: .yts lady gaga'); return; }
+    if (!text) { await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: .ʏᴛꜱ ʟᴀᴅʏ ɢᴀɢᴀ\n╰┈┈┈┈┈┈┈┈⬡`); return; }
     try {
         const res = await yts(text);
         const rawVideos = res.all.filter((v) => v.type === 'video');
@@ -54,20 +54,20 @@ const handler = async (m, { conn, text }) => {
             });
         } catch {}
         const caption =
-`┌──「 *YouTube Search* 」
-│
-│  Kata kunci  » *${q}*
-│  Ditemukan   » *${videos.length} video*
-│
-├──「 *Video Teratas* 」
-│
-│  Judul    » ${top.title.length > 35 ? top.title.slice(0, 33) + '..' : top.title}
-│  Channel  » ${top.channel}
-│  Durasi   » ${top.duration}
-│  Ditonton » ${views} kali
-│  Diupload » ${top.ago || '-'}
-│
-└─────────────────────
+`╭┈┈⬡「 *ʏᴏᴜᴛᴜʙᴇ ꜱᴇᴀʀᴄʜ* 」
+┃
+┃ ✧ ᴋᴀᴛᴀ ᴋᴜɴᴄɪ  » *${q}*
+┃ ✧ ᴅɪᴛᴇᴍᴜᴋᴀɴ   » *${videos.length} ᴠɪᴅᴇᴏ*
+┃
+┣┈┈⬡「 *ᴠɪᴅᴇᴏ ᴛᴇʀᴀᴛᴀꜱ* 」
+┃
+┃ ✧ ᴊᴜᴅᴜʟ    » ${top.title.length > 35 ? top.title.slice(0, 33) + '..' : top.title}
+┃ ✧ ᴄʜᴀɴɴᴇʟ  » ${top.channel}
+┃ ✧ ᴅᴜʀᴀꜱɪ   » ${top.duration}
+┃ ✧ ᴅɪᴛᴏɴᴛᴏɴ » ${views} ᴋᴀʟɪ
+┃ ✧ ᴅɪᴜᴘʟᴏᴀᴅ » ${top.ago || '-'}
+┃
+╰┈┈┈┈┈┈┈┈⬡
 _Ketuk tombol untuk pilih video atau audio_ `;
         const { Button } = await import('../../Library/MessageBuilder.js');
         const btn = new Button(conn);
