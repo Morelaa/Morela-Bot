@@ -44,16 +44,16 @@ async function downloadBuffer(url) {
 const handler = async (m, { conn, text, usedPrefix, command }) => {
     if (command === 'stickersearch_pick') {
         const slug = text?.trim();
-        if (!slug) { await m.reply(' Slug tidak valid'); return; }
-        await m.reply(' Memproses...');
+        if (!slug) { await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ꜱʟᴜɢ ᴛɪᴅᴀᴋ ᴠᴀʟɪᴅ\n╰┈┈┈┈┈┈┈┈⬡`); return; }
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴍᴇᴍᴘʀᴏꜱᴇꜱ...\n╰┈┈┈┈┈┈┈┈⬡`);
         try {
             const detail = await api.detail(slug);
-            if (!detail.stickers.length) { await m.reply(' Pack ini kosong'); return; }
+            if (!detail.stickers.length) { await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴘᴀᴄᴋ ɪɴɪ ᴋᴏꜱᴏɴɢ\n╰┈┈┈┈┈┈┈┈⬡`); return; }
             const packname = config.stickerPackName || detail.title || config.botName;
             const hasStatic = detail.stickers.some(s => !s.animated);
             const pool = (hasStatic ? detail.stickers.filter(s => !s.animated) : detail.stickers)
                 .slice(0, MAX_STICKERS);
-            await m.reply(` Mengunduh *${packname}*...\n ${pool.length} stiker\n_Mohon tunggu sebentar_`);
+            await m.reply(`╭┈┈⬡「 *ᴍᴇɴɢᴜɴᴅᴜʜ *${packname}*...* 」\n┃ ✧ ${pool.length} ꜱᴛɪᴋᴇʀ\n┃ ✧ _ᴍᴏʜᴏɴ ᴛᴜɴɢɢᴜ ꜱᴇʙᴇɴᴛᴀʀ_\n╰┈┈┈┈┈┈┈┈⬡`);
             const stickerBuffers = [];
             for (const s of pool) {
                 try {
@@ -61,36 +61,36 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
                 } catch {}
                 await new Promise(r => setTimeout(r, 200));
             }
-            if (!stickerBuffers.length) { await m.reply(' Gagal mengunduh stiker'); return; }
+            if (!stickerBuffers.length) { await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴍᴇɴɢᴜɴᴅᴜʜ ꜱᴛɪᴋᴇʀ\n╰┈┈┈┈┈┈┈┈⬡`); return; }
             await sendStickerPack(
                 conn, m.chat,
                 stickerBuffers.map(buf => ({ buffer: buf, ext: 'webp', mimetype: 'image/webp', emojis: [''] })),
                 { name: packname, publisher: config.botName, description: `Sticker pack: ${packname}`, quoted: m.raw }
             );
         } catch (e) {
-            await m.reply(` Gagal: ${e.message}`);
+            await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ: ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         return;
     }
     if (!text) {
         await m.reply(
-            `╭──「  *Sticker Pack Search* 」\n` +
-            `│\n` +
-            `│  Cari & kirim sticker pack!\n` +
-            `│\n` +
-            `│   *Contoh:*\n` +
-            `│  ${usedPrefix}${command} anime\n` +
-            `│  ${usedPrefix}${command} blue archive\n` +
-            `│  ${usedPrefix}${command} cat meme\n` +
-            `│\n` +
-            `│   Dikirim sebagai pack WA asli!\n` +
-            `╰─────────────────────`
+            `╭┈┈⬡「 *ꜱᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ ꜱᴇᴀʀᴄʜ* 」\n` +
+            `┃\n` +
+            `┃ ✧ ᴄᴀʀɪ & ᴋɪʀɪᴍ ꜱᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ!\n` +
+            `┃\n` +
+            `┃ ✧ *ᴄᴏɴᴛᴏʜ:*\n` +
+            `┃ ✧ ${usedPrefix}${command} ᴀɴɪᴍᴇ\n` +
+            `┃ ✧ ${usedPrefix}${command} ʙʟᴜᴇ ᴀʀᴄʜɪᴠᴇ\n` +
+            `┃ ✧ ${usedPrefix}${command} ᴄᴀᴛ ᴍᴇᴍᴇ\n` +
+            `┃\n` +
+            `┃ ✧ ᴅɪᴋɪʀɪᴍ ꜱᴇʙᴀɢᴀɪ ᴘᴀᴄᴋ ᴡᴀ ᴀꜱʟɪ!\n` +
+            `╰┈┈┈┈┈┈┈┈⬡`
         );
         return;
     }
     try {
         const packs = await api.search(text);
-        if (!packs.length) { await m.reply(` Sticker pack *"${text}"* tidak ditemukan`); return; }
+        if (!packs.length) { await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ꜱᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ *"${text}"* ᴛɪᴅᴀᴋ ᴅɪᴛᴇᴍᴜᴋᴀɴ\n╰┈┈┈┈┈┈┈┈⬡`); return; }
         const rows = packs.slice(0, 10).map((p) => ({
             title: p.name.length > 40 ? p.name.slice(0, 37) + '...' : p.name,
             description: ` ${Number(p.download).toLocaleString('id-ID')}x download`,
@@ -99,13 +99,13 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
         const menuBuf = fs.existsSync(config.menuImage) ? fs.readFileSync(config.menuImage) : null;
         const q = text.charAt(0).toUpperCase() + text.slice(1);
         const footer =
-            `╭──「  *Sticker Pack* 」\n` +
-            `│\n` +
-            `│   Query » *${q}*\n` +
-            `│   Ketemu » *${packs.length} pack*\n` +
-            `│\n` +
-            `│   Pilih  auto kirim sebagai pack!\n` +
-            `╰─────────────────────\n` +
+            `╭┈┈⬡「 *ꜱᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ* 」\n` +
+            `┃\n` +
+            `┃ ✧ ǫᴜᴇʀʏ » *${q}*\n` +
+            `┃ ✧ ᴋᴇᴛᴇᴍᴜ » *${packs.length} ᴘᴀᴄᴋ*\n` +
+            `┃\n` +
+            `┃ ✧ ᴘɪʟɪʜ  ᴀᴜᴛᴏ ᴋɪʀɪᴍ ꜱᴇʙᴀɢᴀɪ ᴘᴀᴄᴋ!\n` +
+            `╰┈┈┈┈┈┈┈┈⬡\n` +
             `_Pilih pack di bawah ini_ \n` +
             `© ${config.botName}`;
         const { Button } = await import('../../Library/MessageBuilder.js');
@@ -118,7 +118,7 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
         rows.forEach((r) => spBtn.makeRow('', r.title, r.description, r.id));
         await spBtn.send(m.chat, { quoted: m.raw });
     } catch (e) {
-        await m.reply(` Error: ${e.message}`);
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴇʀʀᴏʀ: ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.help = ['stickersearch <query>', 'ssearch <query>'];
