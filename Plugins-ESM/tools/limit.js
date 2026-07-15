@@ -12,11 +12,11 @@ const handler = async (m) => {
     const sisa = isPrem ? '∞' : Math.max(limit - used, 0);
     const pemakaian = isPrem ? `${used}/∞` : `${used}/${limit}`;
     await m.reply(
-        `╭╌╌⬡「  *ʟɪᴍɪᴛ ᴋᴀᴍᴜ* 」\n┃\n` +
-        `┃ ◦  Terpakai : *${pemakaian}*\n` +
-        `┃ ◦  Sisa     : *${sisa}*\n` +
-        `┃ ◦  Status   : *${isPrem ? 'Premium' : 'Free'}*\n┃\n` +
-        `╰╌╌⬡\n\n꒰ © ${botName} ꒱`
+        `╭┈┈⬡「 *ʟɪᴍɪᴛ ᴋᴀᴍᴜ* 」\n┃\n` +
+        `┃ ✧ ᴛᴇʀᴘᴀᴋᴀɪ : *${pemakaian}*\n` +
+        `┃ ✧ ꜱɪꜱᴀ     : *${sisa}*\n` +
+        `┃ ✧ ꜱᴛᴀᴛᴜꜱ   : *${isPrem ? 'Premium' : 'Free'}*\n┃\n` +
+        `╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`
     );
 };
 handler.help = ['limit'];
