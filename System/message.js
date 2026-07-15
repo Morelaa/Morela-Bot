@@ -49,8 +49,11 @@ export function serializeMessage(raw, sock) {
     const type = getContentType(raw.message);
     const chat = raw.key.remoteJid;
     const isGroup = chat?.endsWith('@g.us');
-    const sender = isGroup ? raw.key.participant || raw.participant : chat;
     const fromMe = !!raw.key.fromMe;
+    const botJid = sock?.user?.id ? (sock.user.id.split(':')[0] + '@s.whatsapp.net') : chat;
+    const sender = isGroup
+        ? (raw.key.participant || raw.participant)
+        : (fromMe ? botJid : chat);
     const text = extractText(raw.message, type);
     const contextInfo = raw.message?.[type]?.contextInfo || {};
     const mentionedJid = contextInfo.mentionedJid || [];
