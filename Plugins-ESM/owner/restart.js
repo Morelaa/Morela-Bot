@@ -1,6 +1,6 @@
 'use strict';
 const handler = async (m) => {
-    await m.reply(' Merestart bot...');
+    await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴍᴇʀᴇꜱᴛᴀʀᴛ ʙᴏᴛ...\n╰┈┈┈┈┈┈┈┈⬡`);
     setTimeout(() => process.exit(0), 500);
 };
 handler.help = ['restart'];
