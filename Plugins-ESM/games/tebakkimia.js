@@ -18,13 +18,13 @@ const activeSessions = new Map();
 const handler = async (m, { conn }) => {
     const existing = activeSessions.get(m.chat);
     if (existing && existing.expireAt > Date.now()) {
-        await m.reply(` *Game Sedang Berlangsung!*\n\nMasih ada game Tebak Kimia di sini.\nSelesaikan dulu atau ketik *nyerah* untuk menyerah.`);
+        await m.reply(`╭┈┈⬡「 *ɢᴀᴍᴇ ꜱᴇᴅᴀɴɢ ʙᴇʀʟᴀɴɢꜱᴜɴɢ!* 」\n┃\n┃ ✧ ᴍᴀꜱɪʜ ᴀᴅᴀ ɢᴀᴍᴇ ᴛᴇʙᴀᴋ ᴋɪᴍɪᴀ ᴅɪ ꜱɪɴɪ.\n┃ ✧ ꜱᴇʟᴇꜱᴀɪᴋᴀɴ ᴅᴜʟᴜ ᴀᴛᴀᴜ ᴋᴇᴛɪᴋ *ɴʏᴇʀᴀʜ* ᴜɴᴛᴜᴋ ᴍᴇɴʏᴇʀᴀʜ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     const bank = loadSoal();
     const item = pickRandom(bank);
     if (!item) {
-        await m.reply('Bank soal kosong. Pastikan data/soal_tebakkimia.json ada.');
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ʙᴀɴᴋ ꜱᴏᴀʟ ᴋᴏꜱᴏɴɢ. ᴘᴀꜱᴛɪᴋᴀɴ ᴅᴀᴛᴀ/ꜱᴏᴀʟ_ᴛᴇʙᴀᴋᴋɪᴍɪᴀ.ᴊꜱᴏɴ ᴀᴅᴀ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     activeSessions.set(m.chat, {
@@ -35,19 +35,19 @@ const handler = async (m, { conn }) => {
     });
     await conn.sendMessage(m.chat, {
         text:
-`╭──「  *Tebak Kimia* 」
-│
-│   *Waktu*  » 45 detik
-│
-├──「  *Nama Unsur* 」
-│
-│    ${item.soal}  
-│
-│  Ketik *simbol/lambang* unsur tersebut!
-│   Contoh: H, He, Li, Na, Ca...
-│  Atau ketik *nyerah* untuk menyerah
-│
-╰─────────────────────
+`╭┈┈⬡「 *ᴛᴇʙᴀᴋ ᴋɪᴍɪᴀ* 」
+┃
+┃ ✧ *ᴡᴀᴋᴛᴜ*  » 45 ᴅᴇᴛɪᴋ
+┃
+┣┈┈⬡「 *ɴᴀᴍᴀ ᴜɴꜱᴜʀ* 」
+┃
+┃ ✧ ${item.soal}
+┃
+┃ ✧ ᴋᴇᴛɪᴋ *ꜱɪᴍʙᴏʟ/ʟᴀᴍʙᴀɴɢ* ᴜɴꜱᴜʀ ᴛᴇʀꜱᴇʙᴜᴛ!
+┃ ✧ ᴄᴏɴᴛᴏʜ: ʜ, ʜᴇ, ʟɪ, ɴᴀ, ᴄᴀ...
+┃ ✧ ᴀᴛᴀᴜ ᴋᴇᴛɪᴋ *ɴʏᴇʀᴀʜ* ᴜɴᴛᴜᴋ ᴍᴇɴʏᴇʀᴀʜ
+┃
+╰┈┈┈┈┈┈┈┈⬡
 _© ${config.copyrightName}_`
     }, { quoted: m.raw });
     setTimeout(async () => {
@@ -73,19 +73,19 @@ handler.onText = async (m) => {
     if (raw.startsWith('.') || raw.startsWith('!')) return false;
     if (raw.toLowerCase() === 'nyerah') {
         activeSessions.delete(m.chat);
-        await m.reply(` *Menyerah!* Simbolnya: *${session.jawaban}*\n\nKetik *.tebakkimia* untuk soal baru!`);
+        await m.reply(`╭┈┈⬡「 *ᴍᴇɴʏᴇʀᴀʜ!* ꜱɪᴍʙᴏʟɴʏᴀ: *${session.jawaban}* 」\n┃\n┃ ✧ ᴋᴇᴛɪᴋ *.ᴛᴇʙᴀᴋᴋɪᴍɪᴀ* ᴜɴᴛᴜᴋ ꜱᴏᴀʟ ʙᴀʀᴜ!\n╰┈┈┈┈┈┈┈┈⬡`);
         return true;
     }
     if (raw === session.jawaban) {
         activeSessions.delete(m.chat);
-        await m.reply(` *Benar!* Simbolnya *${session.jawaban}*. Ahli kimia sejati!\n\nKetik *.tebakkimia* untuk soal baru!`);
+        await m.reply(`╭┈┈⬡「 *ʙᴇɴᴀʀ!* ꜱɪᴍʙᴏʟɴʏᴀ *${session.jawaban}*. ᴀʜʟɪ ᴋɪᴍɪᴀ ꜱᴇᴊᴀᴛɪ!* 」\n┃\n┃ ✧ ᴋᴇᴛɪᴋ *.ᴛᴇʙᴀᴋᴋɪᴍɪᴀ* ᴜɴᴛᴜᴋ ꜱᴏᴀʟ ʙᴀʀᴜ!\n╰┈┈┈┈┈┈┈┈⬡`);
         return true;
     }
     const lastWrong = session.lastWrong[m.sender] || 0;
     if (Date.now() - lastWrong < 5000) return true;
     session.lastWrong[m.sender] = Date.now();
     const sisaDetik = Math.max(0, Math.ceil((session.expireAt - Date.now()) / 1000));
-    await m.reply(` *${raw}* bukan simbolnya~ (sisa ${sisaDetik} detik)\n\nCoba lagi atau ketik *nyerah* `);
+    await m.reply(`╭┈┈⬡「 *${raw}* ʙᴜᴋᴀɴ ꜱɪᴍʙᴏʟɴʏᴀ~ (ꜱɪꜱᴀ ${sisaDetik} ᴅᴇᴛɪᴋ)* 」\n┃\n┃ ✧ ᴄᴏʙᴀ ʟᴀɢɪ ᴀᴛᴀᴜ ᴋᴇᴛɪᴋ *ɴʏᴇʀᴀʜ*\n╰┈┈┈┈┈┈┈┈⬡`);
     return true;
 };
 export default handler;
