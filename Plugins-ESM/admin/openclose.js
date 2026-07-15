@@ -3,24 +3,24 @@
 const handler = async (m, { conn, command }) => {
     const from = m.chat;
     if (!from || !from.endsWith('@g.us')) {
-        return m.reply(' Command ini hanya bisa digunakan di dalam grup.');
+        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴄᴏᴍᴍᴀɴᴅ ɪɴɪ ʜᴀɴʏᴀ ʙɪꜱᴀ ᴅɪɢᴜɴᴀᴋᴀɴ ᴅɪ ᴅᴀʟᴀᴍ ɢʀᴜᴘ.\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 
     if (command === 'open') {
         try {
             await conn.groupSettingUpdate(from, 'not_announcement');
-            return m.reply(' *Grup Dibuka*\n\n Semua anggota kini dapat mengirim pesan.');
+            return m.reply(`╭┈┈⬡「 *ɢʀᴜᴘ ᴅɪʙᴜᴋᴀ* 」\n┃\n┃ ✧ ꜱᴇᴍᴜᴀ ᴀɴɢɢᴏᴛᴀ ᴋɪɴɪ ᴅᴀᴘᴀᴛ ᴍᴇɴɢɪʀɪᴍ ᴘᴇꜱᴀɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
         } catch {
-            return m.reply(' *Grup Dibuka*\n\n Gagal membuka grup!\nPastikan bot memiliki hak admin.');
+            return m.reply(`╭┈┈⬡「 *ɢʀᴜᴘ ᴅɪʙᴜᴋᴀ* 」\n┃\n┃ ✧ ɢᴀɢᴀʟ ᴍᴇᴍʙᴜᴋᴀ ɢʀᴜᴘ!\n┃ ✧ ᴘᴀꜱᴛɪᴋᴀɴ ʙᴏᴛ ᴍᴇᴍɪʟɪᴋɪ ʜᴀᴋ ᴀᴅᴍɪɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
     }
 
     if (command === 'close') {
         try {
             await conn.groupSettingUpdate(from, 'announcement');
-            return m.reply(' *Grup Ditutup*\n\n Hanya admin yang dapat mengirim pesan sekarang.');
+            return m.reply(`╭┈┈⬡「 *ɢʀᴜᴘ ᴅɪᴛᴜᴛᴜᴘ* 」\n┃\n┃ ✧ ʜᴀɴʏᴀ ᴀᴅᴍɪɴ ʏᴀɴɢ ᴅᴀᴘᴀᴛ ᴍᴇɴɢɪʀɪᴍ ᴘᴇꜱᴀɴ ꜱᴇᴋᴀʀᴀɴɢ.\n╰┈┈┈┈┈┈┈┈⬡`);
         } catch {
-            return m.reply(' *Grup Ditutup*\n\n Gagal menutup grup!\nPastikan bot memiliki hak admin.');
+            return m.reply(`╭┈┈⬡「 *ɢʀᴜᴘ ᴅɪᴛᴜᴛᴜᴘ* 」\n┃\n┃ ✧ ɢᴀɢᴀʟ ᴍᴇɴᴜᴛᴜᴘ ɢʀᴜᴘ!\n┃ ✧ ᴘᴀꜱᴛɪᴋᴀɴ ʙᴏᴛ ᴍᴇᴍɪʟɪᴋɪ ʜᴀᴋ ᴀᴅᴍɪɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
     }
 };
