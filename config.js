@@ -71,14 +71,22 @@ const config = {
     registerImage: path.join(__dirname, 'media', 'register.jpg'),
     // Path gambar yang dikirim di gate "belum terdaftar" (saat user belum .daftar/.register).
 
+    didyoumeanImage: 'https://cdn.ornzora.eu.cc/c6dbc61a-8eb9-4725-adf4-9d4e05bf4953-upload-1780181470322.jpg',
+    // Thumbnail yang tampil di kartu "Did You Mean" saat user salah ketik command.
+
+
     apiKeys: {
         neoxr: 'SENSOR_NEOXR',
         imgbb: 'SENSOR_IMGBB',
         // Daftar gratis di https://api.imgbb.com/ untuk dapat key ini.
         // Daftar gratis di https://api.neoxr.eu/ untuk dapat key ini.
 
-        evelyne: 'FreeLimit',
+        evelyne: 'SENSOR_EVELYNE',
         // Key gratis untuk api-evelyne.vercel.app, dipakai fitur brat (.bratruromiya, .brattren).
+
+        openrouter: 'SENSOR_OPENROUTER',
+        // API key OpenRouter (https://openrouter.ai/keys), dipakai fitur AI Agent
+        // (Plugins-ESM/ai/aiagent.js — .aiagenton/.agenton). Wajib diisi supaya AI Agent bisa jawab.
     },
 
     githubToken: 'SENSOR_GITHUBTOKEN',
@@ -129,7 +137,7 @@ const config = {
     // true -> di grup, cuma main owner & owner yang bisa chat/command ke bot.
     // false -> di grup, semua orang + main owner + owner bisa chat/command ke bot.
 
-    defaultPrivateMode: true,
+    defaultPrivateMode: false,
     // Nilai default private mode kalau belum pernah di-set lewat command toggle.
     // true -> di chat pribadi (DM), cuma main owner & owner yang bisa chat ke bot.
     // false -> di chat pribadi (DM), semua orang bebas chat ke bot.
