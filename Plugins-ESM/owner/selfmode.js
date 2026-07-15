@@ -83,7 +83,7 @@ async function sendInteractive(conn, chatJid, headerTitle, bodyText, quoted) {
    ──────────────────────────────────────────────────────────────── */
 function buildSelfmodeRows(groups, cmdPrefix = '.selfmode') {
     return groups.map((g, i) => {
-        const emoji = g.selfOn ? '' : '';
+        const emoji = g.selfOn ? '🟢' : '🔴';
         const status = g.selfOn ? 'Self Mode ON' : 'Public Mode';
         return {
             header: `𝔊𝔯𝔲𝔭 ${i + 1}`,
@@ -165,7 +165,7 @@ async function sendGroupList(conn, from, m, quoted, groupList, cmdPrefix, extraC
     const caption =
         `乂  *ꜱ ᴇ ʟ ꜰ   ᴍ ᴏ ᴅ ᴇ   ◦   ᴅ ᴀ ꜰ ᴛ ᴀ ʀ   ɢ ʀ ᴜ ᴘ*\n\n` +
         `\t◦  *ᴛᴏᴛᴀʟ ɢʀᴜᴘ*  : ${groupList.length}\n` +
-        `\t◦  *ꜱᴇʟꜰ ᴍᴏᴅᴇ*  :  ${selfOnCount} ɢʀᴜᴘ  ◦   ${groupList.length - selfOnCount} ɢʀᴜᴘ\n` +
+        `\t◦  *ꜱᴇʟꜰ ᴍᴏᴅᴇ*  : 🟢 ${selfOnCount} ɢʀᴜᴘ  ◦  🔴 ${groupList.length - selfOnCount} ɢʀᴜᴘ\n` +
         (globalOn ? `\t◦  *ɢʟᴏʙᴀʟ*      :  _ᴀᴋᴛɪꜰ — ꜱᴇᴍᴜᴀ ɢʀᴜᴘ ᴏᴛᴏᴍᴀᴛɪꜱ ꜱᴇʟꜰ ᴍᴏᴅᴇ_\n` : '') +
         extraCaption +
         `\n_𝔎𝔩𝔦𝔨 𝔫𝔞𝔪𝔞 𝔤𝔯𝔲𝔭 𝔲𝔫𝔱𝔲𝔨 𝔩𝔞𝔫𝔤𝔰𝔲𝔫𝔤 𝔱𝔬𝔤𝔤𝔩𝔢 𝔰𝔢𝔩𝔣 𝔪𝔬𝔡𝔢_`;
@@ -229,7 +229,7 @@ const handler = async (m, { conn }) => {
 
             if (!groupList.length) {
                 await conn.sendMessage(from, { react: { text: '', key: m.key } });
-                return m.reply(`乂  *ꜱᴇʟꜰ ꜱᴛᴀᴛᴜꜱ*\n\n\t◦  Bot tidak berada di grup manapun.`);
+                return m.reply(`╭┈┈⬡「 *乂  *ꜱᴇʟꜰ ꜱᴛᴀᴛᴜꜱ* 」\n┃\n┃ ✧ \ᴛ◦  ʙᴏᴛ ᴛɪᴅᴀᴋ ʙᴇʀᴀᴅᴀ ᴅɪ ɢʀᴜᴘ ᴍᴀɴᴀᴘᴜɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
             }
 
             await sendGroupList(
@@ -255,7 +255,7 @@ const handler = async (m, { conn }) => {
                 conn, from,
                 '𝗣 𝗨 𝗕 𝗟 𝗜 𝗖   ◦   𝗦 𝗧 𝗔 𝗧 𝗨 𝗦',
                 `*乂  ꜱᴇʟꜰ ᴍᴏᴅᴇ   ◦   ꜱᴛᴀᴛᴜꜱ*\n\n` +
-                ` ᴍᴏᴅᴇ   :  *PUBLIC — ᴛɪᴅᴀᴋ ᴀᴅᴀ ɢʀᴜᴘ ʏᴀɴɢ ꜱᴇʟꜰ ᴍᴏᴅᴇ*\n` +
+                ` ᴍᴏᴅᴇ   : 🔴 *PUBLIC — ᴛɪᴅᴀᴋ ᴀᴅᴀ ɢʀᴜᴘ ʏᴀɴɢ ꜱᴇʟꜰ ᴍᴏᴅᴇ*\n` +
                 ` ɪɴꜰᴏ   : _Bot ʀᴇꜱᴘᴏɴ ꜱᴇᴍᴜᴀ ᴜꜱᴇʀ ᴅɪ ꜱᴇᴍᴜᴀ ɢʀᴜᴘ_\n` +
                 ` ᴋᴇᴛɪᴋ : *.selfmode* _ᴜɴᴛᴜᴋ ᴀᴋᴛɪꜰᴋᴀɴ ᴅɪ ɢʀᴜᴘ ᴛᴇʀᴛᴇɴᴛᴜ_`,
                 fkontak
@@ -268,7 +268,7 @@ const handler = async (m, { conn }) => {
             conn, from,
             '𝗦 𝗘 𝗟 𝗙   ◦   𝗦 𝗧 𝗔 𝗧 𝗨 𝗦',
             `*乂  ꜱᴇʟꜰ ᴍᴏᴅᴇ   ◦   ꜱᴛᴀᴛᴜꜱ*\n\n` +
-            ` ᴍᴏᴅᴇ   :  *PER-GRUP — ɢʟᴏʙᴀʟ ᴛɪᴅᴀᴋ ᴀᴋᴛɪꜰ*\n` +
+            ` ᴍᴏᴅᴇ   : 🟢 *PER-GRUP — ɢʟᴏʙᴀʟ ᴛɪᴅᴀᴋ ᴀᴋᴛɪꜰ*\n` +
             ` ᴛᴏᴛᴀʟ   : *${onGroups.length} ɢʀᴜᴘ* ꜱᴇᴅᴀɴɢ ꜱᴇʟꜰ ᴍᴏᴅᴇ\n\n` +
             `*乂 Daftar grup:*\n${listText}\n\n` +
             ` ᴋᴇᴛɪᴋ : *.selfmode* _ᴜɴᴛᴜᴋ ᴋᴇʟᴏʟᴀ ᴘᴇʀ ɢʀᴜᴘ_`,
@@ -295,7 +295,7 @@ const handler = async (m, { conn }) => {
             '𝗣 𝗨 𝗕 𝗟 𝗜 𝗖   ◦   𝗠 𝗢 𝗗 𝗘',
             `*乂  ꜱᴇʟꜰ ꜱᴛᴀᴛᴜꜱ   ◦   ᴅɪᴜᴘᴅᴀᴛᴇ*\n\n` +
             ` ɢʀᴜᴘ    : _${grpName}_\n` +
-            ` ꜱᴛᴀᴛᴜꜱ :  *ᴘᴜʙʟɪᴄ ᴍᴏᴅᴇ ᴅɪᴀᴋᴛɪꜰᴋᴀɴ*\n` +
+            ` ꜱᴛᴀᴛᴜꜱ : 🔴 *ᴘᴜʙʟɪᴄ ᴍᴏᴅᴇ ᴅɪᴀᴋᴛɪꜰᴋᴀɴ*\n` +
             ` ɴᴏᴛᴇ    : _ ɢʟᴏʙᴀʟ ꜱᴇʟꜰ ᴍᴀꜱɪʜ ᴀᴋᴛɪꜰ, ɴᴀᴍᴜɴ ɢʀᴜᴘ ɪɴɪ ᴅɪᴋᴇᴄᴜᴀʟɪᴋᴀɴ_\n` +
             ` ɪɴꜰᴏ    : _Bot ʀᴇꜱᴘᴏɴ ꜱᴇᴍᴜᴀ ᴜꜱᴇʀ ᴅɪ ɢʀᴜᴘ ɪɴɪ_\n` +
             ` ᴋᴇᴛɪᴋ  : *.selfstatus* _ᴜɴᴛᴜᴋ ʟɪʜᴀᴛ ꜱᴛᴀᴛᴜꜱ ʟᴇɴɢᴋᴀᴘ_`,
@@ -314,7 +314,7 @@ const handler = async (m, { conn }) => {
             conn, from,
             wantOn ? '𝗦 𝗘 𝗟 𝗙   ◦   𝗚 𝗟 𝗢 𝗕 𝗔 𝗟' : '𝗣 𝗨 𝗕 𝗟 𝗜 𝗖   ◦   𝗚 𝗟 𝗢 𝗕 𝗔 𝗟',
             `*乂  ꜱᴇʟꜰ ɢʟᴏʙᴀʟ   ◦   ${wantOn ? 'ᴅɪᴀᴋᴛɪꜰᴋᴀɴ' : 'ᴅɪɴᴏɴᴀᴋᴛɪꜰᴋᴀɴ'}*\n\n` +
-            ` ꜱᴛᴀᴛᴜꜱ : ${wantOn ? ' *ɢʟᴏʙᴀʟ ꜱᴇʟꜰ ᴍᴏᴅᴇ ᴀᴋᴛɪꜰ*' : ' *ɢʟᴏʙᴀʟ ᴍᴏᴅᴇ ᴘᴜʙʟɪᴄ*'}\n` +
+            ` ꜱᴛᴀᴛᴜꜱ : ${wantOn ? '🟢 *ɢʟᴏʙᴀʟ ꜱᴇʟꜰ ᴍᴏᴅᴇ ᴀᴋᴛɪꜰ*' : '🔴 *ɢʟᴏʙᴀʟ ᴍᴏᴅᴇ ᴘᴜʙʟɪᴄ*'}\n` +
             ` ᴛᴏᴛᴀʟ   : _${total} ɢʀᴜᴘ ᴅɪᴜᴘᴅᴀᴛᴇ ꜱᴇᴋᴀʟɪɢᴜꜱ_\n` +
             ` ɪɴꜰᴏ   : ${wantOn
                 ? '_Bot ʜᴀɴʏᴀ ʀᴇꜱᴘᴏɴ ᴏᴡɴᴇʀ ᴅɪ ꜱᴇᴍᴜᴀ ɢʀᴜᴘ_'
@@ -343,7 +343,7 @@ const handler = async (m, { conn }) => {
             conn, from,
             wantOn ? '𝗦 𝗘 𝗟 𝗙   ◦   𝗠 𝗢 𝗗 𝗘' : '𝗣 𝗨 𝗕 𝗟 𝗜 𝗖   ◦   𝗠 𝗢 𝗗 𝗘',
             `*乂  ꜱᴇʟꜰ ᴍᴏᴅᴇ   ◦   ${wantOn ? 'ᴅɪᴀᴋᴛɪꜰᴋᴀɴ' : 'ᴅɪɴᴏɴᴀᴋᴛɪꜰᴋᴀɴ'}*\n\n` +
-            ` ꜱᴛᴀᴛᴜꜱ : ${wantOn ? ' *ꜱᴇʟꜰ ᴍᴏᴅᴇ ᴀᴋᴛɪꜰ*' : ' *ᴍᴏᴅᴇ ᴘᴜʙʟɪᴄ ᴅɪᴀᴋᴛɪꜰᴋᴀɴ*'}\n` +
+            ` ꜱᴛᴀᴛᴜꜱ : ${wantOn ? '🟢 *ꜱᴇʟꜰ ᴍᴏᴅᴇ ᴀᴋᴛɪꜰ*' : '🔴 *ᴍᴏᴅᴇ ᴘᴜʙʟɪᴄ ᴅɪᴀᴋᴛɪꜰᴋᴀɴ*'}\n` +
             ` ɢʀᴜᴘ   : _${grpName}_\n` +
             (isSelfModeGlobal()
                 ? ` ɴᴏᴛᴇ    : _ ɢʟᴏʙᴀʟ ꜱᴇʟꜰ ᴍᴀꜱɪʜ ᴀᴋᴛɪꜰ, ɢᴜɴᴀᴋᴀɴ *.selfstatus* ᴜɴᴛᴜᴋ ᴋᴇʟᴏʟᴀ ᴘᴇʀ-ɢʀᴜᴘ_\n`
@@ -365,7 +365,7 @@ const handler = async (m, { conn }) => {
 
         if (!groupList.length) {
             await conn.sendMessage(from, { react: { text: '', key: m.key } });
-            return m.reply(`乂  *ꜱᴇʟꜰ ᴍᴏᴅᴇ*\n\n\t◦  Bot tidak berada di grup manapun.`);
+            return m.reply(`╭┈┈⬡「 *乂  *ꜱᴇʟꜰ ᴍᴏᴅᴇ* 」\n┃\n┃ ✧ \ᴛ◦  ʙᴏᴛ ᴛɪᴅᴀᴋ ʙᴇʀᴀᴅᴀ ᴅɪ ɢʀᴜᴘ ᴍᴀɴᴀᴘᴜɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
 
         await sendGroupList(conn, from, m, fkontak, groupList, '.selfmode');
