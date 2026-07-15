@@ -171,13 +171,13 @@ const handler = async (m, { conn }) => {
 
     if (!media || media.type !== 'imageMessage') {
         return m.reply(
-            `╭──「  *HD Upscaler* 」\n│\n│  Kirim atau reply foto dengan\n│  caption *.hd*\n│\n│   Engine: Imglarger  PicsArt\n│   Scale : 4x\n│\n╰─────────────────────`
+            `╭┈┈⬡「 *ʜᴅ ᴜᴘꜱᴄᴀʟᴇʀ* 」\n┃\n┃ ✧ ᴋɪʀɪᴍ ᴀᴛᴀᴜ ʀᴇᴘʟʏ ꜰᴏᴛᴏ ᴅᴇɴɢᴀɴ\n┃ ✧ ᴄᴀᴘᴛɪᴏɴ *.ʜᴅ*\n┃\n┃ ✧ ᴇɴɢɪɴᴇ: ɪᴍɢʟᴀʀɢᴇʀ  ᴘɪᴄꜱᴀʀᴛ\n┃ ✧ ꜱᴄᴀʟᴇ : 4x\n┃\n╰┈┈┈┈┈┈┈┈⬡`
         );
     }
 
     const img = media.message;
     if ((img.fileLength || 0) > 10 * 1024 * 1024) {
-        return m.reply(' Gambar terlalu besar! Maksimal *10MB*');
+        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀᴍʙᴀʀ ᴛᴇʀʟᴀʟᴜ ʙᴇꜱᴀʀ! ᴍᴀᴋꜱɪᴍᴀʟ *10ᴍʙ*\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
@@ -188,7 +188,7 @@ const handler = async (m, { conn }) => {
         if (!buffer || !buffer.length) throw new Error('Buffer kosong');
     } catch (e) {
         await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
-        return m.reply(` Gagal download gambar\n\n${e.message}`);
+        return m.reply(`╭┈┈⬡「 *ɢᴀɢᴀʟ ᴅᴏᴡɴʟᴏᴀᴅ ɢᴀᴍʙᴀʀ* 」\n┃\n┃ ✧ ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 
     await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
@@ -205,7 +205,7 @@ const handler = async (m, { conn }) => {
         } catch (e2) {
             await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
             return m.reply(
-                `╭──「  *Kedua Engine Gagal* 」\n│\n│  Imglarger : ${e1.message}\n│  PicsArt   : ${e2.message}\n│\n╰─────────────────────`
+                `╭┈┈⬡「 *ᴋᴇᴅᴜᴀ ᴇɴɢɪɴᴇ ɢᴀɢᴀʟ* 」\n┃\n┃ ✧ ɪᴍɢʟᴀʀɢᴇʀ : ${e1.message}\n┃ ✧ ᴘɪᴄꜱᴀʀᴛ   : ${e2.message}\n┃\n╰┈┈┈┈┈┈┈┈⬡`
             );
         }
     }
