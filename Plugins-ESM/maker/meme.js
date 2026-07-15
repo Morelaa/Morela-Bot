@@ -4,17 +4,17 @@ import { findMediaMessage, downloadMessageMedia } from '../../Library/handle.js'
 const handler = async (m, { conn, text }) => {
     const media = findMediaMessage(m);
     if (!media || media.type !== 'imageMessage') {
-        await m.reply('Reply gambar dengan caption .meme teksatas|teksbawah ya.\nContoh: .meme KETIKA BOT|ERROR LAGI');
+        await m.reply(`╭┈┈⬡「 *ʀᴇᴘʟʏ ɢᴀᴍʙᴀʀ ᴅᴇɴɢᴀɴ ᴄᴀᴘᴛɪᴏɴ .ᴍᴇᴍᴇ ᴛᴇᴋꜱᴀᴛᴀꜱ|ᴛᴇᴋꜱʙᴀᴡᴀʜ ʏᴀ.* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: .ᴍᴇᴍᴇ ᴋᴇᴛɪᴋᴀ ʙᴏᴛ|ᴇʀʀᴏʀ ʟᴀɢɪ\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     if (!text) {
-        await m.reply('Kasih teksnya. Format: .meme teksatas|teksbawah');
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴋᴀꜱɪʜ ᴛᴇᴋꜱɴʏᴀ. ꜰᴏʀᴍᴀᴛ: .ᴍᴇᴍᴇ ᴛᴇᴋꜱᴀᴛᴀꜱ|ᴛᴇᴋꜱʙᴀᴡᴀʜ\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     const [top = '', bottom = ''] = text.split('|').map((s) => s.trim());
     const buffer = await downloadMessageMedia(m, conn);
     if (!buffer?.length) {
-        await m.reply('Gagal download gambar.');
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴅᴏᴡɴʟᴏᴀᴅ ɢᴀᴍʙᴀʀ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     const result = await createMeme(buffer, { topText: top, bottomText: bottom });
