@@ -277,14 +277,14 @@ handler.group = true;
 handler.admin = true;
 
 // ── Passive: proteksi tipe pesan (bot lain/video/foto/audio/dokumen/sticker/tag status) ──
-handler.onText = async (m, { conn }) => {
+handler.onText = async (m, { conn, participants }) => {
     if (!m.isGroup) return false;
     if (!m.message) return false;
     if (m.fromMe) return false;
 
     const senderJid = m.sender || m.key?.participant || m.key?.remoteJid || '';
     if (!senderJid) return false;
-    if (await isSenderAdminInGroup(conn, m.chat, senderJid)) return false;
+    if (await isSenderAdminInGroup(conn, m.chat, senderJid, participants)) return false;
 
     const grp = db.getGroup(m.chat);
     if (!grp) return false;
