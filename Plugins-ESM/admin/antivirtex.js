@@ -206,7 +206,7 @@ handler.group = true;
 handler.admin = true;
 
 // ── Passive: scan tiap pesan grup ─────────────────────────────────
-handler.onText = async (m, { conn }) => {
+handler.onText = async (m, { conn, participants }) => {
     if (!m.isGroup) return false;
     if (!m.message) return false;
     if (m.fromMe) return false;
@@ -220,9 +220,9 @@ handler.onText = async (m, { conn }) => {
     const senderJid = m.sender || m.key?.participant || m.key?.remoteJid || '';
     if (!senderJid) return false;
 
-    if (await isSenderAdminInGroup(conn, m.chat, senderJid)) return false;
+    if (await isSenderAdminInGroup(conn, m.chat, senderJid, participants)) return false;
 
-    const botAdmin = await resolveBotAdmin(conn, m.chat);
+    const botAdmin = await resolveBotAdmin(conn, m.chat, participants);
 
     if (isProductVirtex(m)) { await kickAndNotify(conn, m, senderJid, 'Product Message Virtex (deskripsi panjang)', botAdmin); return false; }
     if (isLongTextVirtex(m)) { await kickAndNotify(conn, m, senderJid, 'Teks ekstrem panjang (>8000 karakter)', botAdmin); return false; }
