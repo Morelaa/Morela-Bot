@@ -123,7 +123,7 @@ handler.group = true;
 handler.admin = true;
 
 // ── Passive: scan tiap pesan grup, hapus kalau ada link ───────────
-handler.onText = async (m, { conn }) => {
+handler.onText = async (m, { conn, participants }) => {
     if (!m.isGroup) return false;
     if (!m.message) return false;
     if (m.fromMe) return false;
@@ -132,14 +132,14 @@ handler.onText = async (m, { conn }) => {
     const grp = db.getGroup(from);
     if (!grp?.settings?.antilink) return false;
 
-    const botIsAdmin = await resolveBotAdmin(conn, from);
+    const botIsAdmin = await resolveBotAdmin(conn, from, participants);
     if (!botIsAdmin) return false;
 
     const rawText = extractAllText(m);
     if (rawText && isRealBotCommand(rawText)) return false;
 
     const senderRaw = m.key?.participant || m.key?.remoteJid || m.sender || '';
-    let senderIsAdmin = await isSenderAdminInGroup(conn, from, senderRaw);
+    let senderIsAdmin = await isSenderAdminInGroup(conn, from, senderRaw, participants);
     if (senderIsAdmin) return false;
 
     if (!hasProhibitedContent(m)) return false;
