@@ -3,14 +3,7 @@ import { get as kvGet } from '../../Database/kvstore.js';
 import store from '../../Core/store.js';
 const handler = async (m, { conn, command, args }) => {
     if (!m.quoted) {
-        return m.reply(
-            ` *Harus reply pesan dulu!*\n\n` +
-            `Cara pakai:\n` +
-            `• Reply pesan  ketik *.crm*\n` +
-            `• Reply pesan  ketik *.crm <jid>* (kirim ke chat lain)\n` +
-            `• Reply pesan  ketik *.rawjson* (lihat raw JSON)\n\n` +
-            `_Mendukung: button, media, sticker, text, dll_`
-        );
+        return m.reply(`╭┈┈⬡「 *ʜᴀʀᴜꜱ ʀᴇᴘʟʏ ᴘᴇꜱᴀɴ ᴅᴜʟᴜ!* 」\n┃\n┃ ✧ ᴄᴀʀᴀ ᴘᴀᴋᴀɪ:\n┃ ✧ ʀᴇᴘʟʏ ᴘᴇꜱᴀɴ  ᴋᴇᴛɪᴋ *.ᴄʀᴍ*\n┃ ✧ ʀᴇᴘʟʏ ᴘᴇꜱᴀɴ  ᴋᴇᴛɪᴋ *.ᴄʀᴍ <ᴊɪᴅ>* (ᴋɪʀɪᴍ ᴋᴇ ᴄʜᴀᴛ ʟᴀɪɴ)\n┃ ✧ ʀᴇᴘʟʏ ᴘᴇꜱᴀɴ  ᴋᴇᴛɪᴋ *.ʀᴀᴡᴊꜱᴏɴ* (ʟɪʜᴀᴛ ʀᴀᴡ ᴊꜱᴏɴ)\n┃\n┃ ✧ _ᴍᴇɴᴅᴜᴋᴜɴɢ: ʙᴜᴛᴛᴏɴ, ᴍᴇᴅɪᴀ, ꜱᴛɪᴄᴋᴇʀ, ᴛᴇxᴛ, ᴅʟʟ_\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     const quotedId = m.quoted?.key?.id;
     const quotedChat = m.quoted?.key?.remoteJid || m.chat;
@@ -34,10 +27,7 @@ const handler = async (m, { conn, command, args }) => {
         rawQuotedMessage = m.quoted.message;
     }
     if (!rawQuotedMessage) {
-        return m.reply(
-            ` Tidak dapat mengambil raw message.\n` +
-            `Coba gunakan *.rawjson* untuk melihat struktur quoted.`
-        );
+        return m.reply(`╭┈┈⬡「 *ᴛɪᴅᴀᴋ ᴅᴀᴘᴀᴛ ᴍᴇɴɢᴀᴍʙɪʟ ʀᴀᴡ ᴍᴇꜱꜱᴀɢᴇ.* 」\n┃ ✧ ᴄᴏʙᴀ ɢᴜɴᴀᴋᴀɴ *.ʀᴀᴡᴊꜱᴏɴ* ᴜɴᴛᴜᴋ ᴍᴇʟɪʜᴀᴛ ꜱᴛʀᴜᴋᴛᴜʀ ǫᴜᴏᴛᴇᴅ.\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     if (command === 'rawjson' || command === 'rawijson') {
         const json = JSON.stringify(rawQuotedMessage, null, 2);
@@ -50,11 +40,7 @@ const handler = async (m, { conn, command, args }) => {
             }, { quoted: m.raw });
         }
         else {
-            await m.reply(
-                ` *Raw Quoted Message*\n` +
-                `mtype: \`${m.quoted?.type ?? 'unknown'}\`\n\n` +
-                `\`\`\`json\n${json}\n\`\`\``
-            );
+            await m.reply(`╭┈┈⬡「 *ʀᴀᴡ ǫᴜᴏᴛᴇᴅ ᴍᴇꜱꜱᴀɢᴇ* 」\n┃ ✧ ᴍᴛʏᴘᴇ: \`${m.quoted?.type ?? 'unknown'}\`\n╰┈┈┈┈┈┈┈┈⬡\n\n\`\`\`json\n${json}\n\`\`\``);
         }
         return;
     }
@@ -68,7 +54,7 @@ const handler = async (m, { conn, command, args }) => {
             targetJid = argJid;
         }
         else {
-            return m.reply(` JID tidak valid: \`${argJid}\`\n\nContoh:\n• \`628xxx\`  nomor WA\n• \`120363xxx@g.us\`  grup`);
+            return m.reply(`╭┈┈⬡「 *ᴊɪᴅ ᴛɪᴅᴀᴋ ᴠᴀʟɪᴅ: \`${argJid}\`* 」\n┃\n┃ ✧ ᴄᴏɴᴛᴏʜ:\n┃ ✧ \`628xxx\`  ɴᴏᴍᴏʀ ᴡᴀ\n┃ ✧ \`120363xxx@ɢ.ᴜꜱ\`  ɢʀᴜᴘ\n╰┈┈┈┈┈┈┈┈⬡`);
         }
     }
     const isInteractive = !!rawQuotedMessage?.interactiveMessage;
@@ -93,11 +79,7 @@ const handler = async (m, { conn, command, args }) => {
             relayOptions.additionalNodes = interactiveNodes;
         await conn.relayMessage(targetJid, generatedMsg.message, relayOptions);
         if (targetJid !== m.chat) {
-            await m.reply(
-                ` *Berhasil relay pesan!*\n\n` +
-                ` Tipe: \`${m.quoted?.type ?? 'unknown'}\`\n` +
-                ` Tujuan: \`${targetJid}\``
-            );
+            await m.reply(`╭┈┈⬡「 *ʙᴇʀʜᴀꜱɪʟ ʀᴇʟᴀʏ ᴘᴇꜱᴀɴ!* 」\n┃\n┃ ✧ ᴛɪᴘᴇ: \`${m.quoted?.type ?? 'unknown'}\`\n┃ ✧ ᴛᴜᴊᴜᴀɴ: \`${targetJid}\`\n╰┈┈┈┈┈┈┈┈⬡`);
         }
     }
     catch (_err1) {
@@ -105,16 +87,11 @@ const handler = async (m, { conn, command, args }) => {
             const fallbackOptions = isInteractive ? { additionalNodes: interactiveNodes } : {};
             await conn.relayMessage(targetJid, rawQuotedMessage, fallbackOptions);
             if (targetJid !== m.chat) {
-                await m.reply(` Relay berhasil\n Tujuan: \`${targetJid}\``);
+                await m.reply(`╭┈┈⬡「 *ʀᴇʟᴀʏ ʙᴇʀʜᴀꜱɪʟ* 」\n┃ ✧ ᴛᴜᴊᴜᴀɴ: \`${targetJid}\`\n╰┈┈┈┈┈┈┈┈⬡`);
             }
         }
         catch (err2) {
-            await m.reply(
-                ` *Relay gagal!*\n\n` +
-                `Error: ${err2?.message || err2}\n\n` +
-                ` Coba *.rawjson* untuk lihat struktur pesan,\n` +
-                `lalu relay manual via \`>\` eval.`
-            );
+            await m.reply(`╭┈┈⬡「 *ʀᴇʟᴀʏ ɢᴀɢᴀʟ!* 」\n┃\n┃ ✧ ᴇʀʀᴏʀ: ${err2?.message || err2}\n┃\n┃ ✧ ᴄᴏʙᴀ *.ʀᴀᴡᴊꜱᴏɴ* ᴜɴᴛᴜᴋ ʟɪʜᴀᴛ ꜱᴛʀᴜᴋᴛᴜʀ ᴘᴇꜱᴀɴ,\n┃ ✧ ʟᴀʟᴜ ʀᴇʟᴀʏ ᴍᴀɴᴜᴀʟ ᴠɪᴀ \`>\` ᴇᴠᴀʟ.\n╰┈┈┈┈┈┈┈┈⬡`);
             return;
         }
     }
@@ -128,7 +105,7 @@ const handler = async (m, { conn, command, args }) => {
         }, { quoted: m.raw });
     }
     catch (jsonErr) {
-        await m.reply(` Relay sukses tapi gagal kirim JSON:\n${jsonErr?.message || jsonErr}`);
+        await m.reply(`╭┈┈⬡「 *ʀᴇʟᴀʏ ꜱᴜᴋꜱᴇꜱ ᴛᴀᴘɪ ɢᴀɢᴀʟ ᴋɪʀɪᴍ ᴊꜱᴏɴ:* 」\n┃ ✧ ${jsonErr?.message || jsonErr}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.command = /^(crm|rawjson|rawijson)$/i;
