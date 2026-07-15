@@ -10,7 +10,7 @@ function extractVideoId(url) {
 const handler = async (m, { conn, args }) => {
     const url = args[0];
     if (!url || !/(youtube\.com|youtu\.be)/.test(url)) {
-        await m.reply(' Kasih link YouTube yang valid.\nContoh: .ytmp4 https://youtu.be/xxxxx');
+        await m.reply(`╭┈┈⬡「 *ᴋᴀꜱɪʜ ʟɪɴᴋ ʏᴏᴜᴛᴜʙᴇ ʏᴀɴɢ ᴠᴀʟɪᴅ.* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: .ʏᴛᴍᴘ4 ʜᴛᴛᴘꜱ://ʏᴏᴜᴛᴜ.ʙᴇ/xxxxx\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
