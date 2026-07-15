@@ -5,7 +5,7 @@ import config from '../../config.js';
 import { buildFkontak } from '../../Library/utils.js';
 
 const handler = async (m, { conn, text, command }) => {
-    if (!text?.trim()) return m.reply(`Masukkan teks!\n\nContoh:\n.${command || 'bratspongebob'} falzx hama banget jir`);
+    if (!text?.trim()) return m.reply(`╭┈┈⬡「 *ᴍᴀꜱᴜᴋᴋᴀɴ ᴛᴇᴋꜱ!* 」\n┃\n┃ ✧ ᴄᴏɴᴛᴏʜ:\n┃ ✧ .${command || 'bratspongebob'} ꜰᴀʟᴢx ʜᴀᴍᴀ ʙᴀɴɢᴇᴛ ᴊɪʀ\n╰┈┈┈┈┈┈┈┈⬡`);
 
     try {
         const imageUrl = 'https://img1.pixhost.to/images/11791/687260942_vynaa-valerie.jpg';
@@ -60,7 +60,7 @@ const handler = async (m, { conn, text, command }) => {
         await conn.sendMessage(m.chat, { sticker: webpBuffer }, { quoted: (await buildFkontak(conn, config).catch(() => null)) || m.raw });
     } catch (e) {
         console.error(e);
-        m.reply(' Gagal membuat stiker');
+        m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴍᴇᴍʙᴜᴀᴛ ꜱᴛɪᴋᴇʀ\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 
