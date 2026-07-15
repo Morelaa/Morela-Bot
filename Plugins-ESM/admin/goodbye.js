@@ -73,24 +73,19 @@ const handler = async (m, { conn, args, participants, groupMeta }) => {
         const groupData = getGroup(from);
         const current = !!groupData?.settings?.goodbye;
         if (!mode || mode === 'status' || mode === 'cek') {
-            return m.reply(
-                ` *GOODBYE STATUS*\n\n` +
-                `Goodbye : ${current ? ' AKTIF' : ' NONAKTIF'}\n\n` +
-                `• *.goodbye on/off* — atur goodbye\n` +
-                `• *.goodbye @tag* / *.tesgoodbye @tag* — test manual`
-            );
+            return m.reply(`╭┈┈⬡「 *ɢᴏᴏᴅʙʏᴇ ꜱᴛᴀᴛᴜꜱ* 」\n┃\n┃ ✧ ɢᴏᴏᴅʙʏᴇ : ${current ? ' AKTIF' : ' NONAKTIF'}\n┃\n┃ ✧ *.ɢᴏᴏᴅʙʏᴇ ᴏɴ/ᴏꜰꜰ* — ᴀᴛᴜʀ ɢᴏᴏᴅʙʏᴇ\n┃ ✧ *.ɢᴏᴏᴅʙʏᴇ @ᴛᴀɢ* / *.ᴛᴇꜱɢᴏᴏᴅʙʏᴇ @ᴛᴀɢ* — ᴛᴇꜱᴛ ᴍᴀɴᴜᴀʟ\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         if (mode === 'on') {
-            if (current) return m.reply(' Goodbye sudah aktif!');
+            if (current) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴏᴏᴅʙʏᴇ ꜱᴜᴅᴀʜ ᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡`);
             upsertGroupSettings(from, groupMeta?.subject ?? null, { goodbye: true });
-            return m.reply(' *Goodbye Diaktifkan!* ');
+            return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *ɢᴏᴏᴅʙʏᴇ ᴅɪᴀᴋᴛɪꜰᴋᴀɴ!*\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         if (mode === 'off') {
-            if (!current) return m.reply(' Goodbye sudah nonaktif!');
+            if (!current) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴏᴏᴅʙʏᴇ ꜱᴜᴅᴀʜ ɴᴏɴᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡`);
             upsertGroupSettings(from, groupMeta?.subject ?? null, { goodbye: false });
-            return m.reply(' *Goodbye Dinonaktifkan!*');
+            return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *ɢᴏᴏᴅʙʏᴇ ᴅɪɴᴏɴᴀᴋᴛɪꜰᴋᴀɴ!*\n╰┈┈┈┈┈┈┈┈⬡`);
         }
-        return m.reply(' Gunakan: .goodbye on / off / status / @tag');
+        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴜɴᴀᴋᴀɴ: .ɢᴏᴏᴅʙʏᴇ ᴏɴ / ᴏꜰꜰ / ꜱᴛᴀᴛᴜꜱ / @ᴛᴀɢ\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     try {
         const meta = groupMeta || (await conn.groupMetadata(from));
@@ -98,15 +93,15 @@ const handler = async (m, { conn, args, participants, groupMeta }) => {
         const memberCount = meta.participants?.length || 0;
         const targetJid = m.mentionedJid[0];
         const safeTarget = sanitizeJid(targetJid);
-        if (!safeTarget) return m.reply(' JID target tidak valid!');
+        if (!safeTarget) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴊɪᴅ ᴛᴀʀɢᴇᴛ ᴛɪᴅᴀᴋ ᴠᴀʟɪᴅ!\n╰┈┈┈┈┈┈┈┈⬡`);
         const list = participants || meta.participants;
         const participant = findParticipant(list, safeTarget);
         const pushname = participant?.notify || participant?.name || null;
         await sendGoodbye(conn, from, safeTarget, groupName, memberCount, pushname);
-        m.reply(' Goodbye test terkirim!');
+        m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴏᴏᴅʙʏᴇ ᴛᴇꜱᴛ ᴛᴇʀᴋɪʀɪᴍ!\n╰┈┈┈┈┈┈┈┈⬡`);
     } catch (e) {
         console.error('[GOODBYE CMD ERROR]', e?.message);
-        m.reply(` Error: ${e?.message}`);
+        m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴇʀʀᴏʀ: ${e?.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.help = ['goodbye on', 'goodbye off', 'goodbye @tag', 'tesgoodbye @tag'];
