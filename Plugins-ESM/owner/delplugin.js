@@ -5,24 +5,24 @@ const handler = async (m, { text }) => {
     const name = (text || '').trim();
     if (!name) {
         await m.reply(
-            `╭╌╌⬡「  *ᴅᴇʟ ᴘʟᴜɢɪɴ* 」\n┃\n` +
-            `┃ ◦ Format : *.delplugin <nama>*\n` +
-            `┃ ◦ Contoh : *.delplugin backup*\n` +
-            `┃ ◦ Contoh : *.delplugin owner/backup*\n┃\n` +
-            `╰╌╌⬡`
+            `╭┈┈⬡「 *ᴅᴇʟ ᴘʟᴜɢɪɴ* 」\n┃\n` +
+            `┃ ✧ ꜰᴏʀᴍᴀᴛ : *.ᴅᴇʟᴘʟᴜɢɪɴ <ɴᴀᴍᴀ>*\n` +
+            `┃ ✧ ᴄᴏɴᴛᴏʜ : *.ᴅᴇʟᴘʟᴜɢɪɴ ʙᴀᴄᴋᴜᴘ*\n` +
+            `┃ ✧ ᴄᴏɴᴛᴏʜ : *.ᴅᴇʟᴘʟᴜɢɪɴ ᴏᴡɴᴇʀ/ʙᴀᴄᴋᴜᴘ*\n┃\n` +
+            `╰┈┈┈┈┈┈┈┈⬡`
         );
         return;
     }
     const result = pluginManager.deletePlugin(name);
     if (!result.success) {
-        await m.reply(`╭╌╌⬡「  *ᴅᴇʟ ᴘʟᴜɢɪɴ* 」\n┃\n┃  ${result.error}\n┃\n╰╌╌⬡`);
+        await m.reply(`╭┈┈⬡「 *ᴅᴇʟ ᴘʟᴜɢɪɴ* 」\n┃\n┃ ✧ ${result.error}\n┃\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     await m.reply(
-        `╭╌╌⬡「  *ᴅᴇʟ ᴘʟᴜɢɪɴ* 」\n┃\n` +
-        `┃  Berhasil dihapus & langsung nonaktif.\n┃\n` +
-        `┃  ${result.rel}.js\n┃\n` +
-        `╰╌╌⬡`
+        `╭┈┈⬡「 *ᴅᴇʟ ᴘʟᴜɢɪɴ* 」\n┃\n` +
+        `┃ ✧ ʙᴇʀʜᴀꜱɪʟ ᴅɪʜᴀᴘᴜꜱ & ʟᴀɴɢꜱᴜɴɢ ɴᴏɴᴀᴋᴛɪꜰ.\n┃\n` +
+        `┃ ✧ ${result.rel}.ᴊꜱ\n┃\n` +
+        `╰┈┈┈┈┈┈┈┈⬡`
     );
 };
 handler.help = ['delplugin <nama>'];
