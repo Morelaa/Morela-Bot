@@ -33,7 +33,7 @@ function normalize(str) {
 const handler = async (m, { conn }) => {
     const existing = activeSessions.get(m.chat);
     if (existing && existing.expireAt > Date.now()) {
-        await m.reply(` *Game Sedang Berlangsung!*\n\nMasih ada game Tebak Surah di sini.\nSelesaikan dulu atau ketik *nyerah* untuk menyerah.`);
+        await m.reply(`╭┈┈⬡「 *ɢᴀᴍᴇ ꜱᴇᴅᴀɴɢ ʙᴇʀʟᴀɴɢꜱᴜɴɢ!* 」\n┃\n┃ ✧ ᴍᴀꜱɪʜ ᴀᴅᴀ ɢᴀᴍᴇ ᴛᴇʙᴀᴋ ꜱᴜʀᴀʜ ᴅɪ ꜱɪɴɪ.\n┃ ✧ ꜱᴇʟᴇꜱᴀɪᴋᴀɴ ᴅᴜʟᴜ ᴀᴛᴀᴜ ᴋᴇᴛɪᴋ *ɴʏᴇʀᴀʜ* ᴜɴᴛᴜᴋ ᴍᴇɴʏᴇʀᴀʜ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     try {
@@ -60,19 +60,19 @@ const handler = async (m, { conn }) => {
         });
         await conn.sendMessage(m.chat, {
             text:
-`╭──「  *Tebak Surah* 」
-│
-│  Dengarkan audio & tebak nama surahnya!
-│
-│   *Ayat ke*  » ${ayahNum}
-│   *Qari*    » ${qari}
-│   *Waktu*    » 90 detik
-│
-│  Ketik nama surah (Inggris/Arab)
-│   *Contoh:* Al-Fatihah / Al-Baqarah
-│
-│  Atau ketik *nyerah* untuk menyerah
-╰─────────────────────
+`╭┈┈⬡「 *ᴛᴇʙᴀᴋ ꜱᴜʀᴀʜ* 」
+┃
+┃ ✧ ᴅᴇɴɢᴀʀᴋᴀɴ ᴀᴜᴅɪᴏ & ᴛᴇʙᴀᴋ ɴᴀᴍᴀ ꜱᴜʀᴀʜɴʏᴀ!
+┃
+┃ ✧ *ᴀʏᴀᴛ ᴋᴇ*  » ${ayahNum}
+┃ ✧ *ǫᴀʀɪ*    » ${qari}
+┃ ✧ *ᴡᴀᴋᴛᴜ*    » 90 ᴅᴇᴛɪᴋ
+┃
+┃ ✧ ᴋᴇᴛɪᴋ ɴᴀᴍᴀ ꜱᴜʀᴀʜ (ɪɴɢɢʀɪꜱ/ᴀʀᴀʙ)
+┃ ✧ *ᴄᴏɴᴛᴏʜ:* ᴀʟ-ꜰᴀᴛɪʜᴀʜ / ᴀʟ-ʙᴀǫᴀʀᴀʜ
+┃
+┃ ✧ ᴀᴛᴀᴜ ᴋᴇᴛɪᴋ *ɴʏᴇʀᴀʜ* ᴜɴᴛᴜᴋ ᴍᴇɴʏᴇʀᴀʜ
+╰┈┈┈┈┈┈┈┈⬡
 _© ${config.copyrightName}_`
         }, { quoted: m.raw });
         const audioRes = await fetch(r.audio, { headers: { 'User-Agent': 'Mozilla/5.0' } });
@@ -100,7 +100,7 @@ _© ${config.copyrightName}_`
             }
         }, TIMEOUT_MS + 500);
     } catch (e) {
-        await m.reply(` Gagal ambil soal: ${e.message}`);
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴀᴍʙɪʟ ꜱᴏᴀʟ: ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.help = ['tebaksurah'];
@@ -115,20 +115,20 @@ handler.onText = async (m) => {
     const tebakan = raw.toUpperCase();
     if (tebakan === 'NYERAH') {
         activeSessions.delete(m.chat);
-        await m.reply(` *Menyerah!* Surahnya: *${session.surahName}* (${session.surahAr})\n\nKetik *.tebaksurah* untuk soal baru!`);
+        await m.reply(`╭┈┈⬡「 *ᴍᴇɴʏᴇʀᴀʜ!* ꜱᴜʀᴀʜɴʏᴀ: *${session.surahName}* (${session.surahAr})* 」\n┃\n┃ ✧ ᴋᴇᴛɪᴋ *.ᴛᴇʙᴀᴋꜱᴜʀᴀʜ* ᴜɴᴛᴜᴋ ꜱᴏᴀʟ ʙᴀʀᴜ!\n╰┈┈┈┈┈┈┈┈⬡`);
         return true;
     }
     const isBenar = normalize(tebakan) === normalize(session.jawabanEn) || raw === session.jawabanAr;
     if (isBenar) {
         activeSessions.delete(m.chat);
-        await m.reply(` *Benar!* Surahnya *${session.surahName}* (${session.surahAr}), artinya "${session.translation}".\n\nKetik *.tebaksurah* untuk soal baru!`);
+        await m.reply(`╭┈┈⬡「 *ʙᴇɴᴀʀ!* ꜱᴜʀᴀʜɴʏᴀ *${session.surahName}* (${session.surahAr}), ᴀʀᴛɪɴʏᴀ "${session.translation}".* 」\n┃\n┃ ✧ ᴋᴇᴛɪᴋ *.ᴛᴇʙᴀᴋꜱᴜʀᴀʜ* ᴜɴᴛᴜᴋ ꜱᴏᴀʟ ʙᴀʀᴜ!\n╰┈┈┈┈┈┈┈┈⬡`);
         return true;
     }
     const lastWrong = session.lastWrong[m.sender] || 0;
     if (Date.now() - lastWrong < 5000) return true;
     session.lastWrong[m.sender] = Date.now();
     const sisaDetik = Math.max(0, Math.ceil((session.expireAt - Date.now()) / 1000));
-    await m.reply(` *${raw}* bukan jawabannya~ (sisa ${sisaDetik} detik)\n\nCoba lagi atau ketik *nyerah* `);
+    await m.reply(`╭┈┈⬡「 *${raw}* ʙᴜᴋᴀɴ ᴊᴀᴡᴀʙᴀɴɴʏᴀ~ (ꜱɪꜱᴀ ${sisaDetik} ᴅᴇᴛɪᴋ)* 」\n┃\n┃ ✧ ᴄᴏʙᴀ ʟᴀɢɪ ᴀᴛᴀᴜ ᴋᴇᴛɪᴋ *ɴʏᴇʀᴀʜ*\n╰┈┈┈┈┈┈┈┈⬡`);
     return true;
 };
 export default handler;
