@@ -199,7 +199,7 @@ const handler = async (m, { conn, command, args, isOwner }) => {
             : (command === 'menu' && args?.[0] ? args[0].toLowerCase() : null);
         if (cat) {
             const data = menuLists[cat];
-            if (!data) return m.reply(` Kategori "${cat}" tidak ditemukan`);
+            if (!data) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴋᴀᴛᴇɢᴏʀɪ "${cat}" ᴛɪᴅᴀᴋ ᴅɪᴛᴇᴍᴜᴋᴀɴ\n╰┈┈┈┈┈┈┈┈⬡`);
             const body = buildCategoryBody(data);
             if (getMenuStyle() === 'v2') {
                 return sendMenuV2Style(conn, m, body, senderJid);
@@ -213,7 +213,7 @@ const handler = async (m, { conn, command, args, isOwner }) => {
         await sendMenuV1Style(conn, m.chat, imgBuf, body, fkontak, ctx, menuLists);
     } catch (e) {
         console.error('[MENU ERROR]', e);
-        await m.reply(` Error: ${e.message}`);
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴇʀʀᴏʀ: ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.help = ['menu'];
