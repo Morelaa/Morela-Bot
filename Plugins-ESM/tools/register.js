@@ -280,19 +280,19 @@ const handler = async (m, { conn, text, isOwner }) => {
     if (command === 'daftar' || command === 'register') {
         if (isOwn || isPrem) {
             return m.reply(
-                `╭╌╌⬡「  *ᴀᴄᴄᴏᴜɴᴛ ᴘʀɪᴠɪʟᴇɢᴇᴅ* 」\n┃\n` +
-                `┃ ◦  Kamu adalah *Owner/Premium*\n` +
-                `┃ ◦  Akun sudah otomatis diizinkan\n┃\n` +
-                `╰╌╌⬡\n\n꒰ © ${botName} ꒱`
+                `╭┈┈⬡「 *ᴀᴄᴄᴏᴜɴᴛ ᴘʀɪᴠɪʟᴇɢᴇᴅ* 」\n┃\n` +
+                `┃ ✧ ᴋᴀᴍᴜ ᴀᴅᴀʟᴀʜ *ᴏᴡɴᴇʀ/ᴘʀᴇᴍɪᴜᴍ*\n` +
+                `┃ ✧ ᴀᴋᴜɴ ꜱᴜᴅᴀʜ ᴏᴛᴏᴍᴀᴛɪꜱ ᴅɪɪᴢɪɴᴋᴀɴ\n┃\n` +
+                `╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`
             );
         }
         if (db.isRegistered(userJid)) {
             const data = db.getUser(userJid);
             return m.reply(
-                `╭╌╌⬡「  *ꜱᴜᴅᴀʜ ᴛᴇʀᴅᴀꜰᴛᴀʀ* 」\n┃\n` +
-                `┃ ◦  Nama  : *${data?.name || '-'}*\n` +
-                `┃ ◦ Gunakan *.cekrg* untuk lihat profil\n┃\n` +
-                `╰╌╌⬡\n\n꒰ © ${botName} ꒱`
+                `╭┈┈⬡「 *ꜱᴜᴅᴀʜ ᴛᴇʀᴅᴀꜰᴛᴀʀ* 」\n┃\n` +
+                `┃ ✧ ɴᴀᴍᴀ  : *${data?.name || '-'}*\n` +
+                `┃ ✧ ɢᴜɴᴀᴋᴀɴ *.ᴄᴇᴋʀɢ* ᴜɴᴛᴜᴋ ʟɪʜᴀᴛ ᴘʀᴏꜰɪʟ\n┃\n` +
+                `╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`
             );
         }
         if (text && text.trim().length > 0) {
@@ -329,14 +329,14 @@ const handler = async (m, { conn, text, isOwner }) => {
     }
     if (command === 'daftar_auto') {
         if (isOwn || isPrem) {
-            return m.reply(`╭╌╌⬡「  *ᴘʀɪᴠɪʟᴇɢᴇᴅ* 」\n┃ Kamu Owner/Premium — tidak perlu daftar!\n╰╌╌⬡\n\n꒰ © ${botName} ꒱`);
+            return m.reply(`╭┈┈⬡「 *ᴘʀɪᴠɪʟᴇɢᴇᴅ* 」\n┃ ✧ ᴋᴀᴍᴜ ᴏᴡɴᴇʀ/ᴘʀᴇᴍɪᴜᴍ — ᴛɪᴅᴀᴋ ᴘᴇʀʟᴜ ᴅᴀꜰᴛᴀʀ!\n╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`);
         }
         if (db.isRegistered(userJid)) {
             const data = db.getUser(userJid);
             return m.reply(
-                `╭╌╌⬡「  *ꜱᴜᴅᴀʜ ᴛᴇʀᴅᴀꜰᴛᴀʀ* 」\n┃\n` +
-                `┃ ◦  *${data?.name || '-'}*\n` +
-                `┃ ◦ Gunakan *.cekrg* untuk lihat profil\n┃\n╰╌╌⬡\n\n꒰ © ${botName} ꒱`
+                `╭┈┈⬡「 *ꜱᴜᴅᴀʜ ᴛᴇʀᴅᴀꜰᴛᴀʀ* 」\n┃\n` +
+                `┃ ✧ *${data?.name || '-'}*\n` +
+                `┃ ✧ ɢᴜɴᴀᴋᴀɴ *.ᴄᴇᴋʀɢ* ᴜɴᴛᴜᴋ ʟɪʜᴀᴛ ᴘʀᴏꜰɪʟ\n┃\n╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`
             );
         }
         const nama = String(pushname).slice(0, 25) || 'User';
@@ -368,37 +368,37 @@ const handler = async (m, { conn, text, isOwner }) => {
     if (command === 'unreg' || command === 'unregister') {
         if (!db.isRegistered(userJid)) {
             return m.reply(
-                `╭╌╌⬡「  *ʙᴇʟᴜᴍ ᴛᴇʀᴅᴀꜰᴛᴀʀ* 」\n┃\n┃ ◦  Kamu belum terdaftar!\n┃ ◦ Ketik *.daftar* untuk daftar\n┃\n` +
-                `╰╌╌⬡\n\n꒰ © ${botName} ꒱`
+                `╭┈┈⬡「 *ʙᴇʟᴜᴍ ᴛᴇʀᴅᴀꜰᴛᴀʀ* 」\n┃\n┃ ✧ ᴋᴀᴍᴜ ʙᴇʟᴜᴍ ᴛᴇʀᴅᴀꜰᴛᴀʀ!\n┃ ✧ ᴋᴇᴛɪᴋ *.ᴅᴀꜰᴛᴀʀ* ᴜɴᴛᴜᴋ ᴅᴀꜰᴛᴀʀ\n┃\n` +
+                `╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`
             );
         }
         const data = db.getUser(userJid);
         const inputSN = (text || '').trim().toUpperCase();
         if (!inputSN) {
             return m.reply(
-                `╭╌╌⬡「  *ᴄᴀʀᴀ ᴜɴʀᴇɢ* 」\n┃\n` +
-                `┃ ◦ Format : *.unreg KODE-SN*\n` +
-                `┃ ◦ Contoh : *.unreg RYU7CWF62HS*\n┃\n` +
-                `╰╌╌⬡\n\n꒰ © ${botName} ꒱`
+                `╭┈┈⬡「 *ᴄᴀʀᴀ ᴜɴʀᴇɢ* 」\n┃\n` +
+                `┃ ✧ ꜰᴏʀᴍᴀᴛ : *.ᴜɴʀᴇɢ ᴋᴏᴅᴇ-ꜱɴ*\n` +
+                `┃ ✧ ᴄᴏɴᴛᴏʜ : *.ᴜɴʀᴇɢ ʀʏᴜ7ᴄᴡꜰ62ʜꜱ*\n┃\n` +
+                `╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`
             );
         }
         const storedSN = (data?.sn_code || '').toUpperCase();
         if (inputSN !== storedSN) {
-            return m.reply(`╭╌╌⬡「  *ᴋᴏᴅᴇ ꜱɴ ꜱᴀʟᴀʜ* 」\n┃\n┃ ◦  Kode SN tidak cocok!\n┃\n╰╌╌⬡\n\n꒰ © ${botName} ꒱`);
+            return m.reply(`╭┈┈⬡「 *ᴋᴏᴅᴇ ꜱɴ ꜱᴀʟᴀʜ* 」\n┃\n┃ ✧ ᴋᴏᴅᴇ ꜱɴ ᴛɪᴅᴀᴋ ᴄᴏᴄᴏᴋ!\n┃\n╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`);
         }
         const ok = db.unregisterUser(userJid);
-        if (!ok) return m.reply(' Gagal unreg. Coba lagi.');
+        if (!ok) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴜɴʀᴇɢ. ᴄᴏʙᴀ ʟᴀɢɪ.\n╰┈┈┈┈┈┈┈┈⬡`);
         await conn.sendMessage(from, { react: { text: '', key: m.key } });
         return m.reply(
-            `╭╌╌⬡「  *ᴜɴʀᴇɢ ʙᴇʀʜᴀꜱɪʟ* 」\n┃\n` +
-            `┃ ◦  Akun *${data?.name || '-'}* dihapus\n` +
-            `┃ ◦ Ketik *.daftar* untuk daftar ulang\n┃\n` +
-            `╰╌╌⬡\n\n꒰ © ${botName} ꒱`
+            `╭┈┈⬡「 *ᴜɴʀᴇɢ ʙᴇʀʜᴀꜱɪʟ* 」\n┃\n` +
+            `┃ ✧ ᴀᴋᴜɴ *${data?.name || '-'}* ᴅɪʜᴀᴘᴜꜱ\n` +
+            `┃ ✧ ᴋᴇᴛɪᴋ *.ᴅᴀꜰᴛᴀʀ* ᴜɴᴛᴜᴋ ᴅᴀꜰᴛᴀʀ ᴜʟᴀɴɢ\n┃\n` +
+            `╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`
         );
     }
     if (command === 'cekrg' || command === 'profil' || command === 'profile') {
         if (!isOwn && !isPrem && !db.isRegistered(userJid)) {
-            return m.reply(`╭╌╌⬡「  *ʙᴇʟᴜᴍ ᴛᴇʀᴅᴀꜰᴛᴀʀ* 」\n┃\n┃ ◦ Ketik *.daftar* untuk daftar\n┃\n╰╌╌⬡\n\n꒰ © ${botName} ꒱`);
+            return m.reply(`╭┈┈⬡「 *ʙᴇʟᴜᴍ ᴛᴇʀᴅᴀꜰᴛᴀʀ* 」\n┃\n┃ ✧ ᴋᴇᴛɪᴋ *.ᴅᴀꜰᴛᴀʀ* ᴜɴᴛᴜᴋ ᴅᴀꜰᴛᴀʀ\n┃\n╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`);
         }
         const data = db.getUser(userJid);
         const nama = data?.name || pushname;
@@ -406,14 +406,14 @@ const handler = async (m, { conn, text, isOwner }) => {
         const tgl = data?.registered_at ? fmtTgl(data.registered_at * 1000) : '-';
         const premium = data?.premium ? ' Premium' : 'Free';
         const caption =
-            `╭╌╌⬡「  *ᴘʀᴏꜰɪʟ ᴀᴋᴜɴ* 」\n┃\n` +
-            `┃ ◦  Nama    : *${nama}*\n` +
-            `┃ ◦  Nomor   : *${userNumber}*\n` +
-            `┃ ◦  Kode SN : *${snCode}*\n` +
-            `┃ ◦  Daftar  : *${tgl}*\n` +
-            `┃ ◦  Status  : *${premium}*\n` +
-            `┃ ◦  Verified : *True*\n┃\n` +
-            `╰╌╌⬡\n\n꒰ © ${botName} ꒱`;
+            `╭┈┈⬡「 *ᴘʀᴏꜰɪʟ ᴀᴋᴜɴ* 」\n┃\n` +
+            `┃ ✧ ɴᴀᴍᴀ    : *${nama}*\n` +
+            `┃ ✧ ɴᴏᴍᴏʀ   : *${userNumber}*\n` +
+            `┃ ✧ ᴋᴏᴅᴇ ꜱɴ : *${snCode}*\n` +
+            `┃ ✧ ᴅᴀꜰᴛᴀʀ  : *${tgl}*\n` +
+            `┃ ✧ ꜱᴛᴀᴛᴜꜱ  : *${premium}*\n` +
+            `┃ ✧ ᴠᴇʀɪꜰɪᴇᴅ : *ᴛʀᴜᴇ*\n┃\n` +
+            `╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`;
         try {
             const ppBuf = await fetchPP(conn, userJid);
             const canvasBuf = await generateRegCanvas(nama, snCode, tgl, ppBuf);
@@ -425,26 +425,26 @@ const handler = async (m, { conn, text, isOwner }) => {
         return;
     }
     if (command === 'deldaftar') {
-        if (!isOwn) return m.reply(' Fitur ini hanya untuk Owner!');
+        if (!isOwn) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ꜰɪᴛᴜʀ ɪɴɪ ʜᴀɴʏᴀ ᴜɴᴛᴜᴋ ᴏᴡɴᴇʀ!\n╰┈┈┈┈┈┈┈┈⬡`);
         const allUsers = db.getUsers();
         const total = db.countUsers();
         if (total === 0) {
-            return m.reply(`╭╌╌⬡「  *ᴅᴀꜰᴛᴀʀ ᴘᴇɴᴅᴀꜰᴛᴀʀ* 」\n┃\n┃ ◦  Belum ada user terdaftar\n┃\n╰╌╌⬡\n\n꒰ © ${botName} ꒱`);
+            return m.reply(`╭┈┈⬡「 *ᴅᴀꜰᴛᴀʀ ᴘᴇɴᴅᴀꜰᴛᴀʀ* 」\n┃\n┃ ✧ ʙᴇʟᴜᴍ ᴀᴅᴀ ᴜꜱᴇʀ ᴛᴇʀᴅᴀꜰᴛᴀʀ\n┃\n╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`);
         }
         if (text && text.trim()) {
             const targetJid = text.trim();
             const targetUser =
                 allUsers[targetJid] ||
                 Object.values(allUsers).find((u) => u.phone === targetJid.replace('@s.whatsapp.net', ''));
-            if (!targetUser) return m.reply(' User tidak ditemukan di database.');
+            if (!targetUser) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴜꜱᴇʀ ᴛɪᴅᴀᴋ ᴅɪᴛᴇᴍᴜᴋᴀɴ ᴅɪ ᴅᴀᴛᴀʙᴀꜱᴇ.\n╰┈┈┈┈┈┈┈┈⬡`);
             const ok = db.unregisterUser(targetUser.jid);
-            if (!ok) return m.reply(' Gagal menghapus user. Coba lagi.');
+            if (!ok) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴍᴇɴɢʜᴀᴘᴜꜱ ᴜꜱᴇʀ. ᴄᴏʙᴀ ʟᴀɢɪ.\n╰┈┈┈┈┈┈┈┈⬡`);
             await conn.sendMessage(from, { react: { text: '', key: m.key } });
             return m.reply(
-                `╭╌╌⬡「  *ʜᴀᴘᴜꜱ ꜱᴜᴋꜱᴇꜱ* 」\n┃\n` +
-                `┃ ◦  User *${targetUser.name || '-'}* dihapus\n` +
-                `┃ ◦  User harus ketik *.daftar* untuk daftar ulang\n┃\n` +
-                `╰╌╌⬡\n\n꒰ © ${botName} ꒱`
+                `╭┈┈⬡「 *ʜᴀᴘᴜꜱ ꜱᴜᴋꜱᴇꜱ* 」\n┃\n` +
+                `┃ ✧ ᴜꜱᴇʀ *${targetUser.name || '-'}* ᴅɪʜᴀᴘᴜꜱ\n` +
+                `┃ ✧ ᴜꜱᴇʀ ʜᴀʀᴜꜱ ᴋᴇᴛɪᴋ *.ᴅᴀꜰᴛᴀʀ* ᴜɴᴛᴜᴋ ᴅᴀꜰᴛᴀʀ ᴜʟᴀɴɢ\n┃\n` +
+                `╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`
             );
         }
         const sorted = Object.values(allUsers).sort((a, b) => (a.registered_at || 0) - (b.registered_at || 0));
@@ -484,22 +484,22 @@ const handler = async (m, { conn, text, isOwner }) => {
         return;
     }
     if (command === 'listuser' || command === 'listusers' || command === 'daftaruser') {
-        if (!isOwn) return m.reply(' Fitur ini hanya untuk Owner!');
+        if (!isOwn) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ꜰɪᴛᴜʀ ɪɴɪ ʜᴀɴʏᴀ ᴜɴᴛᴜᴋ ᴏᴡɴᴇʀ!\n╰┈┈┈┈┈┈┈┈⬡`);
         const allUsers = db.getUsers();
         const total = db.countUsers();
         if (total === 0) {
-            return m.reply(`╭╌╌⬡「  *ʟɪꜱᴛ ᴜꜱᴇʀ* 」\n┃\n┃ ◦  Belum ada user terdaftar\n┃\n╰╌╌⬡\n\n꒰ © ${botName} ꒱`);
+            return m.reply(`╭┈┈⬡「 *ʟɪꜱᴛ ᴜꜱᴇʀ* 」\n┃\n┃ ✧ ʙᴇʟᴜᴍ ᴀᴅᴀ ᴜꜱᴇʀ ᴛᴇʀᴅᴀꜰᴛᴀʀ\n┃\n╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`);
         }
         const sorted = Object.values(allUsers).sort((a, b) => (b.registered_at || 0) - (a.registered_at || 0));
-        let txt = `╭╌╌⬡「  *ʟɪꜱᴛ ᴜꜱᴇʀ* 」\n┃\n┃ ◦  Total : *${total} user*\n┃\n`;
+        let txt = `╭┈┈⬡「 *ʟɪꜱᴛ ᴜꜱᴇʀ* 」\n┃\n┃ ✧ ᴛᴏᴛᴀʟ : *${total} ᴜꜱᴇʀ*\n┃\n`;
         sorted.forEach((u, i) => {
             const tgl = u.registered_at ? fmtTgl(u.registered_at * 1000) : '-';
             const prem = u.premium ? ' ' : '';
             const banned = u.banned ? ' ' : '';
             const ageStr = u.age != null ? ` (${u.age} th)` : '';
-            txt += `┃ ◦ *${i + 1}.* ${u.name || 'User'}${ageStr}${prem}${banned}\n` + `┃     +${u.phone || u.jid.replace('@s.whatsapp.net', '')}\n` + `┃     ${tgl}\n┃\n`;
+            txt += `┃ ✧ *${i + 1}.* ${u.name || 'User'}${ageStr}${prem}${banned}\n` + `┃ ✧ +${u.phone || u.jid.replace('@s.whatsapp.net', '')}\n` + `┃ ✧ ${tgl}\n┃\n`;
         });
-        txt += `╰╌╌⬡\n\n꒰ © ${botName} ꒱`;
+        txt += `╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`;
         await m.reply(txt);
     }
 };
