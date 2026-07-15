@@ -18,13 +18,13 @@ const activeSessions = new Map();
 const handler = async (m, { conn }) => {
     const existing = activeSessions.get(m.chat);
     if (existing && existing.expireAt > Date.now()) {
-        await m.reply(` *Game Sedang Berlangsung!*\n\nMasih ada game Tebak Gambar di sini.\nSelesaikan dulu atau ketik *nyerah* untuk menyerah.`);
+        await m.reply(`╭┈┈⬡「 *ɢᴀᴍᴇ ꜱᴇᴅᴀɴɢ ʙᴇʀʟᴀɴɢꜱᴜɴɢ!* 」\n┃\n┃ ✧ ᴍᴀꜱɪʜ ᴀᴅᴀ ɢᴀᴍᴇ ᴛᴇʙᴀᴋ ɢᴀᴍʙᴀʀ ᴅɪ ꜱɪɴɪ.\n┃ ✧ ꜱᴇʟᴇꜱᴀɪᴋᴀɴ ᴅᴜʟᴜ ᴀᴛᴀᴜ ᴋᴇᴛɪᴋ *ɴʏᴇʀᴀʜ* ᴜɴᴛᴜᴋ ᴍᴇɴʏᴇʀᴀʜ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     const bank = loadSoal();
     const item = pickRandom(bank);
     if (!item) {
-        await m.reply('Bank soal kosong. Pastikan data/soal_tebakgambar.json ada.');
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ʙᴀɴᴋ ꜱᴏᴀʟ ᴋᴏꜱᴏɴɢ. ᴘᴀꜱᴛɪᴋᴀɴ ᴅᴀᴛᴀ/ꜱᴏᴀʟ_ᴛᴇʙᴀᴋɢᴀᴍʙᴀʀ.ᴊꜱᴏɴ ᴀᴅᴀ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     try {
@@ -38,17 +38,17 @@ const handler = async (m, { conn }) => {
         await conn.sendMessage(m.chat, {
             image: imageBuffer,
             caption:
-`╭──「  *Tebak Gambar* 」
-│
-│   *Waktu*  » 90 detik
-│
-│  Perhatikan gambar di atas!
-│  Kira-kira gambar itu apa?
-│
-│  Ketik jawabanmu di chat!
-│  Atau ketik *nyerah* untuk menyerah
-│
-╰─────────────────────
+`╭┈┈⬡「 *ᴛᴇʙᴀᴋ ɢᴀᴍʙᴀʀ* 」
+┃
+┃ ✧ *ᴡᴀᴋᴛᴜ*  » 90 ᴅᴇᴛɪᴋ
+┃
+┃ ✧ ᴘᴇʀʜᴀᴛɪᴋᴀɴ ɢᴀᴍʙᴀʀ ᴅɪ ᴀᴛᴀꜱ!
+┃ ✧ ᴋɪʀᴀ-ᴋɪʀᴀ ɢᴀᴍʙᴀʀ ɪᴛᴜ ᴀᴘᴀ?
+┃
+┃ ✧ ᴋᴇᴛɪᴋ ᴊᴀᴡᴀʙᴀɴᴍᴜ ᴅɪ ᴄʜᴀᴛ!
+┃ ✧ ᴀᴛᴀᴜ ᴋᴇᴛɪᴋ *ɴʏᴇʀᴀʜ* ᴜɴᴛᴜᴋ ᴍᴇɴʏᴇʀᴀʜ
+┃
+╰┈┈┈┈┈┈┈┈⬡
 _© ${config.copyrightName}_`
         }, { quoted: m.raw });
         setTimeout(async () => {
@@ -61,7 +61,7 @@ _© ${config.copyrightName}_`
             }
         }, TIMEOUT_MS + 500);
     } catch (e) {
-        await m.reply(` Gagal ambil soal: ${e.message}`);
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴀᴍʙɪʟ ꜱᴏᴀʟ: ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.help = ['tebakgambar - tebak nama dari gambar yang dikirim bot'];
@@ -76,19 +76,19 @@ handler.onText = async (m) => {
     const tebakan = raw.toUpperCase();
     if (tebakan === 'NYERAH') {
         activeSessions.delete(m.chat);
-        await m.reply(` *Menyerah!* Jawabannya: *${session.jawaban}*\n\nKetik *.tebakgambar* untuk soal baru!`);
+        await m.reply(`╭┈┈⬡「 *ᴍᴇɴʏᴇʀᴀʜ!* ᴊᴀᴡᴀʙᴀɴɴʏᴀ: *${session.jawaban}* 」\n┃\n┃ ✧ ᴋᴇᴛɪᴋ *.ᴛᴇʙᴀᴋɢᴀᴍʙᴀʀ* ᴜɴᴛᴜᴋ ꜱᴏᴀʟ ʙᴀʀᴜ!\n╰┈┈┈┈┈┈┈┈⬡`);
         return true;
     }
     if (tebakan === session.jawaban) {
         activeSessions.delete(m.chat);
-        await m.reply(` *Benar!* Jawabannya *${session.jawaban}*. Mata kamu jeli sekali!\n\nKetik *.tebakgambar* untuk soal baru!`);
+        await m.reply(`╭┈┈⬡「 *ʙᴇɴᴀʀ!* ᴊᴀᴡᴀʙᴀɴɴʏᴀ *${session.jawaban}*. ᴍᴀᴛᴀ ᴋᴀᴍᴜ ᴊᴇʟɪ ꜱᴇᴋᴀʟɪ!* 」\n┃\n┃ ✧ ᴋᴇᴛɪᴋ *.ᴛᴇʙᴀᴋɢᴀᴍʙᴀʀ* ᴜɴᴛᴜᴋ ꜱᴏᴀʟ ʙᴀʀᴜ!\n╰┈┈┈┈┈┈┈┈⬡`);
         return true;
     }
     const lastWrong = session.lastWrong[m.sender] || 0;
     if (Date.now() - lastWrong < 5000) return true;
     session.lastWrong[m.sender] = Date.now();
     const sisaDetik = Math.max(0, Math.ceil((session.expireAt - Date.now()) / 1000));
-    await m.reply(` *${tebakan}* bukan jawabannya~ (sisa ${sisaDetik} detik)\n\nCoba lagi atau ketik *nyerah* `);
+    await m.reply(`╭┈┈⬡「 *${tebakan}* ʙᴜᴋᴀɴ ᴊᴀᴡᴀʙᴀɴɴʏᴀ~ (ꜱɪꜱᴀ ${sisaDetik} ᴅᴇᴛɪᴋ)* 」\n┃\n┃ ✧ ᴄᴏʙᴀ ʟᴀɢɪ ᴀᴛᴀᴜ ᴋᴇᴛɪᴋ *ɴʏᴇʀᴀʜ*\n╰┈┈┈┈┈┈┈┈⬡`);
     return true;
 };
 export default handler;
