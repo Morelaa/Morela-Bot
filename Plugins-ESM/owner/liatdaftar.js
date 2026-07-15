@@ -15,20 +15,20 @@ const handler = async (m, { conn, text }) => {
             allUsers[targetJid] ||
             Object.values(allUsers).find((u) => u.phone === targetJid.replace('@s.whatsapp.net', ''));
         if (!targetUser) {
-            await m.reply(' User tidak ditemukan di daftar pendaftar.');
+            await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴜꜱᴇʀ ᴛɪᴅᴀᴋ ᴅɪᴛᴇᴍᴜᴋᴀɴ ᴅɪ ᴅᴀꜰᴛᴀʀ ᴘᴇɴᴅᴀꜰᴛᴀʀ.\n╰┈┈┈┈┈┈┈┈⬡`);
             return;
         }
         const namaTarget = targetUser.name || '-';
         const ok = db.unregisterUser(targetUser.jid);
         if (!ok) {
-            await m.reply(' Gagal unreg user. Coba lagi.');
+            await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴜɴʀᴇɢ ᴜꜱᴇʀ. ᴄᴏʙᴀ ʟᴀɢɪ.\n╰┈┈┈┈┈┈┈┈⬡`);
             return;
         }
         await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
         await m.reply(
-            `╭╌╌⬡「  *ᴜɴʀᴇɢ ʙᴇʀʜᴀꜱɪʟ* 」\n┃\n` +
-            `┃ ◦  Akun *${namaTarget}* dihapus oleh Owner\n┃\n` +
-            `╰╌╌⬡\n\n꒰ © ${botName} ꒱`
+            `╭┈┈⬡「 *ᴜɴʀᴇɢ ʙᴇʀʜᴀꜱɪʟ* 」\n┃\n` +
+            `┃ ✧ ᴀᴋᴜɴ *${namaTarget}* ᴅɪʜᴀᴘᴜꜱ ᴏʟᴇʜ ᴏᴡɴᴇʀ\n┃\n` +
+            `╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`
         );
         return;
     }
@@ -36,7 +36,7 @@ const handler = async (m, { conn, text }) => {
     const allUsers = db.getUsers();
     const total = db.countUsers();
     if (total === 0) {
-        await m.reply(`╭╌╌⬡「  *ʟɪᴀᴛ ᴅᴀꜰᴛᴀʀ* 」\n┃\n┃ ◦  Belum ada user terdaftar\n┃\n╰╌╌⬡\n\n꒰ © ${botName} ꒱`);
+        await m.reply(`╭┈┈⬡「 *ʟɪᴀᴛ ᴅᴀꜰᴛᴀʀ* 」\n┃\n┃ ✧ ʙᴇʟᴜᴍ ᴀᴅᴀ ᴜꜱᴇʀ ᴛᴇʀᴅᴀꜰᴛᴀʀ\n┃\n╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`);
         return;
     }
 
