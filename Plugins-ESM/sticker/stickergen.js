@@ -41,9 +41,9 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
         await m.reply(
             ` *STICKER GENERATOR AI*\n\n` +
             `> Generate stiker AI dari deskripsi teks!\n\n` +
-            `╭──「  Cara Pakai 」\n` +
-            `│ ${usedPrefix}${command} <deskripsi>\n` +
-            `╰─────────────────\n\n` +
+            `╭┈┈⬡「  ᴄᴀʀᴀ ᴘᴀᴋᴀɪ 」\n` +
+            `┃ ✧ ${usedPrefix}${command} <ᴅᴇꜱᴋʀɪᴘꜱɪ>\n` +
+            `╰┈┈┈┈┈┈┈┈⬡\n\n` +
             `*Contoh:*\n` +
             `> ${usedPrefix}${command} cat eat banana\n` +
             `> ${usedPrefix}${command} anime girl with sword\n` +
@@ -51,7 +51,7 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
         );
         return;
     }
-    await m.reply(` Generating stiker...\n *${text}*`);
+    await m.reply(`╭┈┈⬡「 *ɢᴇɴᴇʀᴀᴛɪɴɢ ꜱᴛɪᴋᴇʀ...* 」\n┃ ✧ *${text}*\n╰┈┈┈┈┈┈┈┈⬡`);
     try {
         const res = await axios.get('https://api.neoxr.eu/api/sticker-gen', {
             params: { q: text, apikey: NEOXR_KEY },
@@ -83,7 +83,7 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
             },
         }, { quoted: m.raw });
     } catch (e) {
-        await m.reply(` Gagal: ${e.message}`);
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ: ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.help = ['stickergen <deskripsi>'];
