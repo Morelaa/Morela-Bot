@@ -75,7 +75,7 @@ function formatWIB() {
 
 const handler = async (m, { conn, args, participants }) => {
     const { jid: targetJid, quotedPushName, isSelf } = await resolveTargetJid(m, args, m.sender, conn, participants);
-    if (!targetJid) return m.reply(' Target tidak valid. Reply, mention, atau tulis nomornya.');
+    if (!targetJid) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴛᴀʀɢᴇᴛ ᴛɪᴅᴀᴋ ᴠᴀʟɪᴅ. ʀᴇᴘʟʏ, ᴍᴇɴᴛɪᴏɴ, ᴀᴛᴀᴜ ᴛᴜʟɪꜱ ɴᴏᴍᴏʀɴʏᴀ.\n╰┈┈┈┈┈┈┈┈⬡`);
 
     const num = normNum(targetJid);
     const userData = db.getUser(targetJid) || {};
