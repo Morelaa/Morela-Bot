@@ -190,40 +190,40 @@ async function onHandler(m, { args = [], conn }) {
             return await conn.relayMessage(m.chat, content, {});
         } catch (e) {
             console.error('[ANTIGRUP] Tabel gagal, fallback teks:', e?.message);
-            let text = `╭╌╌⬡「  *ꜱᴛᴀᴛᴜꜱ ꜰɪᴛᴜʀ ɢʀᴜᴘ* 」\n┃\n`;
+            let text = `╭┈┈⬡「 *ꜱᴛᴀᴛᴜꜱ ꜰɪᴛᴜʀ ɢʀᴜᴘ* 」\n┃\n`;
             for (const key of ORDER) {
-                text += `┃ ${statusOf(settings, key)}  ${FEATURES[key]}\n`;
+                text += `┃ ✧ ${statusOf(settings, key)}  ${FEATURES[key]}\n`;
             }
-            text += `┃\n┃ *.on <fitur>* / *.off <fitur>* untuk toggle\n┃ Contoh: *.on antilink*\n╰╌╌⬡`;
+            text += `┃\n┃ ✧ *.ᴏɴ <ꜰɪᴛᴜʀ>* / *.ᴏꜰꜰ <ꜰɪᴛᴜʀ>* ᴜɴᴛᴜᴋ ᴛᴏɢɢʟᴇ\n┃ ✧ ᴄᴏɴᴛᴏʜ: *.ᴏɴ ᴀɴᴛɪʟɪɴᴋ*\n╰┈┈┈┈┈┈┈┈⬡`;
             return m.reply(text);
         }
     }
 
-    if (!VALID_KEYS.includes(fitur)) return m.reply(` Fitur *${fitur}* tidak dikenal!`);
-    if (settings[fitur]) return m.reply(` *${FEATURES[fitur]}* sudah aktif!`);
+    if (!VALID_KEYS.includes(fitur)) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ꜰɪᴛᴜʀ *${fitur}* ᴛɪᴅᴀᴋ ᴅɪᴋᴇɴᴀʟ!\n╰┈┈┈┈┈┈┈┈⬡`);
+    if (settings[fitur]) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *${FEATURES[fitur]}* ꜱᴜᴅᴀʜ ᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡`);
     db.updateGroup(from, { [fitur]: true });
-    return m.reply(` *${FEATURES[fitur]}* berhasil diaktifkan!\n_Bot harus jadi admin agar bisa hapus pesan._`);
+    return m.reply(`╭┈┈⬡「 *${FEATURES[fitur]}* ʙᴇʀʜᴀꜱɪʟ ᴅɪᴀᴋᴛɪꜰᴋᴀɴ!* 」\n┃ ✧ _ʙᴏᴛ ʜᴀʀᴜꜱ ᴊᴀᴅɪ ᴀᴅᴍɪɴ ᴀɢᴀʀ ʙɪꜱᴀ ʜᴀᴘᴜꜱ ᴘᴇꜱᴀɴ._\n╰┈┈┈┈┈┈┈┈⬡`);
 }
 
 async function offHandler(m, { args = [] }) {
     const from = m.chat;
     const fitur = (args[0] || '').toLowerCase();
-    if (!fitur) return m.reply(' Contoh: .off antibot');
-    if (!VALID_KEYS.includes(fitur)) return m.reply(` Fitur *${fitur}* tidak dikenal!`);
+    if (!fitur) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: .ᴏꜰꜰ ᴀɴᴛɪʙᴏᴛ\n╰┈┈┈┈┈┈┈┈⬡`);
+    if (!VALID_KEYS.includes(fitur)) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ꜰɪᴛᴜʀ *${fitur}* ᴛɪᴅᴀᴋ ᴅɪᴋᴇɴᴀʟ!\n╰┈┈┈┈┈┈┈┈⬡`);
     const grp = db.getGroup(from);
     const settings = grp?.settings || {};
-    if (!settings[fitur]) return m.reply(` *${FEATURES[fitur]}* memang sudah nonaktif!`);
+    if (!settings[fitur]) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *${FEATURES[fitur]}* ᴍᴇᴍᴀɴɢ ꜱᴜᴅᴀʜ ɴᴏɴᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡`);
     db.updateGroup(from, { [fitur]: false });
-    return m.reply(` *${FEATURES[fitur]}* berhasil dinonaktifkan!`);
+    return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *${FEATURES[fitur]}* ʙᴇʀʜᴀꜱɪʟ ᴅɪɴᴏɴᴀᴋᴛɪꜰᴋᴀɴ!\n╰┈┈┈┈┈┈┈┈⬡`);
 }
 
 async function statusHandler(m) {
     const from = m.chat;
     const grp = db.getGroup(from);
     const settings = grp?.settings || {};
-    let text = `╭╌╌⬡「  *ᴀɴᴛɪ ꜱᴛᴀᴛᴜꜱ* 」\n┃\n`;
-    for (const key of ORDER) text += `┃ ${statusOf(settings, key)}  ${FEATURES[key]}\n`;
-    text += `╰╌╌⬡`;
+    let text = `╭┈┈⬡「 *ᴀɴᴛɪ ꜱᴛᴀᴛᴜꜱ* 」\n┃\n`;
+    for (const key of ORDER) text += `┃ ✧ ${statusOf(settings, key)}  ${FEATURES[key]}\n`;
+    text += `╰┈┈┈┈┈┈┈┈⬡`;
     return m.reply(text);
 }
 
@@ -236,15 +236,15 @@ async function delwarnHandler(m, { args = [] }) {
         const num = args[0].replace(/[^0-9]/g, '');
         if (num.length >= 6) targetJid = num + '@s.whatsapp.net';
     }
-    if (!targetJid) return m.reply(' Reply/mention/nomor user yang mau direset warnnya.\nContoh: .delwarn @user');
+    if (!targetJid) return m.reply(`╭┈┈⬡「 *ʀᴇᴘʟʏ/ᴍᴇɴᴛɪᴏɴ/ɴᴏᴍᴏʀ ᴜꜱᴇʀ ʏᴀɴɢ ᴍᴀᴜ ᴅɪʀᴇꜱᴇᴛ ᴡᴀʀɴɴʏᴀ.* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: .ᴅᴇʟᴡᴀʀɴ @ᴜꜱᴇʀ\n╰┈┈┈┈┈┈┈┈⬡`);
 
     const grp = db.getGroup(from);
     const warns = grp?.settings?.warns || {};
-    if (!warns[targetJid] || warns[targetJid].count === 0) return m.reply(` @${targetJid.split('@')[0]} tidak punya warn.`);
+    if (!warns[targetJid] || warns[targetJid].count === 0) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ @${targetJid.split('@')[0]} ᴛɪᴅᴀᴋ ᴘᴜɴʏᴀ ᴡᴀʀɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
     const before = warns[targetJid].count;
     warns[targetJid].count = 0;
     db.updateGroup(from, { warns });
-    return m.reply(` Warn @${targetJid.split('@')[0]} direset! (sebelumnya: ${before}/5)`);
+    return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴡᴀʀɴ @${targetJid.split('@')[0]} ᴅɪʀᴇꜱᴇᴛ! (ꜱᴇʙᴇʟᴜᴍɴʏᴀ: ${before}/5)\n╰┈┈┈┈┈┈┈┈⬡`);
 }
 
 async function listwarnHandler(m) {
@@ -252,12 +252,12 @@ async function listwarnHandler(m) {
     const grp = db.getGroup(from);
     const warns = grp?.settings?.warns || {};
     const aktif = Object.entries(warns).filter(([, v]) => v.count > 0);
-    if (!aktif.length) return m.reply(' Tidak ada user yang punya warn.');
-    let list = `╭╌╌⬡「  *ʟɪꜱᴛ ᴡᴀʀɴ ɢʀᴜᴘ* 」\n┃\n`;
+    if (!aktif.length) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴛɪᴅᴀᴋ ᴀᴅᴀ ᴜꜱᴇʀ ʏᴀɴɢ ᴘᴜɴʏᴀ ᴡᴀʀɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
+    let list = `╭┈┈⬡「 *ʟɪꜱᴛ ᴡᴀʀɴ ɢʀᴜᴘ* 」\n┃\n`;
     aktif.sort((a, b) => b[1].count - a[1].count).forEach(([jid, data], i) => {
-        list += `┃ ${i + 1}. @${jid.split('@')[0]} — *${data.count}/5*\n`;
+        list += `┃ ✧ ${i + 1}. @${jid.split('@')[0]} — *${data.count}/5*\n`;
     });
-    list += `┃\n┃ *.delwarn @user* untuk reset\n╰╌╌⬡`;
+    list += `┃\n┃ ✧ *.ᴅᴇʟᴡᴀʀɴ @ᴜꜱᴇʀ* ᴜɴᴛᴜᴋ ʀᴇꜱᴇᴛ\n╰┈┈┈┈┈┈┈┈⬡`;
     return m.reply(list);
 }
 
