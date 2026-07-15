@@ -73,24 +73,19 @@ const handler = async (m, { conn, args, participants, groupMeta }) => {
         const groupData = getGroup(from);
         const current = !!groupData?.settings?.welcome;
         if (!mode || mode === 'status' || mode === 'cek') {
-            return m.reply(
-                ` *WELCOME STATUS*\n\n` +
-                `Welcome : ${current ? ' AKTIF' : ' NONAKTIF'}\n\n` +
-                `• *.welcome on/off* — atur welcome\n` +
-                `• *.welcome @tag* / *.teswelcome @tag* — test manual`
-            );
+            return m.reply(`╭┈┈⬡「 *ᴡᴇʟᴄᴏᴍᴇ ꜱᴛᴀᴛᴜꜱ* 」\n┃\n┃ ✧ ᴡᴇʟᴄᴏᴍᴇ : ${current ? ' AKTIF' : ' NONAKTIF'}\n┃\n┃ ✧ *.ᴡᴇʟᴄᴏᴍᴇ ᴏɴ/ᴏꜰꜰ* — ᴀᴛᴜʀ ᴡᴇʟᴄᴏᴍᴇ\n┃ ✧ *.ᴡᴇʟᴄᴏᴍᴇ @ᴛᴀɢ* / *.ᴛᴇꜱᴡᴇʟᴄᴏᴍᴇ @ᴛᴀɢ* — ᴛᴇꜱᴛ ᴍᴀɴᴜᴀʟ\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         if (mode === 'on') {
-            if (current) return m.reply(' Welcome sudah aktif!');
+            if (current) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴡᴇʟᴄᴏᴍᴇ ꜱᴜᴅᴀʜ ᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡`);
             upsertGroupSettings(from, groupMeta?.subject ?? null, { welcome: true });
-            return m.reply(' *Welcome Diaktifkan!* ');
+            return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *ᴡᴇʟᴄᴏᴍᴇ ᴅɪᴀᴋᴛɪꜰᴋᴀɴ!*\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         if (mode === 'off') {
-            if (!current) return m.reply(' Welcome sudah nonaktif!');
+            if (!current) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴡᴇʟᴄᴏᴍᴇ ꜱᴜᴅᴀʜ ɴᴏɴᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡`);
             upsertGroupSettings(from, groupMeta?.subject ?? null, { welcome: false });
-            return m.reply(' *Welcome Dinonaktifkan!*');
+            return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *ᴡᴇʟᴄᴏᴍᴇ ᴅɪɴᴏɴᴀᴋᴛɪꜰᴋᴀɴ!*\n╰┈┈┈┈┈┈┈┈⬡`);
         }
-        return m.reply(' Gunakan: .welcome on / off / status / @tag');
+        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴜɴᴀᴋᴀɴ: .ᴡᴇʟᴄᴏᴍᴇ ᴏɴ / ᴏꜰꜰ / ꜱᴛᴀᴛᴜꜱ / @ᴛᴀɢ\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     try {
         const meta = groupMeta || (await conn.groupMetadata(from));
@@ -98,15 +93,15 @@ const handler = async (m, { conn, args, participants, groupMeta }) => {
         const memberCount = meta.participants?.length || 0;
         const targetJid = m.mentionedJid[0];
         const safeTarget = sanitizeJid(targetJid);
-        if (!safeTarget) return m.reply(' JID target tidak valid!');
+        if (!safeTarget) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴊɪᴅ ᴛᴀʀɢᴇᴛ ᴛɪᴅᴀᴋ ᴠᴀʟɪᴅ!\n╰┈┈┈┈┈┈┈┈⬡`);
         const list = participants || meta.participants;
         const participant = findParticipant(list, safeTarget);
         const pushname = participant?.notify || participant?.name || null;
         await sendWelcome(conn, from, safeTarget, groupName, memberCount, pushname);
-        m.reply(' Welcome test terkirim!');
+        m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴡᴇʟᴄᴏᴍᴇ ᴛᴇꜱᴛ ᴛᴇʀᴋɪʀɪᴍ!\n╰┈┈┈┈┈┈┈┈⬡`);
     } catch (e) {
         console.error('[WELCOME CMD ERROR]', e?.message);
-        m.reply(` Error: ${e?.message}`);
+        m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴇʀʀᴏʀ: ${e?.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.help = ['welcome on', 'welcome off', 'welcome @tag', 'teswelcome @tag'];
