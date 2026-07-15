@@ -3,11 +3,11 @@ import db from '../../Database/sqlite.js';
 import { sleep } from '../../Library/utils.js';
 const handler = async (m, { conn, text }) => {
     if (!text) {
-        await m.reply('Isi pesan broadcast-nya dong.\nContoh: .broadcast Ada maintenance jam 10 malam ini.');
+        await m.reply(`╭┈┈⬡「 *ɪꜱɪ ᴘᴇꜱᴀɴ ʙʀᴏᴀᴅᴄᴀꜱᴛ-ɴʏᴀ ᴅᴏɴɢ.* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: .ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴀᴅᴀ ᴍᴀɪɴᴛᴇɴᴀɴᴄᴇ ᴊᴀᴍ 10 ᴍᴀʟᴀᴍ ɪɴɪ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     const users = db.prepare('SELECT jid FROM users').all();
-    await m.reply(` Mengirim broadcast ke ${users.length} user...`);
+    await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴍᴇɴɢɪʀɪᴍ ʙʀᴏᴀᴅᴄᴀꜱᴛ ᴋᴇ ${users.length} ᴜꜱᴇʀ...\n╰┈┈┈┈┈┈┈┈⬡`);
     let success = 0;
     for (const { jid } of users) {
         try {
@@ -18,7 +18,7 @@ const handler = async (m, { conn, text }) => {
         }
         await sleep(300);
     }
-    await m.reply(` Broadcast selesai. Terkirim ke ${success}/${users.length} user.`);
+    await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ʙʀᴏᴀᴅᴄᴀꜱᴛ ꜱᴇʟᴇꜱᴀɪ. ᴛᴇʀᴋɪʀɪᴍ ᴋᴇ ${success}/${users.length} ᴜꜱᴇʀ.\n╰┈┈┈┈┈┈┈┈⬡`);
 };
 handler.help = ['broadcast <pesan>'];
 handler.tags = ['owner'];
