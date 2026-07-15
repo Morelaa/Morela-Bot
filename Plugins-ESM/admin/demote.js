@@ -7,18 +7,18 @@ const handler = async (m, { conn, args, participants }) => {
             list = (await conn.groupMetadata(m.chat)).participants;
         }
         catch {
-            await m.reply('Gagal ambil data member grup.');
+            await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴀᴍʙɪʟ ᴅᴀᴛᴀ ᴍᴇᴍʙᴇʀ ɢʀᴜᴘ.\n╰┈┈┈┈┈┈┈┈⬡`);
             return;
         }
     }
     const resolved = resolveTarget(m, args, { minDigits: 8 });
     if (!resolved.raw) {
-        await m.reply('Reply, tag (@user), atau kasih nomor admin yang mau diturunkan.');
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ʀᴇᴘʟʏ, ᴛᴀɢ (@ᴜꜱᴇʀ), ᴀᴛᴀᴜ ᴋᴀꜱɪʜ ɴᴏᴍᴏʀ ᴀᴅᴍɪɴ ʏᴀɴɢ ᴍᴀᴜ ᴅɪᴛᴜʀᴜɴᴋᴀɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     const targetP = findParticipant(list, resolved.raw);
     if (!targetP) {
-        await m.reply('Member tidak ditemukan di grup ini.');
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴍᴇᴍʙᴇʀ ᴛɪᴅᴀᴋ ᴅɪᴛᴇᴍᴜᴋᴀɴ ᴅɪ ɢʀᴜᴘ ɪɴɪ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     try {
@@ -26,7 +26,7 @@ const handler = async (m, { conn, args, participants }) => {
         await m.reply({ text: ` @${targetP.id.split('@')[0]} diturunkan jadi member biasa.`, mentions: [targetP.id] });
     }
     catch (err) {
-        await m.reply(` Gagal demote: ${err?.message || err}`);
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴅᴇᴍᴏᴛᴇ: ${err?.message || err}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.help = ['demote @user'];
