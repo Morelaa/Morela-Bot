@@ -4,18 +4,15 @@ const handler = async (m, { text }) => {
     const arg = (text || '').trim().toLowerCase();
     if (!arg) {
         const current = getMenuStyle();
-        await m.reply(` Menu style saat ini: *${current}*\n\n` +
-            `v1 -> menu interaktif single_select (list kategori di body)\n` +
-            `v2 -> menu button v2 (pp pengirim/bot + info di footer)\n\n` +
-            `Pakai: .setmenustyle v1 / .setmenustyle v2`);
+        await m.reply(`╭┈┈⬡「 *ᴍᴇɴᴜ ꜱᴛʏʟᴇ ꜱᴀᴀᴛ ɪɴɪ: *${current}* 」\n┃\n┃ ✧ ᴠ1 -> ᴍᴇɴᴜ ɪɴᴛᴇʀᴀᴋᴛɪꜰ ꜱɪɴɢʟᴇ_ꜱᴇʟᴇᴄᴛ (ʟɪꜱᴛ ᴋᴀᴛᴇɢᴏʀɪ ᴅɪ ʙᴏᴅʏ)\n┃ ✧ ᴠ2 -> ᴍᴇɴᴜ ʙᴜᴛᴛᴏɴ ᴠ2 (ᴘᴘ ᴘᴇɴɢɪʀɪᴍ/ʙᴏᴛ + ɪɴꜰᴏ ᴅɪ ꜰᴏᴏᴛᴇʀ)\n┃\n┃ ✧ ᴘᴀᴋᴀɪ: .ꜱᴇᴛᴍᴇɴᴜꜱᴛʏʟᴇ ᴠ1 / .ꜱᴇᴛᴍᴇɴᴜꜱᴛʏʟᴇ ᴠ2\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     if (arg !== 'v1' && arg !== 'v2') {
-        await m.reply('Format salah. Pakai: .setmenustyle v1 / .setmenustyle v2');
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ꜰᴏʀᴍᴀᴛ ꜱᴀʟᴀʜ. ᴘᴀᴋᴀɪ: .ꜱᴇᴛᴍᴇɴᴜꜱᴛʏʟᴇ ᴠ1 / .ꜱᴇᴛᴍᴇɴᴜꜱᴛʏʟᴇ ᴠ2\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     const updated = setMenuStyle(arg);
-    await m.reply(` Menu style diganti ke *${updated}*.`);
+    await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴍᴇɴᴜ ꜱᴛʏʟᴇ ᴅɪɢᴀɴᴛɪ ᴋᴇ *${updated}*.\n╰┈┈┈┈┈┈┈┈⬡`);
 };
 handler.help = ['setmenustyle <v1/v2>'];
 handler.tags = ['owner'];
