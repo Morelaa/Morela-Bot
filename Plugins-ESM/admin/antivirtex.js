@@ -176,28 +176,28 @@ const handler = async (m, { args }) => {
 
     if (!mode || mode === 'status' || mode === 'cek') {
         return m.reply(
-            `╭╌╌⬡「  *ᴀɴᴛɪ ᴠɪʀᴛᴇx* 」\n┃\n` +
-            `┃ Status: ${current ? ' AKTIF' : ' NONAKTIF'}\n┃\n` +
-            `┃  ProductMessage panjang  kick\n` +
-            `┃  Teks >8000 karakter  kick\n` +
-            `┃  Karakter zalgo/unicode aneh  kick\n` +
-            `┃  Flood 5 pesan/2 detik  warn & kick\n` +
-            `┃  Semua pesan sender dihapus otomatis\n┃\n` +
-            `┃ *.antivirtex on*  — aktifkan\n` +
-            `┃ *.antivirtex off* — nonaktifkan\n╰╌╌⬡`
+            `╭┈┈⬡「 *ᴀɴᴛɪ ᴠɪʀᴛᴇx* 」\n┃\n` +
+            `┃ ✧ ꜱᴛᴀᴛᴜꜱ: ${current ? ' AKTIF' : ' NONAKTIF'}\n┃\n` +
+            `┃ ✧ ᴘʀᴏᴅᴜᴄᴛᴍᴇꜱꜱᴀɢᴇ ᴘᴀɴᴊᴀɴɢ  ᴋɪᴄᴋ\n` +
+            `┃ ✧ ᴛᴇᴋꜱ >8000 ᴋᴀʀᴀᴋᴛᴇʀ  ᴋɪᴄᴋ\n` +
+            `┃ ✧ ᴋᴀʀᴀᴋᴛᴇʀ ᴢᴀʟɢᴏ/ᴜɴɪᴄᴏᴅᴇ ᴀɴᴇʜ  ᴋɪᴄᴋ\n` +
+            `┃ ✧ ꜰʟᴏᴏᴅ 5 ᴘᴇꜱᴀɴ/2 ᴅᴇᴛɪᴋ  ᴡᴀʀɴ & ᴋɪᴄᴋ\n` +
+            `┃ ✧ ꜱᴇᴍᴜᴀ ᴘᴇꜱᴀɴ ꜱᴇɴᴅᴇʀ ᴅɪʜᴀᴘᴜꜱ ᴏᴛᴏᴍᴀᴛɪꜱ\n┃\n` +
+            `┃ ✧ *.ᴀɴᴛɪᴠɪʀᴛᴇx ᴏɴ*  — ᴀᴋᴛɪꜰᴋᴀɴ\n` +
+            `┃ ✧ *.ᴀɴᴛɪᴠɪʀᴛᴇx ᴏꜰꜰ* — ɴᴏɴᴀᴋᴛɪꜰᴋᴀɴ\n╰┈┈┈┈┈┈┈┈⬡`
         );
     }
     if (mode === 'on' || mode === 'aktif') {
-        if (current) return m.reply('╭╌╌⬡「  *ɪɴꜰᴏ* 」\n┃ Anti Virtex sudah aktif!\n╰╌╌⬡');
+        if (current) return m.reply('╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴀɴᴛɪ ᴠɪʀᴛᴇx ꜱᴜᴅᴀʜ ᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡');
         db.updateGroup(from, { antivirtex: true });
-        return m.reply('╭╌╌⬡「  *ᴀɴᴛɪ ᴠɪʀᴛᴇx ᴀᴋᴛɪꜰ* 」\n┃ Berhasil diaktifkan!\n┃ _Pastikan bot sudah jadi admin!_\n╰╌╌⬡');
+        return m.reply('╭┈┈⬡「 *ᴀɴᴛɪ ᴠɪʀᴛᴇx ᴀᴋᴛɪꜰ* 」\n┃ ✧ ʙᴇʀʜᴀꜱɪʟ ᴅɪᴀᴋᴛɪꜰᴋᴀɴ!\n┃ ✧ _ᴘᴀꜱᴛɪᴋᴀɴ ʙᴏᴛ ꜱᴜᴅᴀʜ ᴊᴀᴅɪ ᴀᴅᴍɪɴ!_\n╰┈┈┈┈┈┈┈┈⬡');
     }
     if (mode === 'off' || mode === 'nonaktif') {
-        if (!current) return m.reply('╭╌╌⬡「  *ɪɴꜰᴏ* 」\n┃ Anti Virtex memang sudah nonaktif!\n╰╌╌⬡');
+        if (!current) return m.reply('╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴀɴᴛɪ ᴠɪʀᴛᴇx ᴍᴇᴍᴀɴɢ ꜱᴜᴅᴀʜ ɴᴏɴᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡');
         db.updateGroup(from, { antivirtex: false });
-        return m.reply('╭╌╌⬡「  *ʙᴇʀʜᴀsɪʟ* 」\n┃ Anti Virtex dinonaktifkan!\n╰╌╌⬡');
+        return m.reply('╭┈┈⬡「 *ʙᴇʀʜᴀꜱɪʟ* 」\n┃ ✧ ᴀɴᴛɪ ᴠɪʀᴛᴇx ᴅɪɴᴏɴᴀᴋᴛɪꜰᴋᴀɴ!\n╰┈┈┈┈┈┈┈┈⬡');
     }
-    return m.reply('╭╌╌⬡「  *ᴇʀʀᴏʀ* 」\n┃ Gunakan: *.antivirtex on/off/status*\n╰╌╌⬡');
+    return m.reply('╭┈┈⬡「 *ᴇʀʀᴏʀ* 」\n┃ ✧ ɢᴜɴᴀᴋᴀɴ: *.ᴀɴᴛɪᴠɪʀᴛᴇx ᴏɴ/ᴏꜰꜰ/ꜱᴛᴀᴛᴜꜱ*\n╰┈┈┈┈┈┈┈┈⬡');
 };
 handler.help = ['antivirtex on', 'antivirtex off', 'antivirtex status'];
 handler.tags = ['group', 'anti'];
