@@ -10,6 +10,7 @@ import {
     safeKickJid,
     safeDeleteParticipant,
     isSenderAdminInGroup,
+    resolveBotAdmin,
 } from '../../Library/resolve.js';
 
 const CFG = {
@@ -239,20 +240,20 @@ handler.group = true;
 handler.admin = true;
 
 // ── Passive: scan tiap pesan (grup & DM) ──────────────────────────
-handler.onText = async (m, { conn }) => {
+handler.onText = async (m, { conn, participants }) => {
     if (!m.message) return false;
     const rawMsg = m.message;
     const isGroup = !!m.isGroup;
     const senderJid = m.sender || m.key?.participant || m.key?.remoteJid || '';
     if (!senderJid) return false;
-    if (isGroup && (await isSenderAdminInGroup(conn, m.chat, senderJid))) return false;
+    if (isGroup && (await isSenderAdminInGroup(conn, m.chat, senderJid, participants))) return false;
 
     const grp = isGroup ? db.getGroup(m.chat) : null;
     const settings = grp?.settings || {};
 
     if (isGroup) {
         if (settings.anticatalog && isCatalogBug(rawMsg)) {
-            const botAdmin = isParticipantAdmin(findParticipant((await conn.groupMetadata(m.chat).catch(() => null))?.participants, String(conn.user?.id ?? '')));
+            const botAdmin = await resolveBotAdmin(conn, m.chat, participants);
             await handleGroupBug(conn, m, senderJid, botAdmin, 'Bug Catalog');
             return false;
         }
@@ -265,7 +266,7 @@ handler.onText = async (m, { conn }) => {
         if (settings.antiairich) {
             const result = isAIRichBug(rawMsg);
             if (result.detected) {
-                const botAdmin = isParticipantAdmin(findParticipant((await conn.groupMetadata(m.chat).catch(() => null))?.participants, String(conn.user?.id ?? '')));
+                const botAdmin = await resolveBotAdmin(conn, m.chat, participants);
                 await handleGroupBug(conn, m, senderJid, botAdmin, 'Bug AIRich Flood');
                 return false;
             }
