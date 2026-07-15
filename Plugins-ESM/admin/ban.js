@@ -7,15 +7,15 @@ const handler = async (m, { command, args }) => {
         const usersRaw = db.getAllUsersRaw();
         const banned = Object.values(usersRaw).filter((u) => u.banned === 1);
         if (!banned.length) {
-            return m.reply(' *BAN LIST*\n\n Tidak ada user yang di-ban saat ini.');
+            return m.reply(`╭┈┈⬡「 *ʙᴀɴ ʟɪꜱᴛ* 」\n┃\n┃ ✧ ᴛɪᴅᴀᴋ ᴀᴅᴀ ᴜꜱᴇʀ ʏᴀɴɢ ᴅɪ-ʙᴀɴ ꜱᴀᴀᴛ ɪɴɪ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         const list = banned.map((u, i) => {
             const num = u.phone || u.jid?.replace('@s.whatsapp.net', '') || '???';
             const nama = u.name || db.getPushName(num) || db.getPushName(u.jid || '') || 'User';
-            return `│ ${i + 1}. +${num} — ${nama}`;
+            return `┃ ✧ ${i + 1}. +${num} — ${nama}`;
         }).join('\n');
         return m.reply(
-            ` *BAN LIST*\n\n╭─────────────────────\n${list}\n╰─────────────────────\n\n` +
+            `╭┈┈⬡「 *ʙᴀɴ ʟɪꜱᴛ* 」\n${list}\n╰┈┈┈┈┈┈┈┈⬡\n\n` +
             ` Total banned: *${banned.length} user*`
         );
     }
@@ -27,14 +27,14 @@ const handler = async (m, { command, args }) => {
         const isBan = command === 'ban';
         return m.reply(
             `${isBan ? '' : ''} *${isBan ? 'Ban' : 'Unban'} User*\n\n` +
-            ` *Cara pakai:*\n╭─────────────────────\n` +
-            `│ .${command} 628xxx\n│ .${command} @mention\n│ Reply pesan + .${command}\n╰─────────────────────`
+            `╭┈┈⬡「 *ᴄᴀʀᴀ ᴘᴀᴋᴀɪ* 」\n` +
+            `┃ ✧ .${command} 628xxx\n┃ ✧ .${command} @ᴍᴇɴᴛɪᴏɴ\n┃ ✧ ʀᴇᴘʟʏ ᴘᴇꜱᴀɴ + .${command}\n╰┈┈┈┈┈┈┈┈⬡`
         );
     }
 
     const targetNum = normNum(targetJid);
     if (m.sender && targetJid === m.sender) {
-        return m.reply(' Tidak bisa ban diri sendiri!');
+        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴛɪᴅᴀᴋ ʙɪꜱᴀ ʙᴀɴ ᴅɪʀɪ ꜱᴇɴᴅɪʀɪ!\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 
     const userData = db.getUser(targetJid);
@@ -43,25 +43,22 @@ const handler = async (m, { command, args }) => {
 
     if (command === 'ban') {
         if (sudahBanned) {
-            return m.reply(
-                ` *Sudah Di-ban!*\n\n Nomor : +${targetNum}\n Nama  : ${namaTarget}\n\n` +
-                `User ini sudah di-ban sebelumnya.\nGunakan *.unban* untuk mencabut ban.`
-            );
+            return m.reply(`╭┈┈⬡「 *ꜱᴜᴅᴀʜ ᴅɪ-ʙᴀɴ!* 」\n┃\n┃ ✧ ɴᴏᴍᴏʀ : +${targetNum}\n┃ ✧ ɴᴀᴍᴀ  : ${namaTarget}\n┃\n┃ ✧ ᴜꜱᴇʀ ɪɴɪ ꜱᴜᴅᴀʜ ᴅɪ-ʙᴀɴ ꜱᴇʙᴇʟᴜᴍɴʏᴀ.\n┃ ✧ ɢᴜɴᴀᴋᴀɴ *.ᴜɴʙᴀɴ* ᴜɴᴛᴜᴋ ᴍᴇɴᴄᴀʙᴜᴛ ʙᴀɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         db.setBanned(targetJid, true);
         return m.reply(
-            ` *User Di-ban!*\n\n╭─────────────────────\n│  Nomor  : +${targetNum}\n│  Nama   : ${namaTarget}\n│  Status : Banned\n╰─────────────────────\n\n` +
+            ` *User Di-ban!*\n\n╭┈┈⬡「 *ʀᴇꜱᴜʟᴛ* 」\n┃ ✧ ɴᴏᴍᴏʀ  : +${targetNum}\n┃ ✧ ɴᴀᴍᴀ   : ${namaTarget}\n┃ ✧ ꜱᴛᴀᴛᴜꜱ : ʙᴀɴɴᴇᴅ\n╰┈┈┈┈┈┈┈┈⬡\n\n` +
             `User tidak bisa menggunakan bot lagi.\nGunakan *.unban* untuk mencabut.`
         );
     }
 
     if (command === 'unban') {
         if (!sudahBanned) {
-            return m.reply(` *Tidak Di-ban!*\n\n Nomor : +${targetNum}\n Nama  : ${namaTarget}\n\nUser ini tidak sedang di-ban.`);
+            return m.reply(`╭┈┈⬡「 *ᴛɪᴅᴀᴋ ᴅɪ-ʙᴀɴ!* 」\n┃\n┃ ✧ ɴᴏᴍᴏʀ : +${targetNum}\n┃ ✧ ɴᴀᴍᴀ  : ${namaTarget}\n┃\n┃ ✧ ᴜꜱᴇʀ ɪɴɪ ᴛɪᴅᴀᴋ ꜱᴇᴅᴀɴɢ ᴅɪ-ʙᴀɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         db.setBanned(targetJid, false);
         return m.reply(
-            ` *User Di-unban!*\n\n╭─────────────────────\n│  Nomor  : +${targetNum}\n│  Nama   : ${namaTarget}\n│  Status : Aktif kembali\n╰─────────────────────\n\n` +
+            ` *User Di-unban!*\n\n╭┈┈⬡「 *ʀᴇꜱᴜʟᴛ* 」\n┃ ✧ ɴᴏᴍᴏʀ  : +${targetNum}\n┃ ✧ ɴᴀᴍᴀ   : ${namaTarget}\n┃ ✧ ꜱᴛᴀᴛᴜꜱ : ᴀᴋᴛɪꜰ ᴋᴇᴍʙᴀʟɪ\n╰┈┈┈┈┈┈┈┈⬡\n\n` +
             `User sudah bisa menggunakan bot lagi.`
         );
     }
