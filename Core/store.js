@@ -1,5 +1,5 @@
 'use strict';
-import { normNum } from '../Library/resolve.js';
+import { normNum, isLidJid, resolveLidToPhone, findBotParticipant, autoMapParticipantLids } from '../Library/resolve.js';
 import events, { EVENTS } from './events.js';
 import { upsertGroupSettings, getGroup } from '../Database/db.js';
 import { recordMemberJoin, recordMemberLeave, recordMemberPromote, recordMemberDemote } from '../Database/groupMembers.js';
@@ -92,6 +92,7 @@ class Store {
             try {
                 meta = await sock.groupMetadata(id);
                 this.groupMetadata[id] = meta;
+                autoMapParticipantLids(meta?.participants);
             }
             catch {
                 meta = this.groupMetadata[id] || null;
@@ -99,6 +100,17 @@ class Store {
                     delete this.groupMetadata[id];
             }
             const botNum = normNum(sock?.user?.id);
+            // WhatsApp sering melaporkan participant pakai identitas @lid, bukan nomor telepon.
+            // Kumpulkan semua identitas yang mungkin merujuk ke bot (nomor, lid, jid) supaya
+            // deteksi "ini bot sendiri" tidak gagal cuma karena bentuk JID berbeda.
+            const botEntry = meta ? findBotParticipant(meta.participants, sock?.user?.id) : null;
+            const botIdSet = new Set([botNum].filter(Boolean));
+            if (botEntry) {
+                if (botEntry.id) botIdSet.add(normNum(botEntry.id));
+                if (botEntry.lid) botIdSet.add(normNum(botEntry.lid));
+                if (botEntry.jid) botIdSet.add(normNum(botEntry.jid));
+                if (botEntry.phoneNumber) botIdSet.add(normNum(botEntry.phoneNumber));
+            }
             const list = participants || [];
             const groupSettings = getGroup(id)?.settings;
             const memberCount = meta?.participants?.length || 0;
@@ -107,7 +119,13 @@ class Store {
                 if (!p)
                     continue;
                 try {
-                    const isBot = botNum && normNum(p) === botNum;
+                    const pNum = normNum(p);
+                    let isBot = !!botNum && botIdSet.has(pNum);
+                    if (!isBot && isLidJid(p)) {
+                        const resolved = resolveLidToPhone(p);
+                        if (resolved && resolved === botNum)
+                            isBot = true;
+                    }
                     const contactName = this.getContact(p)?.notify || this.getContact(p)?.name || null;
                     if (action === 'add') {
                         recordMemberJoin(id, p, contactName);
@@ -146,12 +164,49 @@ class Store {
             }
             events.emitLogged(EVENTS.GROUP_PARTICIPANTS_UPDATE, { id, participants: list, action, meta });
         });
+        // Baileys memicu 'groups.upsert' saat bot pertama kali "mengenal" sebuah grup:
+        // grup baru yang bot dibuat/ditambahkan ke dalamnya, maupun sinkronisasi ulang
+        // daftar grup saat reconnect. Sebelumnya tidak ada listener untuk event ini sama
+        // sekali, jadi grup baru yang tidak sempat kena 'group-participants.update' (mis.
+        // bot ditambahkan saat offline) tidak akan pernah tercatat ke database.
+        sock.ev.on('groups.upsert', (groups) => {
+            for (const g of groups || []) {
+                if (!g?.id)
+                    continue;
+                this.groupMetadata[g.id] = { ...(this.groupMetadata[g.id] || {}), ...g };
+                autoMapParticipantLids(g.participants);
+                try {
+                    upsertGroupSettings(g.id, g.subject ?? null, { botInGroup: true });
+                }
+                catch (err) {
+                    logError('Gagal simpan grup baru (groups.upsert) ke database:', err?.message || err);
+                }
+            }
+        });
         sock.ev.on('messages.upsert', ({ messages }) => {
             for (const m of messages) {
                 this.saveMessage(m.key.remoteJid, m);
             }
         });
         globalThis.__botStore__ = this;
+    }
+    // Self-heal: bandingkan daftar grup aktif langsung dari WhatsApp dengan tabel
+    // lokal, lalu catat/perbarui grup yang bot benar-benar masih ikuti tapi belum
+    // (atau belum lengkap) tercatat. Dipanggil saat koneksi baru terbuka.
+    async reconcileGroups(sock) {
+        try {
+            const active = await sock.groupFetchAllParticipating();
+            for (const [jid, meta] of Object.entries(active || {})) {
+                this.groupMetadata[jid] = meta;
+                autoMapParticipantLids(meta?.participants);
+                upsertGroupSettings(jid, meta?.subject ?? null, { botInGroup: true });
+            }
+            return Object.keys(active || {}).length;
+        }
+        catch (err) {
+            logError('Gagal reconcile daftar grup:', err?.message || err);
+            return 0;
+        }
     }
 }
 const store = new Store();
