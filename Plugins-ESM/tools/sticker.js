@@ -5,18 +5,18 @@ import config from '../../config.js';
 const handler = async (m, { conn }) => {
     const media = findMediaMessage(m);
     if (!media) {
-        await m.reply('Kirim atau reply gambar/video dengan caption .sticker ya.');
+        await m.reply(`╭┈┈⬡「 *ᴄᴀʀᴀ ᴘᴀᴋᴀɪ* 」\n┃ ✧ ᴋɪʀɪᴍ ᴀᴛᴀᴜ ʀᴇᴘʟʏ ɢᴀᴍʙᴀʀ/ᴠɪᴅᴇᴏ ᴅᴇɴɢᴀɴ ᴄᴀᴘᴛɪᴏɴ .ꜱᴛɪᴄᴋᴇʀ ʏᴀ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     await conn.setTyping(m.chat);
     const buffer = await downloadMessageMedia(m, conn);
     if (!buffer?.length) {
-        await m.reply('Gagal download media, coba lagi.');
+        await m.reply(`╭┈┈⬡「 *ᴇʀʀᴏʀ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴅᴏᴡɴʟᴏᴀᴅ ᴍᴇᴅɪᴀ, ᴄᴏʙᴀ ʟᴀɢɪ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     const isVideo = media.type === 'videoMessage';
     if (isVideo && (media.message.seconds || 0) > 15) {
-        await m.reply('Video kepanjangan, maksimal 15 detik ya.');
+        await m.reply(`╭┈┈⬡「 *ᴇʀʀᴏʀ* 」\n┃ ✧ ᴠɪᴅᴇᴏ ᴋᴇᴘᴀɴᴊᴀɴɢᴀɴ, ᴍᴀᴋꜱɪᴍᴀʟ 15 ᴅᴇᴛɪᴋ ʏᴀ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     const webp = await makeSticker(buffer, { isVideo, packName: config.botName, authorName: m.pushName || config.copyrightName });
