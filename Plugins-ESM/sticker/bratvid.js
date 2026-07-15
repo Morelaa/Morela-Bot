@@ -21,7 +21,7 @@ const toWebp = (input, output) =>
     });
 
 const handler = async (m, { conn, text, usedPrefix }) => {
-    if (!text?.trim()) return m.reply(`Contoh: ${usedPrefix}bratvid hahahaha knpaaa`);
+    if (!text?.trim()) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: ${usedPrefix}ʙʀᴀᴛᴠɪᴅ ʜᴀʜᴀʜᴀʜᴀ ᴋɴᴘᴀᴀᴀ\n╰┈┈┈┈┈┈┈┈⬡`);
 
     const id = Date.now();
     const mp4 = path.join(TMP, `${id}.mp4`);
@@ -43,7 +43,7 @@ const handler = async (m, { conn, text, usedPrefix }) => {
     } catch (e) {
         console.error('[BRATVID]', e);
         try { await conn.sendMessage(m.chat, { react: { text: '', key: m.key } }); } catch {}
-        m.reply(' Gagal membuat stiker bratvid.');
+        m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴍᴇᴍʙᴜᴀᴛ ꜱᴛɪᴋᴇʀ ʙʀᴀᴛᴠɪᴅ.\n╰┈┈┈┈┈┈┈┈⬡`);
     } finally {
         try { fs.unlinkSync(mp4); } catch {}
         try { fs.unlinkSync(webp); } catch {}
