@@ -16,7 +16,17 @@ const handler = async (m, { conn, args, participants }) => {
         await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ʀᴇᴘʟʏ, ᴛᴀɢ (@ᴜꜱᴇʀ), ᴀᴛᴀᴜ ᴋᴀꜱɪʜ ɴᴏᴍᴏʀ ᴍᴇᴍʙᴇʀ ʏᴀɴɢ ᴍᴀᴜ ᴅɪ-ᴋɪᴄᴋ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
-    const targetP = findParticipant(list, resolved.raw);
+    let targetP = findParticipant(list, resolved.raw);
+    if (!targetP) {
+        // List yang di-cache mungkin belum sinkron (misal member baru saja
+        // join). Coba ambil ulang data grup langsung dari WhatsApp sebelum
+        // benar-benar menyerah.
+        try {
+            const freshList = (await conn.groupMetadata(m.chat)).participants;
+            targetP = findParticipant(freshList, resolved.raw);
+        }
+        catch { }
+    }
     if (!targetP) {
         await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴍᴇᴍʙᴇʀ ᴛɪᴅᴀᴋ ᴅɪᴛᴇᴍᴜᴋᴀɴ ᴅɪ ɢʀᴜᴘ ɪɴɪ.\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
