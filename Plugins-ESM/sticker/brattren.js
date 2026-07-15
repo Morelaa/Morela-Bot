@@ -29,14 +29,14 @@ const imageToWebp = (input, output) =>
 const handler = async (m, { conn, text, usedPrefix }) => {
     if (!text?.trim())
         return m.reply(
-            `╭──「  *Brat Tren* 」\n` +
-            `│\n` +
-            `│  Masukkan teks!\n` +
-            `│\n` +
-            `│   *Contoh:*\n` +
-            `│  ${usedPrefix}brattren halo dunia\n` +
-            `│\n` +
-            `╰─────────────────────`
+            `╭┈┈⬡「 *ʙʀᴀᴛ ᴛʀᴇɴ* 」\n` +
+            `┃\n` +
+            `┃ ✧ ᴍᴀꜱᴜᴋᴋᴀɴ ᴛᴇᴋꜱ!\n` +
+            `┃\n` +
+            `┃ ✧ *ᴄᴏɴᴛᴏʜ:*\n` +
+            `┃ ✧ ${usedPrefix}ʙʀᴀᴛᴛʀᴇɴ ʜᴀʟᴏ ᴅᴜɴɪᴀ\n` +
+            `┃\n` +
+            `╰┈┈┈┈┈┈┈┈⬡`
         );
 
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
