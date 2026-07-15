@@ -33,7 +33,7 @@ const handler = async (m, { conn }) => {
     const zipPath = path.join(config.rootDir, zipName);
     const ownerJid = getMainOwnerJid();
     if (!ownerJid) {
-        return m.reply(' config.mainOwner belum diisi, gak tau mau kirim backup ke nomor mana.');
+        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴄᴏɴꜰɪɢ.ᴍᴀɪɴᴏᴡɴᴇʀ ʙᴇʟᴜᴍ ᴅɪɪꜱɪ, ɢᴀᴋ ᴛᴀᴜ ᴍᴀᴜ ᴋɪʀɪᴍ ʙᴀᴄᴋᴜᴘ ᴋᴇ ɴᴏᴍᴏʀ ᴍᴀɴᴀ.\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     try {
         await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
@@ -60,13 +60,13 @@ const handler = async (m, { conn }) => {
         });
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         if (m.chat !== ownerJid) {
-            await m.reply(` Backup selesai (${size}, ${duration}s) — dikirim ke DM main owner.`);
+            await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ʙᴀᴄᴋᴜᴘ ꜱᴇʟᴇꜱᴀɪ (${size}, ${duration}ꜱ) — ᴅɪᴋɪʀɪᴍ ᴋᴇ ᴅᴍ ᴍᴀɪɴ ᴏᴡɴᴇʀ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
     }
     catch (err) {
         console.error('[BACKUP ERROR]', err);
         await conn.sendMessage(m.chat, { react: { text: '', key: m.key } }).catch(() => { });
-        await m.reply(` *Backup Gagal!*\n\n${err?.message || err}`);
+        await m.reply(`╭┈┈⬡「 *ʙᴀᴄᴋᴜᴘ ɢᴀɢᴀʟ!* 」\n┃\n┃ ✧ ${err?.message || err}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     finally {
         try {
