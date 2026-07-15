@@ -61,11 +61,11 @@ const handler = async (m, { conn, text, command, usedPrefix }) => {
     // Handler tombol yang dipilih dari menu ButtonV2
     if (BUTTON_CMDS.has(command)) {
         const session = bratSessions.get(m.sender);
-        if (!session) return m.reply('ketik ulang brat lagi ');
+        if (!session) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴋᴇᴛɪᴋ ᴜʟᴀɴɢ ʙʀᴀᴛ ʟᴀɢɪ\n╰┈┈┈┈┈┈┈┈⬡`);
         bratSessions.delete(m.sender);
 
         const target = CMD_MAP[command];
-        if (!target) return m.reply(' Plugin tidak ditemukan!');
+        if (!target) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴘʟᴜɢɪɴ ᴛɪᴅᴀᴋ ᴅɪᴛᴇᴍᴜᴋᴀɴ!\n╰┈┈┈┈┈┈┈┈⬡`);
 
         return target.plugin(m, {
             conn,
@@ -79,20 +79,20 @@ const handler = async (m, { conn, text, command, usedPrefix }) => {
     // Pesan panduan jika tidak ada teks
     if (!text?.trim())
         return m.reply(
-            `╭╌「  *Brat Sticker* 」\n` +
-            `┃ Contoh: *${usedPrefix}brat haloii*\n` +
+            `╭┈┈⬡「 *ʙʀᴀᴛ ꜱᴛɪᴄᴋᴇʀ* 」\n` +
+            `┃ ✧ ᴄᴏɴᴛᴏʜ: *${usedPrefix}ʙʀᴀᴛ ʜᴀʟᴏɪɪ*\n` +
             `┃\n` +
-            `┃ Style dengan button:\n` +
-            `┃ ◦  Original\n` +
-            `┃ ◦  Ruromiya\n` +
-            `┃ ◦  Vid\n` +
+            `┃ ✧ ꜱᴛʏʟᴇ ᴅᴇɴɢᴀɴ ʙᴜᴛᴛᴏɴ:\n` +
+            `┃ ✧ ᴏʀɪɢɪɴᴀʟ\n` +
+            `┃ ✧ ʀᴜʀᴏᴍɪʏᴀ\n` +
+            `┃ ✧ ᴠɪᴅ\n` +
             `┃\n` +
-            `┃ Style ketik langsung:\n` +
-            `┃ ◦ ${usedPrefix}bratv2 <teks>\n` +
-            `┃ ◦ ${usedPrefix}bratgura <teks>\n` +
-            `┃ ◦ ${usedPrefix}bratspongebob <teks>\n` +
-            `┃ ◦ ${usedPrefix}brattren <teks>\n` +
-            `╰╌\n\n${footer}`
+            `┃ ✧ ꜱᴛʏʟᴇ ᴋᴇᴛɪᴋ ʟᴀɴɢꜱᴜɴɢ:\n` +
+            `┃ ✧ ${usedPrefix}ʙʀᴀᴛᴠ2 <ᴛᴇᴋꜱ>\n` +
+            `┃ ✧ ${usedPrefix}ʙʀᴀᴛɢᴜʀᴀ <ᴛᴇᴋꜱ>\n` +
+            `┃ ✧ ${usedPrefix}ʙʀᴀᴛꜱᴘᴏɴɢᴇʙᴏʙ <ᴛᴇᴋꜱ>\n` +
+            `┃ ✧ ${usedPrefix}ʙʀᴀᴛᴛʀᴇɴ <ᴛᴇᴋꜱ>\n` +
+            `╰┈┈┈┈┈┈┈┈⬡\n\n${footer}`
         );
 
     // Simpan sesi dan kirim menu ButtonV2
