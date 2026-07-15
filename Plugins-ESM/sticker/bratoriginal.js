@@ -135,8 +135,8 @@ const imageToWebp = (input, output) =>
     });
 
 const handler = async (m, { conn, text, usedPrefix }) => {
-    if (!text?.trim()) return m.reply(`Contoh: ${usedPrefix}bratoriginal halooo semuaaa nyaaaa`);
-    if (text.length > 800) return m.reply(' Text terlalu panjang! Maks *800 karakter*.');
+    if (!text?.trim()) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: ${usedPrefix}ʙʀᴀᴛᴏʀɪɢɪɴᴀʟ ʜᴀʟᴏᴏᴏ ꜱᴇᴍᴜᴀᴀᴀ ɴʏᴀᴀᴀᴀ\n╰┈┈┈┈┈┈┈┈⬡`);
+    if (text.length > 800) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴛᴇxᴛ ᴛᴇʀʟᴀʟᴜ ᴘᴀɴᴊᴀɴɢ! ᴍᴀᴋꜱ *800 ᴋᴀʀᴀᴋᴛᴇʀ*.\n╰┈┈┈┈┈┈┈┈⬡`);
 
     const id = Date.now();
     const img = path.join(TMP, `${id}.png`);
