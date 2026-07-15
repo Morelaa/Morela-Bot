@@ -92,9 +92,9 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
         return m.reply(
             ` *ᴛᴇʟᴇɢʀᴀᴍ sᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ*\n\n` +
             `> Download sticker pack Telegram  kirim sebagai pack WA asli!\n\n` +
-            `╭┈┈⬡「  *ᴄᴀʀᴀ ᴘᴀᴋᴀɪ* 」\n` +
-            `┃ ${usedPrefix}${command} <url>\n` +
-            `┃ ${usedPrefix}${command} <url> | <nama custom>\n` +
+            `╭┈┈⬡「 *ᴄᴀʀᴀ ᴘᴀᴋᴀɪ* 」\n` +
+            `┃ ✧ ${usedPrefix}${command} <ᴜʀʟ>\n` +
+            `┃ ✧ ${usedPrefix}${command} <ᴜʀʟ> | <ɴᴀᴍᴀ ᴄᴜꜱᴛᴏᴍ>\n` +
             `╰┈┈┈┈┈┈┈┈⬡\n\n` +
             `*ᴄᴀʀᴀ ᴅᴀᴘᴀᴛ ᴜʀʟ:*\n` +
             `> 1. Buka pack di Telegram\n` +
@@ -106,11 +106,7 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
         );
     }
     if (!TG_PACK_REGEX.test(url)) {
-        return m.reply(
-            ` URL tidak valid!\n\n` +
-            `Gunakan link Telegram sticker pack.\n` +
-            `Contoh: *https://t.me/addstickers/NamaPack*`
-        );
+        return m.reply(`╭┈┈⬡「 *ᴜʀʟ ᴛɪᴅᴀᴋ ᴠᴀʟɪᴅ!* 」\n┃\n┃ ✧ ɢᴜɴᴀᴋᴀɴ ʟɪɴᴋ ᴛᴇʟᴇɢʀᴀᴍ ꜱᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ.\n┃ ✧ ᴄᴏɴᴛᴏʜ: *ʜᴛᴛᴘꜱ://ᴛ.ᴍᴇ/ᴀᴅᴅꜱᴛɪᴄᴋᴇʀꜱ/ɴᴀᴍᴀᴘᴀᴄᴋ*\n╰┈┈┈┈┈┈┈┈⬡`);
     }
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
     try {
@@ -122,10 +118,7 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
         const json = res.data;
         if (!json?.status || !json?.data) {
             await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
-            return m.reply(
-                ` Gagal mengambil sticker pack!\n\n` +
-                `_${json?.message || 'Pastikan link valid dan pack masih tersedia.'}_`
-            );
+            return m.reply(`╭┈┈⬡「 *ɢᴀɢᴀʟ ᴍᴇɴɢᴀᴍʙɪʟ ꜱᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ!* 」\n┃\n┃ ✧ _${json?.message || 'Pastikan link valid dan pack masih tersedia.'}_\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         const data = json.data;
         const rawTitle = data.title || data.name || 'Telegram Sticker';
@@ -138,16 +131,16 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
                     : [];
         if (!stickerList.length) {
             await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
-            return m.reply(' Tidak ada stiker ditemukan dalam pack ini!');
+            return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴛɪᴅᴀᴋ ᴀᴅᴀ ꜱᴛɪᴋᴇʀ ᴅɪᴛᴇᴍᴜᴋᴀɴ ᴅᴀʟᴀᴍ ᴘᴀᴄᴋ ɪɴɪ!\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         const total = Math.min(stickerList.length, MAX_STICKERS);
         await m.reply(
             ` *ᴛᴇʟᴇɢʀᴀᴍ sᴛɪᴄᴋᴇʀ ᴘᴀᴄᴋ*\n\n` +
-            `╭┈┈⬡「  *ɪɴꜰᴏ* 」\n` +
-            `┃  *Title:* ${title}\n` +
-            `┃  *Author:* ${author}\n` +
-            `┃  *Type:* ${stickerType}\n` +
-            `┃  *Total:* ${total} stiker\n` +
+            `╭┈┈⬡「 *ɪɴꜰᴏ* 」\n` +
+            `┃ ✧ *ᴛɪᴛʟᴇ:* ${title}\n` +
+            `┃ ✧ *ᴀᴜᴛʜᴏʀ:* ${author}\n` +
+            `┃ ✧ *ᴛʏᴘᴇ:* ${stickerType}\n` +
+            `┃ ✧ *ᴛᴏᴛᴀʟ:* ${total} ꜱᴛɪᴋᴇʀ\n` +
             `╰┈┈┈┈┈┈┈┈⬡\n\n` +
             `>  Mengunduh & memproses...`
         );
@@ -182,7 +175,7 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
         }
         if (!webpBuffers.length) {
             await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
-            return m.reply(' Semua stiker gagal diunduh/dikonversi!');
+            return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ꜱᴇᴍᴜᴀ ꜱᴛɪᴋᴇʀ ɢᴀɢᴀʟ ᴅɪᴜɴᴅᴜʜ/ᴅɪᴋᴏɴᴠᴇʀꜱɪ!\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         await sendStickerPack(conn, m.chat, webpBuffers.map((buf, i) => ({
             buffer: buf,
@@ -193,7 +186,7 @@ const handler = async (m, { conn, args, usedPrefix, command }) => {
     catch (error) {
         console.error('[TELESTIKER] Error:', error?.message);
         await conn.sendMessage(m.chat, { react: { text: '', key: m.key } }).catch(() => { });
-        await m.reply(` *ᴇʀʀᴏʀ*\n\n> ${error?.message}`);
+        await m.reply(`╭┈┈⬡「 *ᴇʀʀᴏʀ* 」\n┃\n┃ ✧ > ${error?.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.command = /^(stikertele|telesticker|tgsticker|tgpack)$/i;
