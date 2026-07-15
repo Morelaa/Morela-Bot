@@ -39,10 +39,10 @@ const handler = async (m, { conn }) => {
         await m.reply(
             ' *BUGIL*\n\n' +
             '> Ubah foto jadi bugil.\n\n' +
-            '╭──「  Cara Pakai 」\n' +
-            '│ Kirim gambar dengan caption .bugil\n' +
-            '│ atau reply gambar dengan .bugil\n' +
-            '╰─────────────────'
+            '╭┈┈⬡「  ᴄᴀʀᴀ ᴘᴀᴋᴀɪ 」\n' +
+            '┃ ✧ ᴋɪʀɪᴍ ɢᴀᴍʙᴀʀ ᴅᴇɴɢᴀɴ ᴄᴀᴘᴛɪᴏɴ .ʙᴜɢɪʟ\n' +
+            '┃ ✧ ᴀᴛᴀᴜ ʀᴇᴘʟʏ ɢᴀᴍʙᴀʀ ᴅᴇɴɢᴀɴ .ʙᴜɢɪʟ\n' +
+            '╰┈┈┈┈┈┈┈┈⬡'
         );
         return;
     }
@@ -64,7 +64,7 @@ const handler = async (m, { conn }) => {
     } catch (err) {
         console.error('[BUGIL]', err.message);
         await conn.sendMessage(m.chat, { react: { text: '', key: m.key } }).catch(() => {});
-        await m.reply(` Gagal: ${err.message}`);
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ: ${err.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.help = ['bugil'];
