@@ -55,6 +55,9 @@ async function startBot() {
             logSuccess(`${config.botName} berhasil terhubung sebagai ${sock.user?.id}`);
             logConnection('connected', `${config.botName} · ${sock.user?.id || '-'}`);
             events.emitLogged(EVENTS.READY, { user: sock.user });
+            store.reconcileGroups(sock)
+                .then((count) => logInfo(`Reconcile grup selesai: ${count} grup aktif tersinkron ke database.`))
+                .catch((err) => logError('Reconcile grup gagal:', err?.message || err));
         }
         if (connection === 'close') {
             const statusCode = new Boom(lastDisconnect?.error)?.output?.statusCode;
