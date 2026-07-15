@@ -55,13 +55,7 @@ async function downloadVideo(videoUrl) {
 const handler = async (m, { conn, args }) => {
     const url = args[0];
     if (!url || !TT_URL_REGEX.test(url)) {
-        await m.reply(
-            ' Kasih link TikTok yang valid.\n' +
-            'Contoh:\n' +
-            '• .tiktok https://vt.tiktok.com/xxx\n' +
-            '• .tiktok https://vm.tiktok.com/xxx\n' +
-            '• .tiktok https://www.tiktok.com/@user/video/xxx'
-        );
+        await m.reply(`╭┈┈⬡「 *ᴋᴀꜱɪʜ ʟɪɴᴋ ᴛɪᴋᴛᴏᴋ ʏᴀɴɢ ᴠᴀʟɪᴅ.* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ:\n┃ ✧ .ᴛɪᴋᴛᴏᴋ ʜᴛᴛᴘꜱ://ᴠᴛ.ᴛɪᴋᴛᴏᴋ.ᴄᴏᴍ/xxx\n┃ ✧ .ᴛɪᴋᴛᴏᴋ ʜᴛᴛᴘꜱ://ᴠᴍ.ᴛɪᴋᴛᴏᴋ.ᴄᴏᴍ/xxx\n┃ ✧ .ᴛɪᴋᴛᴏᴋ ʜᴛᴛᴘꜱ://ᴡᴡᴡ.ᴛɪᴋᴛᴏᴋ.ᴄᴏᴍ/@ᴜꜱᴇʀ/ᴠɪᴅᴇᴏ/xxx\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
@@ -87,7 +81,7 @@ const handler = async (m, { conn, args }) => {
     catch (err) {
         console.error('[TT]', err.message);
         await conn.sendMessage(m.chat, { react: { text: '', key: m.key } }).catch(() => { });
-        await m.reply(` Gagal download: ${err.message}`);
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴅᴏᴡɴʟᴏᴀᴅ: ${err.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
 handler.help = ['tiktok <link tiktok>'];
