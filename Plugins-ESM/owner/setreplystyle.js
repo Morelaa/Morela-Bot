@@ -4,18 +4,15 @@ const handler = async (m, { text }) => {
     const arg = (text || '').trim().toLowerCase();
     if (!arg) {
         const current = getReplyStyle();
-        await m.reply(` Reply style saat ini: *${current}*\n\n` +
-            `v1 -> extendedTextMessage (link preview card, gaya lama)\n` +
-            `v2 -> interactiveMessage (viewOnceMessage, gaya button/card baru)\n\n` +
-            `Pakai: .setreplystyle v1 / .setreplystyle v2`);
+        await m.reply(`╭┈┈⬡「 *ʀᴇᴘʟʏ ꜱᴛʏʟᴇ ꜱᴀᴀᴛ ɪɴɪ: *${current}* 」\n┃\n┃ ✧ ᴠ1 -> ᴇxᴛᴇɴᴅᴇᴅᴛᴇxᴛᴍᴇꜱꜱᴀɢᴇ (ʟɪɴᴋ ᴘʀᴇᴠɪᴇᴡ ᴄᴀʀᴅ, ɢᴀʏᴀ ʟᴀᴍᴀ)\n┃ ✧ ᴠ2 -> ɪɴᴛᴇʀᴀᴄᴛɪᴠᴇᴍᴇꜱꜱᴀɢᴇ (ᴠɪᴇᴡᴏɴᴄᴇᴍᴇꜱꜱᴀɢᴇ, ɢᴀʏᴀ ʙᴜᴛᴛᴏɴ/ᴄᴀʀᴅ ʙᴀʀᴜ)\n┃\n┃ ✧ ᴘᴀᴋᴀɪ: .ꜱᴇᴛʀᴇᴘʟʏꜱᴛʏʟᴇ ᴠ1 / .ꜱᴇᴛʀᴇᴘʟʏꜱᴛʏʟᴇ ᴠ2\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     if (arg !== 'v1' && arg !== 'v2') {
-        await m.reply('Format salah. Pakai: .setreplystyle v1 / .setreplystyle v2');
+        await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ꜰᴏʀᴍᴀᴛ ꜱᴀʟᴀʜ. ᴘᴀᴋᴀɪ: .ꜱᴇᴛʀᴇᴘʟʏꜱᴛʏʟᴇ ᴠ1 / .ꜱᴇᴛʀᴇᴘʟʏꜱᴛʏʟᴇ ᴠ2\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     const updated = setReplyStyle(arg);
-    await m.reply(` Reply style diganti ke *${updated}*.`);
+    await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ʀᴇᴘʟʏ ꜱᴛʏʟᴇ ᴅɪɢᴀɴᴛɪ ᴋᴇ *${updated}*.\n╰┈┈┈┈┈┈┈┈⬡`);
 };
 handler.help = ['setreplystyle <v1/v2>'];
 handler.tags = ['owner'];
