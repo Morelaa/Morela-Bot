@@ -7,17 +7,17 @@ const handler = async (m, { conn, text }) => {
     const name = (text || '').trim();
     if (!name) {
         await m.reply(
-            `╭╌╌⬡「  *ɢᴇᴛ ᴘʟᴜɢɪɴ* 」\n┃\n` +
-            `┃ ◦ Format : *.getplugin <nama>*\n` +
-            `┃ ◦ Contoh : *.getplugin backup*\n` +
-            `┃ ◦ Contoh : *.getplugin owner/backup*\n┃\n` +
-            `╰╌╌⬡`
+            `╭┈┈⬡「 *ɢᴇᴛ ᴘʟᴜɢɪɴ* 」\n┃\n` +
+            `┃ ✧ ꜰᴏʀᴍᴀᴛ : *.ɢᴇᴛᴘʟᴜɢɪɴ <ɴᴀᴍᴀ>*\n` +
+            `┃ ✧ ᴄᴏɴᴛᴏʜ : *.ɢᴇᴛᴘʟᴜɢɪɴ ʙᴀᴄᴋᴜᴘ*\n` +
+            `┃ ✧ ᴄᴏɴᴛᴏʜ : *.ɢᴇᴛᴘʟᴜɢɪɴ ᴏᴡɴᴇʀ/ʙᴀᴄᴋᴜᴘ*\n┃\n` +
+            `╰┈┈┈┈┈┈┈┈⬡`
         );
         return;
     }
     const result = pluginManager.getPluginSource(name);
     if (!result.success) {
-        await m.reply(`╭╌╌⬡「  *ɢᴇᴛ ᴘʟᴜɢɪɴ* 」\n┃\n┃  ${result.error}\n┃\n╰╌╌⬡`);
+        await m.reply(`╭┈┈⬡「 *ɢᴇᴛ ᴘʟᴜɢɪɴ* 」\n┃\n┃ ✧ ${result.error}\n┃\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     const { rel, code } = result;
