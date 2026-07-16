@@ -2,32 +2,23 @@
 import * as kv from '../Database/kvstore.js';
 import config from '../config.js';
 import { normNum } from '../Library/resolve.js';
-
 const KEY = 'owners:extra';
-
 function readExtra() {
     const stored = kv.get(KEY, []);
     return Array.isArray(stored) ? stored : [];
 }
-
 function writeExtra(list) {
     kv.set(KEY, list);
 }
 
-/**
- * Daftar owner tambahan gabungan: config.owners (statis dari config.js)
- * + owner yang ditambahkan lewat .addowner (tersimpan di kv_store, persist).
- */
 export function getExtraOwners() {
     return readExtra();
 }
-
 export function getAllOwners() {
     const fromConfig = Array.isArray(config.owners) ? config.owners.map(normNum) : [];
     const fromKv = readExtra();
     return [...new Set([...fromConfig, ...fromKv])];
 }
-
 export function addOwner(num) {
     const clean = normNum(num);
     if (!clean) return false;
@@ -37,7 +28,6 @@ export function addOwner(num) {
     writeExtra(list);
     return true;
 }
-
 export function removeOwner(num) {
     const clean = normNum(num);
     if (!clean) return false;
@@ -48,5 +38,4 @@ export function removeOwner(num) {
     writeExtra(list);
     return true;
 }
-
 export default { getExtraOwners, getAllOwners, addOwner, removeOwner };
