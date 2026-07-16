@@ -10,13 +10,8 @@ import {
     isSelfModeGlobal,
     setSelfModeGlobal,
 } from '../../System/selfmode.js';
-
 const FOOTER = `© ${config.copyrightName || config.botName || 'Bot'}`;
 const IMAGE_PATH = config.registerImage;
-
-/* ────────────────────────────────────────────────────────────────
-   Helper: bubble interaktif (tombol "main owner") dipakai di semua reply
-   ──────────────────────────────────────────────────────────────── */
 async function sendInteractive(conn, chatJid, headerTitle, bodyText, quoted) {
     const { generateWAMessageFromContent } = await import('@itsliaaa/baileys');
     const mainOwnerNum = getMainOwnerNumber();
@@ -77,10 +72,6 @@ async function sendInteractive(conn, chatJid, headerTitle, bodyText, quoted) {
     );
     await conn.relayMessage(chatJid, msg.message, { messageId: msg.key.id });
 }
-
-/* ────────────────────────────────────────────────────────────────
-   Helper: bangun rows untuk list "pilih grup" — klik = toggle langsung
-   ──────────────────────────────────────────────────────────────── */
 function buildSelfmodeRows(groups, cmdPrefix = '.selfmode') {
     return groups.map((g, i) => {
         const emoji = g.selfOn ? '🟢' : '🔴';
@@ -93,19 +84,12 @@ function buildSelfmodeRows(groups, cmdPrefix = '.selfmode') {
         };
     });
 }
-
-/* ────────────────────────────────────────────────────────────────
-   Helper: sinkronkan tabel `groups` di DB dengan grup yang BENERAN
-   sedang diikuti bot (live dari WhatsApp), supaya grup lama yang
-   belum sempat kesave (join sebelum fitur ini ada / belum pernah
-   kena event participants.update) tetap ke-detect.
-   ──────────────────────────────────────────────────────────────── */
 async function syncGroupsFromLive(conn) {
     let live;
     try {
         live = await conn.groupFetchAllParticipating();
     } catch {
-        return null; // gagal fetch live  fallback ke DB apa adanya
+        return null;
     }
     if (!live) return null;
     const dbGroups = getAllGroups();
@@ -116,21 +100,13 @@ async function syncGroupsFromLive(conn) {
     }
     return live;
 }
-
-/* ────────────────────────────────────────────────────────────────
-   Helper: fetch list grup — utamakan live groupFetchAllParticipating,
-   fallback ke DB kalau live gagal
-   ──────────────────────────────────────────────────────────────── */
 async function fetchGroupList(conn) {
     const live = await syncGroupsFromLive(conn);
     const dbGroups = getAllGroups();
-
     const jids = live
         ? Object.keys(live)
         : Object.keys(dbGroups).filter((jid) => dbGroups[jid]?.settings?.botInGroup !== false);
-
     if (!jids.length) return [];
-
     return jids
         .slice(0, 50)
         .map((jid) => {
@@ -144,16 +120,11 @@ async function fetchGroupList(conn) {
         })
         .sort((a, b) => a.name.localeCompare(b.name));
 }
-
-/* ────────────────────────────────────────────────────────────────
-   Helper: kirim list grup sebagai interactive list message
-   ──────────────────────────────────────────────────────────────── */
 async function sendGroupList(conn, from, m, quoted, groupList, cmdPrefix, extraCaption = '') {
     const selfOnCount = groupList.filter((g) => g.selfOn).length;
     const globalOn = isSelfModeGlobal();
     const MAX_PER = 10;
     const sections = [];
-
     for (let i = 0; i < groupList.length; i += MAX_PER) {
         const slice = groupList.slice(i, i + MAX_PER);
         sections.push({
@@ -161,7 +132,6 @@ async function sendGroupList(conn, from, m, quoted, groupList, cmdPrefix, extraC
             rows: buildSelfmodeRows(slice, cmdPrefix),
         });
     }
-
     const caption =
         `乂  *ꜱ ᴇ ʟ ꜰ   ᴍ ᴏ ᴅ ᴇ   ◦   ᴅ ᴀ ꜰ ᴛ ᴀ ʀ   ɢ ʀ ᴜ ᴘ*\n\n` +
         `\t◦  *ᴛᴏᴛᴀʟ ɢʀᴜᴘ*  : ${groupList.length}\n` +
@@ -169,10 +139,7 @@ async function sendGroupList(conn, from, m, quoted, groupList, cmdPrefix, extraC
         (globalOn ? `\t◦  *ɢʟᴏʙᴀʟ*      :  _ᴀᴋᴛɪꜰ — ꜱᴇᴍᴜᴀ ɢʀᴜᴘ ᴏᴛᴏᴍᴀᴛɪꜱ ꜱᴇʟꜰ ᴍᴏᴅᴇ_\n` : '') +
         extraCaption +
         `\n_𝔎𝔩𝔦𝔨 𝔫𝔞𝔪𝔞 𝔤𝔯𝔲𝔭 𝔲𝔫𝔱𝔲𝔨 𝔩𝔞𝔫𝔤𝔰𝔲𝔫𝔤 𝔱𝔬𝔤𝔤𝔩𝔢 𝔰𝔢𝔩𝔣 𝔪𝔬𝔡𝔢_`;
-
     const thumb = IMAGE_PATH && fs.existsSync(IMAGE_PATH) ? fs.readFileSync(IMAGE_PATH) : undefined;
-
-    // Upload gambar dulu (tanpa kirim pesan ke siapapun), supaya bisa dipakai di interactiveMessage header
     let imgMsg = null;
     if (thumb) {
         try {
@@ -181,7 +148,6 @@ async function sendGroupList(conn, from, m, quoted, groupList, cmdPrefix, extraC
             imgMsg = media?.imageMessage;
         } catch { }
     }
-
     const fk = quoted || m.raw;
     await conn.relayMessage(from, {
         interactiveMessage: {
@@ -207,31 +173,20 @@ async function sendGroupList(conn, from, m, quoted, groupList, cmdPrefix, extraC
         },
     }, { messageId: conn.generateMessageTag() });
 }
-
 const handler = async (m, { conn }) => {
     const from = m.chat;
     const args = m.args;
     const command = m.command;
     const fkontak = await buildFkontak(conn, config);
-
-    /* ══════════════════════════════════════════════════════════════
-       COMMAND: .selfstatus
-       Tampilkan status global + per-grup.
-       - Jika global ON   tampilkan list grup, klik untuk jadikan public (nonaktifkan satu grup)
-       - Jika global OFF  tampilkan info ringkas, arahkan ke .selfmode
-       ══════════════════════════════════════════════════════════════ */
     if (command === 'selfstatus') {
         const globalOn = isSelfModeGlobal();
-
         if (globalOn) {
             await conn.sendMessage(from, { react: { text: '⏳', key: m.key } });
             const groupList = await fetchGroupList(conn);
-
             if (!groupList.length) {
                 await conn.sendMessage(from, { react: { text: '', key: m.key } });
                 return m.reply(`╭┈┈⬡「 *乂  *ꜱᴇʟꜰ ꜱᴛᴀᴛᴜꜱ* 」\n┃\n┃ ✧ \ᴛ◦  ʙᴏᴛ ᴛɪᴅᴀᴋ ʙᴇʀᴀᴅᴀ ᴅɪ ɢʀᴜᴘ ᴍᴀɴᴀᴘᴜɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
             }
-
             await sendGroupList(
                 conn, from, m, fkontak,
                 groupList,
@@ -241,7 +196,6 @@ const handler = async (m, { conn }) => {
             await conn.sendMessage(from, { react: { text: '✅', key: m.key } });
             return;
         }
-
         await syncGroupsFromLive(conn);
         const dbGroups = getAllGroups();
         const jids = Object.keys(dbGroups);
@@ -249,7 +203,6 @@ const handler = async (m, { conn }) => {
             .filter((jid) => isSelfMode(jid))
             .map((jid) => ({ jid, name: dbGroups[jid]?.name || jid }))
             .sort((a, b) => a.name.localeCompare(b.name));
-
         if (!onGroups.length) {
             return sendInteractive(
                 conn, from,
@@ -261,9 +214,7 @@ const handler = async (m, { conn }) => {
                 fkontak
             );
         }
-
         const listText = onGroups.map((g, i) => `   ${i + 1}. ${g.name}`).join('\n');
-
         return sendInteractive(
             conn, from,
             '𝗦 𝗘 𝗟 𝗙   ◦   𝗦 𝗧 𝗔 𝗧 𝗨 𝗦',
@@ -275,21 +226,14 @@ const handler = async (m, { conn }) => {
             fkontak
         );
     }
-
-    /* ══════════════════════════════════════════════════════════════
-       COMMAND: .selfstatus_toggle <jid@g.us>
-       Diklik dari list selfstatus (saat global ON)  set grup itu ke public
-       ══════════════════════════════════════════════════════════════ */
     if (command === 'selfstatus_toggle' && args[0] && args[0].endsWith('@g.us')) {
         const grpJid = args[0];
         setSelfMode(grpJid, false);
-
         let grpName = grpJid;
         try {
             const meta = await conn.groupMetadata(grpJid);
             grpName = meta?.subject || grpJid;
         } catch { }
-
         return sendInteractive(
             conn, from,
             '𝗣 𝗨 𝗕 𝗟 𝗜 𝗖   ◦   𝗠 𝗢 𝗗 𝗘',
@@ -302,11 +246,6 @@ const handler = async (m, { conn }) => {
             fkontak
         );
     }
-
-    /* ══════════════════════════════════════════════════════════════
-       COMMAND: .selfglobal
-       Toggle GLOBAL self mode ON/OFF sekaligus semua grup
-       ══════════════════════════════════════════════════════════════ */
     if (command === 'selfglobal') {
         const wantOn = !isSelfModeGlobal();
         const total = setSelfModeGlobal(wantOn);
@@ -323,22 +262,15 @@ const handler = async (m, { conn }) => {
             fkontak
         );
     }
-
-    /* ══════════════════════════════════════════════════════════════
-       COMMAND: .selfmode <jid@g.us>
-       Diklik dari list  toggle per-grup
-       ══════════════════════════════════════════════════════════════ */
     if (command === 'selfmode' && args[0] && args[0].endsWith('@g.us')) {
         const grpJid = args[0];
         const wantOn = !isSelfMode(grpJid);
         setSelfMode(grpJid, wantOn);
-
         let grpName = grpJid;
         try {
             const meta = await conn.groupMetadata(grpJid);
             grpName = meta?.subject || grpJid;
         } catch { }
-
         return sendInteractive(
             conn, from,
             wantOn ? '𝗦 𝗘 𝗟 𝗙   ◦   𝗠 𝗢 𝗗 𝗘' : '𝗣 𝗨 𝗕 𝗟 𝗜 𝗖   ◦   𝗠 𝗢 𝗗 𝗘',
@@ -353,26 +285,17 @@ const handler = async (m, { conn }) => {
             fkontak
         );
     }
-
-    /* ══════════════════════════════════════════════════════════════
-       COMMAND: .selfmode (tanpa argumen) — tampilkan list semua grup
-       Klik nama grup  toggle langsung
-       ══════════════════════════════════════════════════════════════ */
     if (command === 'selfmode' || command === 'self') {
         await conn.sendMessage(from, { react: { text: '⏳', key: m.key } });
-
         const groupList = await fetchGroupList(conn);
-
         if (!groupList.length) {
             await conn.sendMessage(from, { react: { text: '', key: m.key } });
             return m.reply(`╭┈┈⬡「 *乂  *ꜱᴇʟꜰ ᴍᴏᴅᴇ* 」\n┃\n┃ ✧ \ᴛ◦  ʙᴏᴛ ᴛɪᴅᴀᴋ ʙᴇʀᴀᴅᴀ ᴅɪ ɢʀᴜᴘ ᴍᴀɴᴀᴘᴜɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
-
         await sendGroupList(conn, from, m, fkontak, groupList, '.selfmode');
         await conn.sendMessage(from, { react: { text: '✅', key: m.key } });
     }
 };
-
 handler.help = [
     'selfmode                 — daftar semua grup, klik nama grup untuk toggle self mode per-grup',
     'selfglobal               — toggle SELF MODE GLOBAL, aktifkan/matikan di semua grup sekaligus',
