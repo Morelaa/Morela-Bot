@@ -3,7 +3,6 @@ import config from '../../config.js';
 import { findMediaMessage, downloadMessageMedia } from '../../Library/handle.js';
 import { AIRich, Toolkit } from '../../Library/MessageBuilder.js';
 import { buildFkontak } from '../../Library/utils.js';
-
 const OWNER_WA = `https://wa.me/${config.mainOwner}`;
 const PIXELCUT_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Mobile Safari/537.36',
@@ -20,11 +19,9 @@ const PIXELCUT_HEADERS = {
     'referer': 'https://www.pixa.com/',
     'accept-language': 'id-ID,id;q=0.9,en-AU;q=0.8,en;q=0.7,en-US;q=0.6',
 };
-
 function bufferToBlob(buffer, mimeType) {
     return new Blob([buffer], { type: mimeType });
 }
-
 async function uploadImage(buffer, conn) {
     try {
         const url = await Toolkit.toUrl(conn, buffer, 'image');
@@ -41,7 +38,6 @@ async function uploadImage(buffer, conn) {
         throw new Error('Upload gagal (CDN WA & Ornzora)');
     }
 }
-
 async function removeBg(buffer, mime) {
     const form = new FormData();
     form.append('image', bufferToBlob(buffer, mime), 'image.jpg');
@@ -57,18 +53,14 @@ async function removeBg(buffer, mime) {
     if (!result.length) throw new Error('Buffer hasil kosong');
     return result;
 }
-
 const handler = async (m, { conn, usedPrefix, command }) => {
     const media = findMediaMessage(m);
-
     if (!media || media.type !== 'imageMessage') {
         return m.reply(
             `╭┈┈⬡「 🖼️ *ʀᴇᴍᴏᴠᴇ ʙᴀᴄᴋɢʀᴏᴜɴᴅ* 」\n┃\n┃ ✧ ʀᴇᴘʟʏ ɢᴀᴍʙᴀʀ ᴜɴᴛᴜᴋ ᴍᴇɴɢʜᴀᴘᴜꜱ\n┃ ✧ ʟᴀᴛᴀʀ ʙᴇʟᴀᴋᴀɴɢɴʏᴀ ꜱᴇᴄᴀʀᴀ ᴏᴛᴏᴍᴀᴛɪꜱ.\n┃\n┃ ✧ ꜰᴏʀᴍᴀᴛ:\n┃ ✧ ʀᴇᴘʟʏ ꜰᴏᴛᴏ + ${usedPrefix}${command}\n┃\n╰┈┈┈┈┈┈┈┈⬡`
         );
     }
-
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-
     let buffer;
     try {
         buffer = await downloadMessageMedia(m, conn);
@@ -77,7 +69,6 @@ const handler = async (m, { conn, usedPrefix, command }) => {
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴅᴏᴡɴʟᴏᴀᴅ ɢᴀᴍʙᴀʀ: ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-
     let resultBuffer;
     try {
         resultBuffer = await removeBg(buffer, 'image/jpeg');
@@ -85,15 +76,12 @@ const handler = async (m, { conn, usedPrefix, command }) => {
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return m.reply(`╭┈┈⬡「 *ɢᴀɢᴀʟ ᴘʀᴏꜱᴇꜱ ɢᴀᴍʙᴀʀ* 」\n┃\n┃ ✧ ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-
     try {
         const resultUrl = await uploadImage(resultBuffer, conn);
         const sizeBefore = (buffer.length / 1024).toFixed(1);
         const sizeAfter = (resultBuffer.length / 1024).toFixed(1);
-
         const fk = await buildFkontak(conn, config);
         const ppUrl = await conn.profilePictureUrl(conn.user.id, 'image').catch(() => config.thumbnail);
-
         await new AIRich(conn)
             .setTitle(` Remove Background Selesai | ${sizeBefore} KB  ${sizeAfter} KB`)
             .addProduct({
@@ -112,17 +100,14 @@ const handler = async (m, { conn, usedPrefix, command }) => {
                 ['https://www.google.com/s2/favicons?domain=pixa.com&sz=16', 'https://www.pixa.com', 'Pixelcut API'],
             ])
             .send(m.chat, { quoted: fk });
-
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (e) {
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴋɪʀɪᴍ ʜᴀꜱɪʟ: ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
-
 handler.help = ['removebg <reply foto>'];
 handler.tags = ['tools'];
 handler.command = /^(removebg|pixa|nobg|nobackground)$/i;
 handler.limit = true;
-
 export default handler;
