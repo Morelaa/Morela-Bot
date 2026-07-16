@@ -100,9 +100,6 @@ class Store {
                     delete this.groupMetadata[id];
             }
             const botNum = normNum(sock?.user?.id);
-            // WhatsApp sering melaporkan participant pakai identitas @lid, bukan nomor telepon.
-            // Kumpulkan semua identitas yang mungkin merujuk ke bot (nomor, lid, jid) supaya
-            // deteksi "ini bot sendiri" tidak gagal cuma karena bentuk JID berbeda.
             const botEntry = meta ? findBotParticipant(meta.participants, sock?.user?.id) : null;
             const botIdSet = new Set([botNum].filter(Boolean));
             if (botEntry) {
@@ -164,11 +161,6 @@ class Store {
             }
             events.emitLogged(EVENTS.GROUP_PARTICIPANTS_UPDATE, { id, participants: list, action, meta });
         });
-        // Baileys memicu 'groups.upsert' saat bot pertama kali "mengenal" sebuah grup:
-        // grup baru yang bot dibuat/ditambahkan ke dalamnya, maupun sinkronisasi ulang
-        // daftar grup saat reconnect. Sebelumnya tidak ada listener untuk event ini sama
-        // sekali, jadi grup baru yang tidak sempat kena 'group-participants.update' (mis.
-        // bot ditambahkan saat offline) tidak akan pernah tercatat ke database.
         sock.ev.on('groups.upsert', (groups) => {
             for (const g of groups || []) {
                 if (!g?.id)
@@ -190,9 +182,6 @@ class Store {
         });
         globalThis.__botStore__ = this;
     }
-    // Self-heal: bandingkan daftar grup aktif langsung dari WhatsApp dengan tabel
-    // lokal, lalu catat/perbarui grup yang bot benar-benar masih ikuti tapi belum
-    // (atau belum lengkap) tercatat. Dipanggil saat koneksi baru terbuka.
     async reconcileGroups(sock) {
         try {
             const active = await sock.groupFetchAllParticipating();
