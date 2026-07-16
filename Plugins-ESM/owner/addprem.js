@@ -1,11 +1,9 @@
 'use strict';
 import db from '../../Database/db.js';
 import { resolveTarget, normNum } from '../../Library/resolve.js';
-
 const handler = async (m, { command, args }) => {
     const resolved = resolveTarget(m, args, { minDigits: 8 });
     const targetJid = resolved.jid;
-
     if (!targetJid) {
         const isAdd = command === 'addprem';
         return m.reply(
@@ -14,12 +12,10 @@ const handler = async (m, { command, args }) => {
             `┃ ✧ .${command} 628xxx\n┃ ✧ .${command} @ᴍᴇɴᴛɪᴏɴ\n┃ ✧ ʀᴇᴘʟʏ ᴘᴇꜱᴀɴ + .${command}\n╰┈┈┈┈┈┈┈┈⬡`
         );
     }
-
     const targetNum = normNum(targetJid);
     const userData = db.getUser(targetJid);
     const namaTarget = userData?.name || db.getPushName(targetNum) || db.getPushName(targetJid) || 'User';
     const sudahPremium = !!userData?.premium;
-
     if (command === 'addprem') {
         if (sudahPremium) {
             return m.reply(`╭┈┈⬡「 *ꜱᴜᴅᴀʜ ᴘʀᴇᴍɪᴜᴍ!* 」\n┃\n┃ ✧ ɴᴏᴍᴏʀ : +${targetNum}\n┃ ✧ ɴᴀᴍᴀ  : ${namaTarget}\n┃\n┃ ✧ ᴜꜱᴇʀ ɪɴɪ ꜱᴜᴅᴀʜ ᴘʀᴇᴍɪᴜᴍ ꜱᴇʙᴇʟᴜᴍɴʏᴀ.\n╰┈┈┈┈┈┈┈┈⬡`);
@@ -30,7 +26,6 @@ const handler = async (m, { command, args }) => {
             `User sekarang bebas dari limit harian.\nGunakan *.delprem* untuk mencabut.`
         );
     }
-
     if (command === 'delprem') {
         if (!sudahPremium) {
             return m.reply(`╭┈┈⬡「 *ʙᴇʟᴜᴍ ᴘʀᴇᴍɪᴜᴍ!* 」\n┃\n┃ ✧ ɴᴏᴍᴏʀ : +${targetNum}\n┃ ✧ ɴᴀᴍᴀ  : ${namaTarget}\n┃\n┃ ✧ ᴜꜱᴇʀ ɪɴɪ ʙᴜᴋᴀɴ ᴘʀᴇᴍɪᴜᴍ.\n╰┈┈┈┈┈┈┈┈⬡`);
@@ -45,5 +40,4 @@ handler.help = ['addprem <nomor/reply/mention>', 'delprem <nomor/reply/mention>'
 handler.tags = ['owner'];
 handler.command = /^(addprem|delprem)$/i;
 handler.owner = true;
-
 export default handler;
