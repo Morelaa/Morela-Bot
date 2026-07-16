@@ -5,7 +5,7 @@ import { findMediaMessage, downloadMessageMedia } from '../../Library/handle.js'
 const NEOXR_KEY = config.apiKeys.neoxr;
 const IMGBB_KEY = config.apiKeys.imgbb;
 const ANIME_PROMPT =
-    "Remove Clothing" 
+    "Remove Clothing"
 async function uploadToImgBB(buffer) {
     if (!IMGBB_KEY) {
         throw new Error('API key imgbb belum diisi. Isi config.apiKeys.imgbb dulu.');
