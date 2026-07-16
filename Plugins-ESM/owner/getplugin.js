@@ -2,7 +2,6 @@
 import path from 'path';
 import pluginManager from '../_pluginmanager.js';
 import { AIRich } from '../../Library/MessageBuilder.js';
-
 const handler = async (m, { conn, text }) => {
     const name = (text || '').trim();
     if (!name) {
