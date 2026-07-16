@@ -137,7 +137,7 @@ const config = {
     // true -> di grup, cuma main owner & owner yang bisa chat/command ke bot.
     // false -> di grup, semua orang + main owner + owner bisa chat/command ke bot.
 
-    defaultPrivateMode: false,
+    defaultPrivateMode: true,
     // Nilai default private mode kalau belum pernah di-set lewat command toggle.
     // true -> di chat pribadi (DM), cuma main owner & owner yang bisa chat ke bot.
     // false -> di chat pribadi (DM), semua orang bebas chat ke bot.
