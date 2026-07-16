@@ -4,14 +4,11 @@ import config from '../../config.js';
 import { findMediaMessage, downloadMessageMedia } from '../../Library/handle.js';
 import { AIRich, Toolkit } from '../../Library/MessageBuilder.js';
 import { buildFkontak } from '../../Library/utils.js';
-
 const OWNER_WA = `https://wa.me/${config.mainOwner}`;
 const NEOXR_KEY = config.apiKeys?.neoxr;
-
 function bufferToBlob(buffer, mimeType) {
     return new Blob([buffer], { type: mimeType });
 }
-
 async function uploadImage(buffer, conn) {
     try {
         const url = await Toolkit.toUrl(conn, buffer, 'image');
@@ -28,10 +25,8 @@ async function uploadImage(buffer, conn) {
         throw new Error('Upload gagal (CDN WA & Ornzora)');
     }
 }
-
 const handler = async (m, { conn, usedPrefix, command }) => {
     const media = findMediaMessage(m);
-
     if (!media || media.type !== 'imageMessage') {
         return m.reply(
             `╭┈┈⬡「 *ʀᴇᴍᴏᴠᴇ ᴡᴀᴛᴇʀᴍᴀʀᴋ* 」\n┃\n` +
@@ -43,18 +38,14 @@ const handler = async (m, { conn, usedPrefix, command }) => {
             `╰┈┈┈┈┈┈┈┈⬡`
         );
     }
-
     const img = media.message;
     if ((img.fileLength || 0) > 20 * 1024 * 1024) {
         return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀᴍʙᴀʀ ᴛᴇʀʟᴀʟᴜ ʙᴇꜱᴀʀ, ᴍᴀᴋꜱɪᴍᴀʟ *20 ᴍʙ*\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-
     if (!NEOXR_KEY) {
         return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴀᴘɪ ᴋᴇʏ ɴᴇᴏxʀ ʙᴇʟᴜᴍ ᴅɪᴀᴛᴜʀ ᴅɪ ᴄᴏɴꜰɪɢ.ᴊꜱ (ᴀᴘɪᴋᴇʏꜱ.ɴᴇᴏxʀ)\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-
     let buffer;
     try {
         buffer = await downloadMessageMedia(m, conn);
@@ -63,27 +54,21 @@ const handler = async (m, { conn, usedPrefix, command }) => {
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return m.reply(`╭┈┈⬡「 *ɢᴀɢᴀʟ ᴅᴏᴡɴʟᴏᴀᴅ ɢᴀᴍʙᴀʀ* 」\n┃\n┃ ✧ ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-
     await conn.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
-
     try {
         const [imageUrl, ppUrl, fk] = await Promise.all([
             uploadImage(buffer, conn),
             conn.profilePictureUrl(conn.user.id, 'image').catch(() => config.thumbnail),
             buildFkontak(conn, config),
         ]);
-
         const response = await axios.get('https://api.neoxr.eu/api/nowm', {
             params: { image: imageUrl, apikey: NEOXR_KEY },
             timeout: 120000,
         });
-
         if (!response.data?.status || !response.data?.data?.url) {
             throw new Error(response.data?.message || 'Gagal mendapatkan hasil dari API');
         }
-
         const resultUrl = response.data.data.url;
-
         await new AIRich(conn)
             .setTitle('Ai Assistant')
             .addProduct({
@@ -102,17 +87,14 @@ const handler = async (m, { conn, usedPrefix, command }) => {
                 ['https://www.google.com/s2/favicons?domain=whatsapp.com&sz=16', OWNER_WA, config.botName],
             ])
             .send(m.chat, { quoted: fk });
-
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (e) {
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return m.reply(`╭┈┈⬡「 *ᴘʀᴏꜱᴇꜱ ʀᴇᴍᴏᴠᴇ ᴡᴀᴛᴇʀᴍᴀʀᴋ ɢᴀɢᴀʟ* 」\n┃\n┃ ✧ ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
 };
-
 handler.help = ['removewm <reply foto>'];
 handler.tags = ['tools', 'ai'];
 handler.command = /^(removewm|nowm|hapuswm)$/i;
 handler.limit = true;
-
 export default handler;
