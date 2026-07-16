@@ -193,7 +193,6 @@ const handler = async (m, { conn, command, args, isOwner }) => {
         const imgBuf = await loadConfigImage(config.menuImage);
         const fkontak = await buildFkontak(conn, config);
         const ctx = buildForwardContext(config);
-        // Kategori bisa datang dari tombol (".menu_owner") ATAU diketik manual ("menu owner")
         const cat = command.startsWith('menu_')
             ? command.replace('menu_', '')
             : (command === 'menu' && args?.[0] ? args[0].toLowerCase() : null);
