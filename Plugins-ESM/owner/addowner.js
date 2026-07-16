@@ -1,7 +1,6 @@
 'use strict';
 import { resolveTarget, normNum } from '../../Library/resolve.js';
 import { addOwner, removeOwner, getExtraOwners } from '../../System/ownerlist.js';
-
 const handler = async (m, { conn, command, args }) => {
     if (command === 'listaddedowner') {
         const list = getExtraOwners();
@@ -11,10 +10,8 @@ const handler = async (m, { conn, command, args }) => {
         const text = list.map((n, i) => `┃ ✧ ${i + 1}. +${n}`).ᴊᴏɪɴ('\n');
         return m.reply(`╭┈┈⬡「 *ᴏᴡɴᴇʀ ᴛᴀᴍʙᴀʜᴀɴ* 」\n${text}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-
     const resolved = resolveTarget(m, args, { minDigits: 8 });
     const targetJid = resolved.jid;
-
     if (!targetJid) {
         const isAdd = command === 'addowner';
         return m.reply(
@@ -23,9 +20,7 @@ const handler = async (m, { conn, command, args }) => {
             `┃ ✧ .${command} 628xxx\n┃ ✧ .${command} @ᴍᴇɴᴛɪᴏɴ\n┃ ✧ ʀᴇᴘʟʏ ᴘᴇꜱᴀɴ + .${command}\n╰┈┈┈┈┈┈┈┈⬡`
         );
     }
-
     const targetNum = normNum(targetJid);
-
     if (command === 'addowner') {
         const ok = addOwner(targetNum);
         if (!ok) {
@@ -36,7 +31,6 @@ const handler = async (m, { conn, command, args }) => {
             `Nomor ini sekarang punya akses owner (persist, tetap ada walau bot restart).`
         );
     }
-
     if (command === 'delowner') {
         const ok = removeOwner(targetNum);
         if (!ok) {
@@ -49,5 +43,4 @@ handler.help = ['addowner <nomor/reply/mention>', 'delowner <nomor/reply/mention
 handler.tags = ['owner'];
 handler.command = /^(addowner|delowner|listaddedowner)$/i;
 handler.mainOwner = true;
-
 export default handler;
