@@ -27,16 +27,13 @@ export function checkAndConsume(jid, { isPremium = false, limit = config.default
     incrementUsage(jid, cost);
     return { allowed: true, used: used + cost, limit };
 }
-// Ambil pemakaian limit HARI INI untuk semua jid yang pernah pakai command ber-limit.
 export function getAllUsageToday() {
     return stmtGetAllToday.all(today());
 }
-// Reset limit satu user (hapus semua histori usage_limit miliknya).
 export function resetUsage(jid) {
     const res = stmtDeleteByJid.run(jid);
     return res.changes > 0;
 }
-// Reset limit SEMUA user (kosongkan seluruh tabel usage_limit).
 export function resetAllUsage() {
     const res = stmtDeleteAll.run();
     return res.changes;
