@@ -5,17 +5,10 @@ import config from '../../config.js';
 import { findMediaMessage, downloadMessageMedia } from '../../Library/handle.js';
 import { Toolkit } from '../../Library/MessageBuilder.js';
 import { buildFkontak, formatBytes } from '../../Library/utils.js';
-
 const FOOTER = `© ${config.copyrightName || config.botName || 'Bot'}`;
-
 function bufferToBlob(buffer, mimeType) {
     return new Blob([buffer], { type: mimeType });
 }
-
-/* ────────────────────────────────────────────────────────────────
-   Layanan upload — masing-masing terima (buffer, fileName, ext, mime)
-   dan wajib return string URL, atau throw Error kalau gagal.
-   ──────────────────────────────────────────────────────────────── */
 async function uploadCdnWA(buffer, fileName, ext, mime, conn) {
     const mediaType = mime.startsWith('video') ? 'video'
         : mime.startsWith('audio') ? 'audio'
@@ -25,7 +18,6 @@ async function uploadCdnWA(buffer, fileName, ext, mime, conn) {
     if (!url) throw new Error('CDN WA tidak mengembalikan URL');
     return url;
 }
-
 async function uploadOrnzora(buffer, fileName, ext, mime) {
     const form = new FormData();
     form.append('file', bufferToBlob(buffer, mime), `${fileName}.${ext}`);
@@ -36,7 +28,6 @@ async function uploadOrnzora(buffer, fileName, ext, mime) {
     if (!url) throw new Error('Ornzora tidak mengembalikan URL');
     return url;
 }
-
 async function uploadLitterbox(buffer, fileName, ext, mime) {
     const form = new FormData();
     form.append('fileToUpload', bufferToBlob(buffer, mime), `${fileName}.${ext}`);
@@ -47,7 +38,6 @@ async function uploadLitterbox(buffer, fileName, ext, mime) {
     if (text.startsWith('https://')) return text.trim();
     throw new Error(text || 'Litterbox gagal');
 }
-
 async function uploadGofile(buffer, fileName, ext, mime) {
     const srvRes = await fetch('https://api.gofile.io/servers');
     const srvData = await srvRes.json();
@@ -60,7 +50,6 @@ async function uploadGofile(buffer, fileName, ext, mime) {
     if (!data?.data?.downloadPage) throw new Error('Gofile upload gagal');
     return data.data.downloadPage;
 }
-
 async function uploadQuax(buffer, fileName, ext, mime) {
     const form = new FormData();
     form.append('file', bufferToBlob(buffer, mime), `${fileName}.${ext}`);
@@ -69,7 +58,6 @@ async function uploadQuax(buffer, fileName, ext, mime) {
     if (!data?.success || !data?.files?.[0]?.url) throw new Error('Qu.ax gagal');
     return data.files[0].url;
 }
-
 async function uploadTmpFiles(buffer, fileName, ext, mime) {
     const form = new FormData();
     form.append('file', bufferToBlob(buffer, mime), `${fileName}.${ext}`);
@@ -81,7 +69,6 @@ async function uploadTmpFiles(buffer, fileName, ext, mime) {
     }
     throw new Error('TmpFiles gagal');
 }
-
 async function uploadImgBB(buffer) {
     const key = config.apiKeys?.imgbb;
     if (!key) throw new Error('API key ImgBB belum diatur');
@@ -95,7 +82,6 @@ async function uploadImgBB(buffer) {
     if (!url) throw new Error('ImgBB gagal');
     return url;
 }
-
 async function uploadPutIcu(buffer, fileName, ext, mime) {
     const res = await fetch('https://put.icu/upload/', {
         method: 'PUT',
@@ -108,7 +94,6 @@ async function uploadPutIcu(buffer, fileName, ext, mime) {
     if (data?.url) return data.url;
     throw new Error('Put.icu: Invalid response');
 }
-
 const SERVICES = [
     { name: 'CDN WA', emoji: '💬', fn: uploadCdnWA, note: 'WhatsApp CDN', imageOnly: false },
     { name: 'Ornzora', emoji: '🌐', fn: uploadOrnzora, note: 'CDN Publik Permanen', imageOnly: false },
@@ -119,10 +104,8 @@ const SERVICES = [
     { name: 'ImgBB', emoji: '🌅', fn: uploadImgBB, note: 'Khusus gambar', imageOnly: true },
     { name: 'Put.icu', emoji: '📡', fn: uploadPutIcu, note: 'Expires 1 hari', imageOnly: false },
 ];
-
 const handler = async (m, { conn, usedPrefix }) => {
     const media = findMediaMessage(m);
-
     if (!media) {
         return m.reply(
             `╭┈┈⬡「 *ᴜᴘʟᴏᴀᴅ ꜰɪʟᴇ* 」\n┃\n` +
@@ -141,9 +124,7 @@ const handler = async (m, { conn, usedPrefix }) => {
             `╰┈┈┈┈┈┈┈┈⬡`
         );
     }
-
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-
     let buffer;
     try {
         buffer = await downloadMessageMedia(m, conn);
@@ -152,21 +133,17 @@ const handler = async (m, { conn, usedPrefix }) => {
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return m.reply(`╭┈┈⬡「 *ɢᴀɢᴀʟ ᴅᴏᴡɴʟᴏᴀᴅ ᴍᴇᴅɪᴀ* 」\n┃\n┃ ✧ ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-
     const ft = await fileTypeFromBuffer(buffer);
     const ext = ft?.ext || 'bin';
     const mime = ft?.mime || 'application/octet-stream';
     const fileName = `upload-${Date.now()}`;
     const size = formatBytes(buffer.length);
     const isImage = mime.startsWith('image');
-
     await conn.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
-
     const services = SERVICES.filter((svc) => !svc.imageOnly || isImage);
     const results = await Promise.allSettled(
         services.map((svc) => svc.fn(buffer, fileName, ext, mime, conn))
     );
-
     const lines = [
         `╭┈┈⬡「 📤 *ᴜᴘʟᴏᴀᴅ ʀᴇꜱᴜʟᴛ* 」`,
         `┃ ✧ 📁 \`${fileName}.${ext}\` • ${size}`,
@@ -174,7 +151,6 @@ const handler = async (m, { conn, usedPrefix }) => {
     ];
     const buttons = [];
     let anySuccess = false;
-
     for (let i = 0; i < services.length; i++) {
         const svc = services[i];
         const res = results[i];
@@ -192,12 +168,10 @@ const handler = async (m, { conn, usedPrefix }) => {
         }
     }
     lines.push(`╰┈┈┈┈┈┈┈┈⬡`);
-
     if (!buttons.length) {
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
         return m.reply([...lines, FOOTER].join('\n'));
     }
-
     const fkontak = await buildFkontak(conn, config);
     await conn.relayMessage(m.chat, {
         interactiveMessage: {
@@ -215,13 +189,10 @@ const handler = async (m, { conn, usedPrefix }) => {
             nativeFlowMessage: { messageParamsJson: '{}', buttons },
         },
     }, { messageId: conn.generateMessageTag() });
-
     await conn.sendMessage(m.chat, { react: { text: anySuccess ? '✅' : '❌', key: m.key } });
 };
-
 handler.help = ['tourl (kirim/reply file, foto, atau video)'];
 handler.tags = ['tools'];
 handler.command = /^(tourl|upload)$/i;
 handler.limit = true;
-
 export default handler;
