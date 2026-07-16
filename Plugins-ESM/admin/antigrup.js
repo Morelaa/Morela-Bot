@@ -10,7 +10,6 @@ import {
     safeDeleteParticipant,
     isSenderAdminInGroup,
 } from '../../Library/resolve.js';
-
 const FEATURES = {
     antilink: 'Anti Link',
     antivirtex: 'Anti Virtex',
@@ -27,14 +26,11 @@ const FEATURES = {
 };
 const VALID_KEYS = Object.keys(FEATURES);
 const ORDER = ['antilink', 'antivirtex', 'antibot', 'anticatalog', 'antiairich', 'antifoto', 'antivideo', 'antiaudio', 'antidokumen', 'antisticker', 'antimention', 'welcome'];
-
 function getText(m) {
     return m.text || m.message?.conversation || m.message?.extendedTextMessage?.text ||
         m.message?.imageMessage?.caption || m.message?.videoMessage?.caption || m.message?.documentMessage?.caption || '';
 }
-
 async function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
-
 async function deleteMsg(sock, m) {
     const senderRaw = m.key?.participant || m.key?.remoteJid || '';
     const deleteParticipant = safeDeleteParticipant(senderRaw);
@@ -47,7 +43,6 @@ async function deleteMsg(sock, m) {
         }
     }
 }
-
 async function findKickableJid(sock, groupJid, senderJid) {
     try {
         const meta = await sock.groupMetadata(groupJid);
@@ -59,7 +54,6 @@ async function findKickableJid(sock, groupJid, senderJid) {
         return found ? safeKickJid(found) : null;
     } catch (e) { console.error('[ANTIGRUP] findKickableJid error:', e?.message); return null; }
 }
-
 async function addWarn(sock, m, reason, senderJid) {
     try {
         const grp = db.getGroup(m.chat);
@@ -69,7 +63,6 @@ async function addWarn(sock, m, reason, senderJid) {
         warns[senderJid].updatedAt = Date.now();
         db.updateGroup(m.chat, { warns });
         const count = warns[senderJid].count;
-
         const isLid = isLidJid(senderJid);
         const rawLidNum = senderJid.split('@')[0];
         const resolvedPhone = isLid ? resolveLidToPhone(senderJid) : null;
@@ -80,11 +73,9 @@ async function addWarn(sock, m, reason, senderJid) {
             (resolvedPhone ? db.getPushName(`${phoneNum}@s.whatsapp.net`) : null) ||
             (resolvedPhone ? db.getPushName(phoneNum) : null) ||
             m.pushName || (resolvedPhone ? `+${phoneNum}` : rawLidNum);
-
         const warnText =
             `* Peringatan ${count}/5*\n\n@${phoneNum} melanggar aturan:\n*${reason}*\n\nNama: *${displayName}*\n` +
             (count >= 5 ? 'Peringatan penuh! Akan segera dikeluarkan.' : 'Jika mencapai 5 peringatan, akan dikeluarkan.');
-
         for (let attempt = 1; attempt <= 2; attempt++) {
             try {
                 await sock.sendMessage(m.chat, { text: warnText, mentions: [mentionJid] }, { quoted: m.raw });
@@ -95,7 +86,6 @@ async function addWarn(sock, m, reason, senderJid) {
                 break;
             }
         }
-
         if (count >= 5) {
             warns[senderJid].count = 0;
             db.updateGroup(m.chat, { warns });
@@ -107,12 +97,10 @@ async function addWarn(sock, m, reason, senderJid) {
         }
     } catch (e) { console.error('[ANTIGRUP] addWarn error:', e?.message); }
 }
-
 async function act(sock, m, reason, senderJid) {
     try { await deleteMsg(sock, m); } catch (e) { console.error('[ANTIGRUP] Delete gagal:', e?.message); }
     await addWarn(sock, m, reason, senderJid);
 }
-
 function isBotMessage(m) {
     const pushName = m.pushName || '';
     const mtype = m.type || '';
@@ -138,22 +126,18 @@ function isBotMessage(m) {
     if (/level up|breakthrough|exp gained/i.test(ltext)) return true;
     return false;
 }
-
 function statusOf(settings, k) { return settings[k] ? ' ᴀᴋᴛɪꜰ' : ' ɴᴏɴᴀᴋᴛɪꜰ'; }
-
 async function onHandler(m, { args = [], conn }) {
     const from = m.chat;
     const fitur = (args[0] || '').toLowerCase();
     const grp = db.getGroup(from);
     const settings = grp?.settings || {};
-
     if (!fitur) {
         const tableRows = [{ items: ['Fɪᴛᴜʀ', 'Sᴛᴀᴛᴜs'], isHeading: true }];
         for (const key of ORDER) {
             const status = settings[key] ? '🟢 ᴀᴋᴛɪꜰ' : '🔴 ɴᴏɴᴀᴋᴛɪꜰ';
             tableRows.push({ items: [FEATURES[key], status] });
         }
-
         const submessages = [
             {
                 messageType: 2,
@@ -168,7 +152,6 @@ async function onHandler(m, { args = [], conn }) {
                 tableMetadata: { title: 'Sᴛᴀᴛᴜs Fɪᴛᴜʀ Gʀᴜᴘ', rows: tableRows },
             },
         ];
-
         const content = {
             botForwardedMessage: {
                 message: {
@@ -185,7 +168,6 @@ async function onHandler(m, { args = [], conn }) {
                 },
             },
         };
-
         try {
             return await conn.relayMessage(m.chat, content, {});
         } catch (e) {
@@ -198,13 +180,11 @@ async function onHandler(m, { args = [], conn }) {
             return m.reply(text);
         }
     }
-
     if (!VALID_KEYS.includes(fitur)) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ꜰɪᴛᴜʀ *${fitur}* ᴛɪᴅᴀᴋ ᴅɪᴋᴇɴᴀʟ!\n╰┈┈┈┈┈┈┈┈⬡`);
     if (settings[fitur]) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *${FEATURES[fitur]}* ꜱᴜᴅᴀʜ ᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡`);
     db.updateGroup(from, { [fitur]: true });
     return m.reply(`╭┈┈⬡「 *${FEATURES[fitur]}* ʙᴇʀʜᴀꜱɪʟ ᴅɪᴀᴋᴛɪꜰᴋᴀɴ!* 」\n┃ ✧ _ʙᴏᴛ ʜᴀʀᴜꜱ ᴊᴀᴅɪ ᴀᴅᴍɪɴ ᴀɢᴀʀ ʙɪꜱᴀ ʜᴀᴘᴜꜱ ᴘᴇꜱᴀɴ._\n╰┈┈┈┈┈┈┈┈⬡`);
 }
-
 async function offHandler(m, { args = [] }) {
     const from = m.chat;
     const fitur = (args[0] || '').toLowerCase();
@@ -216,7 +196,6 @@ async function offHandler(m, { args = [] }) {
     db.updateGroup(from, { [fitur]: false });
     return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *${FEATURES[fitur]}* ʙᴇʀʜᴀꜱɪʟ ᴅɪɴᴏɴᴀᴋᴛɪꜰᴋᴀɴ!\n╰┈┈┈┈┈┈┈┈⬡`);
 }
-
 async function statusHandler(m) {
     const from = m.chat;
     const grp = db.getGroup(from);
@@ -226,7 +205,6 @@ async function statusHandler(m) {
     text += `╰┈┈┈┈┈┈┈┈⬡`;
     return m.reply(text);
 }
-
 async function delwarnHandler(m, { args = [] }) {
     const from = m.chat;
     let targetJid = null;
@@ -237,7 +215,6 @@ async function delwarnHandler(m, { args = [] }) {
         if (num.length >= 6) targetJid = num + '@s.whatsapp.net';
     }
     if (!targetJid) return m.reply(`╭┈┈⬡「 *ʀᴇᴘʟʏ/ᴍᴇɴᴛɪᴏɴ/ɴᴏᴍᴏʀ ᴜꜱᴇʀ ʏᴀɴɢ ᴍᴀᴜ ᴅɪʀᴇꜱᴇᴛ ᴡᴀʀɴɴʏᴀ.* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: .ᴅᴇʟᴡᴀʀɴ @ᴜꜱᴇʀ\n╰┈┈┈┈┈┈┈┈⬡`);
-
     const grp = db.getGroup(from);
     const warns = grp?.settings?.warns || {};
     if (!warns[targetJid] || warns[targetJid].count === 0) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ @${targetJid.split('@')[0]} ᴛɪᴅᴀᴋ ᴘᴜɴʏᴀ ᴡᴀʀɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
@@ -246,7 +223,6 @@ async function delwarnHandler(m, { args = [] }) {
     db.updateGroup(from, { warns });
     return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴡᴀʀɴ @${targetJid.split('@')[0]} ᴅɪʀᴇꜱᴇᴛ! (ꜱᴇʙᴇʟᴜᴍɴʏᴀ: ${before}/5)\n╰┈┈┈┈┈┈┈┈⬡`);
 }
-
 async function listwarnHandler(m) {
     const from = m.chat;
     const grp = db.getGroup(from);
@@ -260,8 +236,6 @@ async function listwarnHandler(m) {
     list += `┃\n┃ ✧ *.ᴅᴇʟᴡᴀʀɴ @ᴜꜱᴇʀ* ᴜɴᴛᴜᴋ ʀᴇꜱᴇᴛ\n╰┈┈┈┈┈┈┈┈⬡`;
     return m.reply(list);
 }
-
-// ── Command router: .on .off .antistatus .delwarn .listwarn ──────
 const handler = async (m, ctx) => {
     const cmd = m.command || '';
     if (cmd === 'on') return onHandler(m, ctx);
@@ -275,21 +249,16 @@ handler.tags = ['group', 'anti', 'warn'];
 handler.command = /^(on|off|antistatus|groupstatus|statusgrup|delwarn|resetwarn|clearwarn|listwarn|warnlist)$/i;
 handler.group = true;
 handler.admin = true;
-
-// ── Passive: proteksi tipe pesan (bot lain/video/foto/audio/dokumen/sticker/tag status) ──
 handler.onText = async (m, { conn, participants }) => {
     if (!m.isGroup) return false;
     if (!m.message) return false;
     if (m.fromMe) return false;
-
     const senderJid = m.sender || m.key?.participant || m.key?.remoteJid || '';
     if (!senderJid) return false;
     if (await isSenderAdminInGroup(conn, m.chat, senderJid, participants)) return false;
-
     const grp = db.getGroup(m.chat);
     if (!grp) return false;
     const settings = grp.settings || {};
-
     if (settings.antibot && isBotMessage(m)) { await act(conn, m, FEATURES.antibot, senderJid); return false; }
     if (settings.antivideo && m.type === 'videoMessage') { await act(conn, m, FEATURES.antivideo, senderJid); return false; }
     if (settings.antifoto && m.type === 'imageMessage') { await act(conn, m, FEATURES.antifoto, senderJid); return false; }
@@ -299,5 +268,4 @@ handler.onText = async (m, { conn, participants }) => {
     if (settings.antimention && m.type === 'groupStatusMentionMessage') { await act(conn, m, FEATURES.antimention, senderJid); return false; }
     return false;
 };
-
 export default handler;
