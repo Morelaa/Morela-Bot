@@ -2,9 +2,7 @@
 import { getGroup, updateGroup, getAllGroups } from '../Database/db.js';
 import * as kv from '../Database/kvstore.js';
 import config from '../config.js';
-
 const KEY_GLOBAL = 'selfmode:global';
-
 function readGlobal() {
     const val = kv.get(KEY_GLOBAL);
     return val === undefined ? !!config.defaultSelfMode : val === true || val === 'true';
@@ -13,13 +11,6 @@ function writeGlobal(active) {
     try { kv.set(KEY_GLOBAL, !!active); } catch { }
 }
 
-/**
- * Cek apakah grup ini dalam self mode.
- * Logic:
- *  - Jika global OFF  cek flag selfmode per-grup
- *  - Jika global ON   self mode aktif KECUALI grup yang eksplisit di-set selfmode=false
- *    (dikecualikan via .selfstatus_toggle)
- */
 export function isSelfMode(groupJid) {
     if (!groupJid) return false;
     const groupData = getGroup(groupJid);
@@ -29,22 +20,15 @@ export function isSelfMode(groupJid) {
     }
     return groupData?.settings?.selfmode ?? false;
 }
-
 export function setSelfMode(groupJid, value) {
     if (!groupJid) return false;
     updateGroup(groupJid, { selfmode: Boolean(value) });
     return Boolean(value);
 }
-
 export function isSelfModeGlobal() {
     return readGlobal();
 }
 
-/**
- * Set global self mode ON/OFF.
- * Jika applyToAll = true  update flag selfmode semua grup sesuai value.
- * Jika value = false dan applyToAll = true  reset semua grup ke public (hapus pengecualian).
- */
 export function setSelfModeGlobal(value, applyToAll = true) {
     writeGlobal(value);
     if (!applyToAll) return 0;
@@ -56,15 +40,12 @@ export function setSelfModeGlobal(value, applyToAll = true) {
     }
     return count;
 }
-
 export function toggleSelfModeGlobal() {
     return setSelfModeGlobal(!isSelfModeGlobal());
 }
-
 export function shouldBlockNonOwner(groupJid, isOwnerSender) {
     return isSelfMode(groupJid) && !isOwnerSender;
 }
-
 export default {
     isSelfMode,
     setSelfMode,
