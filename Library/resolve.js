@@ -77,9 +77,6 @@ export function findParticipant(participants, rawTarget) {
             const pNum = normNum(p.id);
             if (pNum === targetNum && pNum.length > 4)
                 return true;
-            // Baileys kadang menyimpan nomor asli di field phoneNumber/jid
-            // walau id-nya berupa @lid (privasi nomor disembunyikan di grup).
-            // findBotParticipant sudah cek ini, findParticipant sebelumnya belum.
             if (p.phoneNumber) {
                 const phoneNum = normNum(p.phoneNumber);
                 if (phoneNum === targetNum && phoneNum.length > 4)
@@ -103,9 +100,6 @@ export function findParticipant(participants, rawTarget) {
             return false;
         });
         if (found) {
-            // Simpan mapping lid->phone kalau baru ketemu lewat phoneNumber/jid,
-            // supaya pencarian berikutnya (dan command lain) langsung cepat
-            // lewat DB tanpa perlu field phoneNumber/jid lagi.
             if (found.id?.endsWith('@lid')) {
                 try {
                     setLidMapping(normNum(found.id), targetNum);
@@ -114,11 +108,6 @@ export function findParticipant(participants, rawTarget) {
             }
             return found;
         }
-        // Fallback: beberapa negara/klien menyimpan nomor dengan representasi
-        // kode negara yang sedikit berbeda. Coba cocokkan berdasarkan akhiran
-        // (suffix) nomor selama cukup panjang (>=8 digit) dan hasilnya tidak
-        // ambigu (cuma ada 1 kandidat cocok), supaya nomor internasional non-62
-        // tetap bisa ditemukan tanpa salah kick orang lain.
         if (targetNum.length >= 8) {
             const suffix = targetNum.slice(-8);
             const candidates = participants.filter(p => {
@@ -302,12 +291,6 @@ export function resolveTarget(m, args = [], opts = {}) {
         return { jid, raw, quotedPushName: null, source: 'mention' };
     }
     if (args[argIndex]) {
-        // Gabungkan token-token berurutan yang "terlihat seperti" bagian dari
-        // nomor telepon (digit, +, -, (), spasi sudah otomatis terpisah jadi
-        // token sendiri oleh args). Berhenti begitu ketemu token yang bukan
-        // bagian nomor (misal alasan kick: "kick 6281234567890 spam").
-        // Ini membuat parsing bekerja untuk SEMUA kode negara/format,
-        // bukan cuma nomor tanpa spasi seperti 62xxxx.
         let combined = '';
         for (let i = argIndex; i < args.length; i++) {
             const token = args[i];
@@ -320,7 +303,6 @@ export function resolveTarget(m, args = [], opts = {}) {
         }
         let num = normNum(combined || args[argIndex]);
         if (num.startsWith('0') && num.length > 1) {
-            // Format lokal Indonesia (08xxxxxxxxx) -> kode negara 62
             num = '62' + num.slice(1);
         }
         if (num.length >= minDigits) {
