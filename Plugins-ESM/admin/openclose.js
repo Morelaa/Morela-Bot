@@ -1,11 +1,9 @@
 'use strict';
-
 const handler = async (m, { conn, command }) => {
     const from = m.chat;
     if (!from || !from.endsWith('@g.us')) {
         return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴄᴏᴍᴍᴀɴᴅ ɪɴɪ ʜᴀɴʏᴀ ʙɪꜱᴀ ᴅɪɢᴜɴᴀᴋᴀɴ ᴅɪ ᴅᴀʟᴀᴍ ɢʀᴜᴘ.\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-
     if (command === 'open') {
         try {
             await conn.groupSettingUpdate(from, 'not_announcement');
@@ -14,7 +12,6 @@ const handler = async (m, { conn, command }) => {
             return m.reply(`╭┈┈⬡「 *ɢʀᴜᴘ ᴅɪʙᴜᴋᴀ* 」\n┃\n┃ ✧ ɢᴀɢᴀʟ ᴍᴇᴍʙᴜᴋᴀ ɢʀᴜᴘ!\n┃ ✧ ᴘᴀꜱᴛɪᴋᴀɴ ʙᴏᴛ ᴍᴇᴍɪʟɪᴋɪ ʜᴀᴋ ᴀᴅᴍɪɴ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
     }
-
     if (command === 'close') {
         try {
             await conn.groupSettingUpdate(from, 'announcement');
@@ -30,5 +27,4 @@ handler.command = /^(open|close)$/i;
 handler.group = true;
 handler.admin = true;
 handler.botAdmin = true;
-
 export default handler;
