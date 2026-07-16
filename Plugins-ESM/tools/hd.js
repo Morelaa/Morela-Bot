@@ -4,18 +4,15 @@ import config from '../../config.js';
 import { findMediaMessage, downloadMessageMedia } from '../../Library/handle.js';
 import { AIRich, Toolkit } from '../../Library/MessageBuilder.js';
 import { buildFkontak } from '../../Library/utils.js';
-
 const IMGLARGER_BASE_URL = 'https://get1.imglarger.com/api/UpscalerNew';
 const IMGLARGER_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.51 Safari/537.36',
     'Origin': 'https://imgupscaler.com',
     'Referer': 'https://imgupscaler.com/',
 };
-
 function bufferToBlob(buffer, mimeType) {
     return new Blob([buffer], { type: mimeType });
 }
-
 async function uploadImage(buffer, conn) {
     try {
         const url = await Toolkit.toUrl(conn, buffer, 'image');
@@ -32,7 +29,6 @@ async function uploadImage(buffer, conn) {
         throw new Error('Upload gagal (CDN WA & Ornzora)');
     }
 }
-
 async function upscaleWithImglarger(buffer) {
     const uploadForm = new FormData();
     uploadForm.append('myfile', bufferToBlob(buffer, 'image/jpeg'), 'image.jpg');
@@ -46,7 +42,6 @@ async function upscaleWithImglarger(buffer) {
     if (upload.code !== 200 || !upload.data?.code) {
         throw new Error('Gagal upload ke Imglarger');
     }
-
     const fileCode = upload.data.code;
     for (let i = 0; i < 20; i++) {
         await new Promise((r) => setTimeout(r, 3000));
@@ -65,7 +60,6 @@ async function upscaleWithImglarger(buffer) {
     }
     throw new Error('Timeout: Server Imglarger sibuk');
 }
-
 class PicsArtUpscaler {
     constructor() {
         this.authToken = null;
@@ -73,7 +67,6 @@ class PicsArtUpscaler {
         this.enhanceUrl = 'https://ai.picsart.com/gw1/diffbir-enhancement-service/v1.7.6';
         this.jsUrl = 'https://picsart.com/-/landings/4.290.0/static/index-msH24PNW-B73n3SC9.js';
     }
-
     async getAuthToken() {
         if (this.authToken) return this.authToken;
         const res = await axios.get(this.jsUrl, {
@@ -85,7 +78,6 @@ class PicsArtUpscaler {
         this.authToken = `Bearer ${match[1]}`;
         return this.authToken;
     }
-
     async uploadBuffer(buffer) {
         await this.getAuthToken();
         const form = new FormData();
@@ -107,7 +99,6 @@ class PicsArtUpscaler {
         if (!data?.result?.url) throw new Error('Upload ke PicsArt gagal');
         return data.result.url;
     }
-
     async enhanceImage(imageUrl, targetScale = 4) {
         const scale = Math.max(1, Math.min(20, targetScale));
         const params = new URLSearchParams({ picsart_cdn_url: imageUrl, format: 'PNG', model: 'REALESERGAN' });
@@ -129,7 +120,6 @@ class PicsArtUpscaler {
         if (!res.data?.id) throw new Error('Enhance request gagal');
         return res.data;
     }
-
     async checkStatus(jobId) {
         const res = await axios.get(`${this.enhanceUrl}/${jobId}`, {
             headers: {
@@ -142,7 +132,6 @@ class PicsArtUpscaler {
         });
         return res.data;
     }
-
     async waitForCompletion(jobId) {
         for (let i = 0; i < 30; i++) {
             try {
@@ -156,7 +145,6 @@ class PicsArtUpscaler {
         }
         throw new Error('Timeout menunggu PicsArt');
     }
-
     async upscale(buffer, targetScale = 4) {
         const uploadedUrl = await this.uploadBuffer(buffer);
         const enhance = await this.enhanceImage(uploadedUrl, targetScale);
@@ -165,23 +153,18 @@ class PicsArtUpscaler {
         return Buffer.from(res.data);
     }
 }
-
 const handler = async (m, { conn }) => {
     const media = findMediaMessage(m);
-
     if (!media || media.type !== 'imageMessage') {
         return m.reply(
             `╭┈┈⬡「 *ʜᴅ ᴜᴘꜱᴄᴀʟᴇʀ* 」\n┃\n┃ ✧ ᴋɪʀɪᴍ ᴀᴛᴀᴜ ʀᴇᴘʟʏ ꜰᴏᴛᴏ ᴅᴇɴɢᴀɴ\n┃ ✧ ᴄᴀᴘᴛɪᴏɴ *.ʜᴅ*\n┃\n┃ ✧ ᴇɴɢɪɴᴇ: ɪᴍɢʟᴀʀɢᴇʀ  ᴘɪᴄꜱᴀʀᴛ\n┃ ✧ ꜱᴄᴀʟᴇ : 4x\n┃\n╰┈┈┈┈┈┈┈┈⬡`
         );
     }
-
     const img = media.message;
     if ((img.fileLength || 0) > 10 * 1024 * 1024) {
         return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀᴍʙᴀʀ ᴛᴇʀʟᴀʟᴜ ʙᴇꜱᴀʀ! ᴍᴀᴋꜱɪᴍᴀʟ *10ᴍʙ*\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
-
     let buffer;
     try {
         buffer = await downloadMessageMedia(m, conn);
@@ -190,12 +173,9 @@ const handler = async (m, { conn }) => {
         await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
         return m.reply(`╭┈┈⬡「 *ɢᴀɢᴀʟ ᴅᴏᴡɴʟᴏᴀᴅ ɢᴀᴍʙᴀʀ* 」\n┃\n┃ ✧ ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-
     await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
-
     let resultBuffer;
     let methodUsed = 'Imglarger';
-
     try {
         resultBuffer = await upscaleWithImglarger(buffer);
     } catch (e1) {
@@ -209,17 +189,13 @@ const handler = async (m, { conn }) => {
             );
         }
     }
-
     const hdUrl = await uploadImage(resultBuffer, conn);
     if (!hdUrl) throw new Error('Gagal upload hasil ke hosting');
-
     const sizeBefore = (buffer.length / 1024).toFixed(1);
     const sizeAfter = (resultBuffer.length / 1024).toFixed(1);
-
     const fk = await buildFkontak(conn, config);
     const ppUrl = await conn.profilePictureUrl(conn.user.id, 'image')
         .catch(() => config.thumbnail);
-
     await new AIRich(conn)
         .setTitle(` HD Upscaler | ${methodUsed} | ${sizeBefore} KB  ${sizeAfter} KB`)
         .addProduct({
@@ -238,13 +214,10 @@ const handler = async (m, { conn }) => {
             ['https://www.google.com/s2/favicons?domain=github.com&sz=16', 'https://github.com', `GitHub ${config.botName}`],
         ])
         .send(m.chat, { quoted: fk });
-
     await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
 };
-
 handler.help = ['hd <reply foto>'];
 handler.tags = ['tools'];
 handler.command = /^hd$/i;
 handler.limit = true;
-
 export default handler;
