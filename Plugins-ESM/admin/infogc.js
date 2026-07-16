@@ -6,7 +6,6 @@ import db from '../../Database/db.js';
 import { ButtonV2 } from '../../Library/MessageBuilder.js';
 import { isLidJid, resolveLidToPhone, normNum, findParticipant, findBotParticipant, isParticipantAdmin } from '../../Library/resolve.js';
 const { prepareWAMessageMedia } = baileys;
-
 function resolveOwnerName(ownerRaw, participants) {
     if (!ownerRaw || ownerRaw === '-') return '-';
     const isLid = isLidJid(ownerRaw);
@@ -20,15 +19,13 @@ function resolveOwnerName(ownerRaw, participants) {
     }
     return num || ownerRaw;
 }
-
 async function getGroupPP(conn, groupJid) {
     try {
         const url = await conn.profilePictureUrl(groupJid, 'image');
         if (url) return url;
-    } catch { /* noop */ }
+    } catch {  }
     return config.thumbnail;
 }
-
 async function isGroupBotAdmin(conn, groupJid, botJid) {
     try {
         const meta = await conn.groupMetadata(groupJid);
@@ -37,7 +34,6 @@ async function isGroupBotAdmin(conn, groupJid, botJid) {
         return isParticipantAdmin(botParticipant);
     } catch { return false; }
 }
-
 function buildRows(groups) {
     return groups.map((g, i) => ({
         header: `Grup ${i + 1}`,
@@ -46,7 +42,6 @@ function buildRows(groups) {
         id: `.infogc ${g.jid}`,
     }));
 }
-
 const handler = async (m, { conn, command, text }) => {
     if (command === 'masukgc' || command === 'joingc') {
         if (!text) {
@@ -70,14 +65,13 @@ const handler = async (m, { conn, command, text }) => {
             return m.reply(`╭┈┈⬡「 *ɢᴀɢᴀʟ ᴍᴀꜱᴜᴋ ɢʀᴜᴘ* 」\n┃\n┃ ✧ ᴀʟᴀꜱᴀɴ : ${info}\n╰┈┈┈┈┈┈┈┈⬡`);
         }
     }
-
     if (command === 'outgc') {
         if (!text || !text.trim().endsWith('@g.us')) {
             return m.reply(`╭┈┈⬡「 *ᴏᴜᴛ ɢʀᴜᴘ* 」\n┃\n┃ ✧ ꜰᴏʀᴍᴀᴛ : .ᴏᴜᴛɢᴄ <ᴊɪᴅ@ɢ.ᴜꜱ>\n┃\n┃ ✧ ɢᴜɴᴀᴋᴀɴ .ɪɴꜰᴏɢᴄ ᴅᴜʟᴜ ᴜɴᴛᴜᴋ ᴘɪʟɪʜ ɢʀᴜᴘ.\n╰┈┈┈┈┈┈┈┈⬡`);
         }
         const targetJid = text.trim();
         let groupName = targetJid;
-        try { const meta = await conn.groupMetadata(targetJid); groupName = meta?.subject || targetJid; } catch { /* noop */ }
+        try { const meta = await conn.groupMetadata(targetJid); groupName = meta?.subject || targetJid; } catch {  }
         try {
             await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
             await conn.groupLeave(targetJid);
@@ -89,12 +83,11 @@ const handler = async (m, { conn, command, text }) => {
             return m.reply(`╭┈┈⬡「 *ɢᴀɢᴀʟ ᴋᴇʟᴜᴀʀ* 」\n┃\n┃ ✧ ɴᴀᴍᴀ  : ${groupName}\n┃ ✧ ᴇʀʀᴏʀ : ${e?.message || 'Unknown error'}\n╰┈┈┈┈┈┈┈┈⬡`);
         }
     }
-
     if (command === 'infogc' && text && text.trim().endsWith('@g.us')) {
         const targetJid = text.trim();
         await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
         let meta = null;
-        try { meta = await conn.groupMetadata(targetJid); } catch { /* noop */ }
+        try { meta = await conn.groupMetadata(targetJid); } catch {  }
         const dbData = db.getGroup(targetJid);
         const settings = dbData?.settings || {};
         const name = meta?.subject || dbData?.name || targetJid;
@@ -103,13 +96,11 @@ const handler = async (m, { conn, command, text }) => {
         const desc = String(meta?.desc || '-').slice(0, 60);
         const parts = meta?.participants || [];
         const ownerName = resolveOwnerName(ownerRaw, parts);
-
         let botJid = '';
         try {
             const decoded = await conn.decodeJid(conn.user?.id ?? '');
             botJid = decoded.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
         } catch { botJid = conn.user?.id || ''; }
-
         const isBotAdmin = await isGroupBotAdmin(conn, targetJid, botJid);
         const onoff = (v) => (v ? 'ON' : 'OFF');
         const bodyText =
@@ -127,7 +118,6 @@ const handler = async (m, { conn, command, text }) => {
             `◦ Antilink   : *${onoff(settings.antilink)}*\n` +
             `◦ Antigrup   : *${onoff(settings.antibot)}*\n` +
             `◦ Open/Close : *${onoff(settings.openclose)}*`;
-
         const ppThumb = await getGroupPP(conn, targetJid);
         try {
             const btn = new ButtonV2(conn).setTitle(name).setSubtitle(`Member : ${members}`).setBody(bodyText).setFooter(`© ${config.botName}`);
@@ -143,7 +133,6 @@ const handler = async (m, { conn, command, text }) => {
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
         return;
     }
-
     if (command === 'infogc') {
         await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
         let groupList = [];
@@ -152,23 +141,19 @@ const handler = async (m, { conn, command, text }) => {
             try {
                 const activeGroups = await conn.groupFetchAllParticipating();
                 const activeJids = new Set(Object.keys(activeGroups));
-                // Hapus grup yang sudah tidak diikuti bot lagi.
                 for (const jid of Object.keys(dbGroups)) {
                     if (!activeJids.has(jid)) {
                         db.deleteGroup(jid);
                         delete dbGroups[jid];
                     }
                 }
-                // Self-heal: grup yang menurut WhatsApp masih diikuti bot tapi belum
-                // (atau belum lengkap) tercatat di DB lokal — misalnya karena bot sempat
-                // ditambahkan saat offline dan event join tidak sempat kesimpen.
                 for (const jid of activeJids) {
                     if (!dbGroups[jid] || dbGroups[jid]?.settings?.botInGroup !== true) {
                         db.updateGroup(jid, { botInGroup: true });
                         dbGroups[jid] = db.getGroup(jid) || dbGroups[jid];
                     }
                 }
-            } catch { /* non-fatal */ }
+            } catch {  }
             const jids = Object.keys(dbGroups);
             if (!jids.length) {
                 await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
@@ -201,15 +186,13 @@ const handler = async (m, { conn, command, text }) => {
         }
         const caption = `*Info Grup*\n\nTotal Grup : ${groupList.length}\n\n_Ketuk nama grup untuk lihat info lengkap._`;
         const thumb = fs.existsSync(config.registerImage) ? fs.readFileSync(config.registerImage) : undefined;
-
         let imgMsg = null;
         if (thumb) {
             try {
                 const media = await prepareWAMessageMedia({ image: thumb }, { upload: conn.waUploadToServer });
                 imgMsg = media?.imageMessage;
-            } catch { /* noop */ }
+            } catch {  }
         }
-
         await conn.relayMessage(m.chat, {
             interactiveMessage: {
                 ...(imgMsg ? { header: { hasMediaAttachment: true, imageMessage: imgMsg } } : { header: { hasMediaAttachment: false } }),
@@ -226,5 +209,4 @@ handler.command = /^(infogc|outgc|masukgc|joingc)$/i;
 handler.owner = true;
 handler.tags = ['owner'];
 handler.help = ['infogc', 'infogc <jid@g.us>', 'outgc <jid@g.us>', 'masukgc <link>'];
-
 export default handler;
