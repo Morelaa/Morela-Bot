@@ -4,28 +4,22 @@ import fs from 'fs';
 import { writeFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import archiver from 'archiver';
 import config from '../../config.js';
-import { AIRich } from '../../Library/MessageBuilder.js';
 import { buildFkontak } from '../../Library/utils.js';
-import { isMainOwner } from '../../System/mainowner.js';
+import { isMainOwner, getMainOwnerNumber } from '../../System/mainowner.js';
 import { isLidJid, resolveLidToPhone, mapSenderLid, normNum } from '../../Library/resolve.js';
+import { findMediaMessage, downloadMessageMedia } from '../../Library/handle.js';
+import { editImageWithPrompt } from './omni.js';
 import pluginManager from '../_pluginmanager.js';
-
 const __dirname   = path.dirname(fileURLToPath(import.meta.url));
-const BOT_ROOT    = path.resolve(__dirname, '../..');       // root project Morela
-const PLUGIN_ROOT = path.resolve(__dirname, '..');          // Plugins-ESM/
-
-// ═══════════════════════════════════════════════════════════════════
-// STATE GLOBAL (status on/off per chat, history percakapan, lock, dll)
-// ═══════════════════════════════════════════════════════════════════
-if (!globalThis.__aiAgentStatus__)    globalThis.__aiAgentStatus__    = {};
+const BOT_ROOT    = path.resolve(__dirname, '../..');
+const PLUGIN_ROOT = path.resolve(__dirname, '..');
 if (!globalThis.__aiAgentHistory__)   globalThis.__aiAgentHistory__   = {};
 if (!globalThis.__aiAgentHistoryTs__) globalThis.__aiAgentHistoryTs__ = {};
 if (!globalThis.__aiAgentLock__)      globalThis.__aiAgentLock__      = new Set();
-
-const _AI_HISTORY_TTL_MS   = 6 * 60 * 60 * 1000; // 6 jam
+const _AI_HISTORY_TTL_MS   = 6 * 60 * 60 * 1000;
 const _AI_HISTORY_MAX_KEYS = 200;
-
 if (!globalThis.__aiAgentCleanupTimer__) {
     globalThis.__aiAgentCleanupTimer__ = setInterval(() => {
         try {
@@ -46,97 +40,58 @@ if (!globalThis.__aiAgentCleanupTimer__) {
                 for (const k of excess) { delete hist[k]; delete ts[k]; cleaned++; }
             }
             if (cleaned > 0) console.log(`[AI-AGENT] Cleanup: ${cleaned} history basi dihapus`);
-        } catch { /* noop */ }
+        } catch {  }
     }, 30 * 60 * 1000);
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// KONFIGURASI MODEL
-// ═══════════════════════════════════════════════════════════════════
 const OPENROUTER_API_KEY = config.apiKeys?.openrouter;
 const MODEL_ID    = 'openrouter/free';
 const MODEL_LABEL = '🚀 Google Lyria 3 Pro';
+const SYSTEM_PROMPT_BASE = `Kamu adalah ${config.botName}, asisten AI WhatsApp buatan ${config.ownerName || config.botName}. Jangan pernah mengaku Claude/GPT/Gemini/AI lain - kamu HANYA ${config.botName}.
 
-const SYSTEM_PROMPT_BASE = `Kamu adalah ${config.botName}, asisten AI berbasis WhatsApp yang dikembangkan oleh ${config.ownerName || config.botName}.
+ATURAN TOOL (WAJIB, PALING PENTING):
+- Kalau ada tool yang cocok dengan permintaan user → LANGSUNG panggil tool itu di respons ini juga. JANGAN menjelaskan dulu, JANGAN nanya konfirmasi untuk tool baca/cari data.
+- JANGAN PERNAH mengarang/menebak isi kode, fitur, atau plugin dari ingatan sendiri. Kalau ada tool untuk mengambil data itu, WAJIB panggil dulu - jawaban HARUS berdasarkan hasil tool, bukan asumsi.
+- download_music → panggil segera kalau user sebut lagu/artis/mp3, tanpa nanya "lagu apa?" dulu. File OTOMATIS terkirim setelah tool ini jalan - jangan pernah nanya "mau didownload?" atau "lanjut download?", karena file sudah/akan langsung terkirim.
+- download_video → panggil segera kalau ada link TikTok/IG/YT/Twitter atau kata "download video/reels/shorts". File OTOMATIS terkirim setelah tool ini jalan, jangan tanya konfirmasi apapun.
+- edit_image → panggil segera kalau user kirim/reply gambar DAN minta gambarnya diubah/diedit (ganti background, ubah gaya, tambah/hapus objek, dll). Gambar hasil edit OTOMATIS terkirim setelah tool ini jalan, jangan nanya konfirmasi. Kalau user cuma nanya ISI gambar (bukan minta diedit), JANGAN panggil tool ini - langsung deskripsikan/jawab dari gambar yang kamu lihat sendiri (kamu bisa melihat gambar yang dikirim/di-reply user).
 
-Kepribadian: profesional, komunikatif, dan kompeten di bidang IT & teknologi.
-Jawab dengan bahasa Indonesia yang jelas dan terstruktur.
-Kalau user nanya hal teknis, berikan penjelasan yang akurat dan mudah dipahami.
-Jangan pernah mengaku sebagai Claude, GPT, Gemini, atau AI lain. Kamu HANYA ${config.botName}.
+FORMAT WHATSAPP (WAJIB):
+- DILARANG pakai *bold*, **bold**, _italic_, #/##/### heading, atau markdown apapun.
+- Tulis kalimat normal (huruf besar di awal kalimat/nama saja, seperti EYD biasa). JANGAN menulis satu kalimat atau paragraf penuh dengan HURUF KAPITAL SEMUA - itu susah dibaca.
+- Kalau perlu menekankan SATU kata kunci pendek saja boleh huruf kapital (maksimal 1-3 kata), sisanya tetap huruf normal.
+- Pakai emoji (🔹 ✅ 📌 🎯) sebagai bullet, tanda - atau : untuk label, bukan huruf kapital untuk struktur.
+- Kode WAJIB dibungkus \`\`\`bahasa\nkode\n\`\`\` - jangan pernah tulis kode di luar code block.
 
-FORMAT WHATSAPP — WAJIB DIIKUTI, TIDAK BOLEH DILANGGAR:
-- DILARANG KERAS menggunakan tanda * (asterisk/bintang) dalam bentuk apapun — baik *bold*, **bold**, maupun bullet point *
-- DILARANG KERAS menggunakan ## atau ### atau # untuk heading/judul
-- DILARANG menggunakan _ (underscore) untuk italic
-- DILARANG menggunakan markdown formatting apapun
-- Gunakan HURUF KAPITAL untuk penekanan kata penting jika perlu
-- Gunakan emoji sebagai pengganti bullet point: 🔹 ✅ 📌 🎯 dll
-- Gunakan tanda — atau : untuk memisahkan label dan nilai
-- Gunakan garis pemisah seperti ──────────── jika perlu membagi section
-- Boleh panjang asal rapi dan mudah dibaca
+EJAAN & KUALITAS BAHASA (WAJIB):
+- Gunakan Bahasa Indonesia baku sesuai EYD, ejaan benar, TANPA typo dan TANPA kata yang tidak ada artinya (jangan mengarang kata).
+- Kalau ragu dengan istilah tertentu, pakai kata yang lebih umum/sederhana dan sudah pasti benar ejaannya.
+- Baca ulang respons secara internal sebelum menjawab: pastikan setiap kata adalah kata baku Bahasa Indonesia yang benar-benar ada.
 
-ATURAN KODE PROGRAMMING — WAJIB, TIDAK BOLEH DILANGGAR:
-- SELALU bungkus semua kode dalam code block dengan format: \`\`\`bahasa\nkode di sini\n\`\`\`
-- WAJIB cantumkan nama bahasa setelah \`\`\` (contoh: javascript, bash, json, dll)
-- JANGAN PERNAH tulis kode sebagai teks biasa di luar code block
-- JANGAN gunakan 📌 KODE LENGKAP atau label lain sebagai pengganti code block
-- Contoh BENAR:
-\`\`\`javascript
-console.log("Hello")
-\`\`\`
-- Contoh SALAH: menulis kode tanpa \`\`\` wrapper
-
-CONTOH FORMAT YANG BENAR:
-🎯 Fitur Download
-🎵 Download lagu — sebutkan nama lagu/artis
-📥 Download video — kirim link TikTok/IG/YT
-
-CONTOH FORMAT YANG SALAH (JANGAN LAKUKAN):
-**Fitur Download**
-- *Download lagu* — sebutkan nama lagu
-## Fitur
-
-GAYA KOMUNIKASI:
-- Bahasa Indonesia formal-santai (tidak kaku, tapi jelas)
-- Langsung ke inti, tanpa basa-basi berlebihan
-- Boleh jawab panjang kalau perlu, asal terstruktur dan rapi
-
-ATURAN TOOL — WAJIB LANGSUNG DIPANGGIL, JANGAN NANYA DULU:
-
-1. download_music → Panggil SEGERA kalau ada kata: lagu, musik, mp3, download lagu, cari lagu, atau nama artis/judul lagu.
-   Langsung eksekusi tanpa tanya "lagu apa?" — gunakan query yang ada.
-2. download_video → Panggil SEGERA kalau ada link TikTok/IG/YT/Twitter atau kata "download video/reels/shorts".
-
-PRINSIP UTAMA: Jangan minta klarifikasi untuk request download. Langsung eksekusi.
+GAYA JAWABAN:
+- Bahasa Indonesia, langsung ke inti, singkat dan padat - jangan bertele-tele.
+- Jawab HANYA apa yang ditanya. Jangan jelaskan fitur lain yang tidak diminta.
 Respond SELALU dalam bahasa Indonesia kecuali user pakai bahasa lain.`;
-
 const SYSTEM_PROMPT_MAIN_OWNER = `
 
 ═══════════════════════════════════════════════════
-  MODE MAIN OWNER — AKSES PENUH SERVER
+  MODE MAIN OWNER - AKSES PENUH SERVER
 ═══════════════════════════════════════════════════
 
-Tool tambahan tersedia:
-▸ read_file      — baca isi file di server (root maupun subfolder)
-▸ list_files     — lihat daftar file/folder di server
-▸ write_plugin   — tulis plugin baru (AUTO-RELOAD)
-▸ edit_file      — edit/timpa isi file mana saja di server (root, Library, System, Database, dll)
-▸ scan_and_count — scan semua file & hitung total baris kode
-▸ check_logs     — baca log error/output terbaru dari file log bot
-▸ analyze_error  — analisis error log + diagnosis + solusi
-▸ find_plugin    — cari file berdasarkan nama file/command/fitur/kata kunci
+Tool tambahan: list_files, read_file, get_plugin, find_plugin, write_plugin, edit_file, scan_and_count, check_logs, analyze_error, run_backup.
+Folder "session/" (kredensial WhatsApp) SELALU diblokir dari semua tool di atas, jangan pernah coba akses.
 
-CATATAN: folder "session/" (kredensial WhatsApp) SELALU diblokir dari semua tool di atas demi keamanan, jangan pernah menyarankan atau mencoba mengaksesnya.
+ATURAN PANGGIL TOOL - WAJIB LANGSUNG DIPANGGIL, TANPA NANYA DULU:
 
-ATURAN TOOL TAMBAHAN — WAJIB LANGSUNG DIPANGGIL:
+1. get_plugin(name) → kalau user sebut NAMA fitur/command/file spesifik (contoh: "cek isi hd", "lihat kode backup", "getplugin ban") → PANGGIL LANGSUNG dengan nama itu SEBAGAI SATU-SATUNYA file yang dibuka. JANGAN buka file lain yang tidak diminta.
+2. find_plugin(keyword) → HANYA kalau user TIDAK tahu nama file pasti dan cuma kasih keyword umum ("ada fitur apa aja soal sticker"). Setelah dapat daftar hasil, JANGAN otomatis baca semua file - sebutkan nama file yang cocok dan biarkan user pilih salah satu.
+3. read_file(filepath) → baca file di luar Plugins-ESM (root, Library/, System/, Database/, dll). Contoh: read_file("handler.js"), read_file("Library/utils.js").
+4. list_files → panggil kalau ada kata: "lihat folder", "ada file apa", "isi folder", "struktur bot", "list file".
+5. run_backup → panggil SEGERA kalau user minta backup/cadangkan bot, TANPA nanya konfirmasi. Ini aksi baca-only (zip lalu kirim), aman langsung eksekusi.
+6. scan_and_count → panggil kalau ada kata: "hitung baris", "berapa baris kode", "scan semua file", "total kode", "LOC".
+7. check_logs → panggil kalau ada kata: "cek log", "lihat error", "log terbaru", "ada error apa".
+8. analyze_error → panggil kalau user paste stack trace/error, atau kata: "debug", "kenapa error", "fix error".
 
-4. list_files  → Panggil kalau ada kata: "lihat folder", "ada file apa", "isi folder", "struktur bot", "plugin apa aja", "list file".
-5. read_file   → Panggil kalau ada kata: "baca file", "lihat kode", "cek file", "isi file", atau menyebut nama file.
-   PENTING: File di root bot langsung bisa dibaca dengan nama relatifnya.
-   Contoh: read_file("utama.js"), read_file("handler.js"), read_file("Library/utils.js"), read_file("System/mainowner.js")
-   JANGAN pernah bilang file tidak ada sebelum mencoba read_file atau find_plugin terlebih dahulu.
-
-6. write_plugin → WAJIB KONFIRMASI DULU SEBELUM MENYIMPAN.
+9. write_plugin → WAJIB KONFIRMASI DULU SEBELUM MENYIMPAN.
    Alur WAJIB:
    a. Tampilkan kode lengkap dulu ke user dalam code block.
    b. Tanya: "Simpan ke file [nama_file.js]? Ketik 'iya simpan' untuk konfirmasi."
@@ -146,22 +101,15 @@ ATURAN TOOL TAMBAHAN — WAJIB LANGSUNG DIPANGGIL:
    DILARANG KERAS langsung simpan hanya dari kata: "buat", "contoh", "bikin kode", "tulis kode", "buatkan fitur".
    "Buat kode" = tampilkan kode saja. "Buat dan simpan" = konfirmasi dulu.
 
-7. edit_file → WAJIB KONFIRMASI DULU SEBELUM MENGUBAH FILE.
-   Alur WAJIB:
-   a. Tampilkan perubahan yang akan dilakukan (diff/preview).
-   b. Tanya: "Edit file [nama_file]? Ketik 'iya edit' untuk konfirmasi."
-   c. TUNGGU jawaban user.
-   d. HANYA panggil edit_file kalau user EKSPLISIT bilang: "iya", "edit", "iya edit", "lanjut", "yes", "ok edit".
-   e. Kalau user tidak konfirmasi → JANGAN edit.
-   DILARANG KERAS langsung edit hanya dari kata: "perbaiki", "fix", "update", "benerin".
-   "Perbaiki kode" = tampilkan kode yang diperbaiki dulu. "Perbaiki dan simpan" = konfirmasi dulu.
-
-8. scan_and_count → Panggil SEGERA kalau ada kata: "hitung baris", "berapa baris kode", "scan semua file", "total kode", "line of code", "LOC".
-9. check_logs     → Panggil SEGERA kalau ada kata: "cek log", "lihat error", "log terbaru", "ada error apa".
-10. analyze_error → Panggil SEGERA kalau user paste stack trace/error message, atau ada kata: "debug", "kenapa error", "fix error", "analisis error ini".
-11. find_plugin   → Panggil HANYA kalau user minta LIHAT atau CARI file/kode yang sudah ada.
-    Setelah find_plugin menemukan file → langsung panggil read_file untuk baca isi file tersebut.
-    CATATAN: find_plugin mencari berdasarkan NAMA FILE maupun ISI FILE, jadi "cek antilink.js" akan langsung ketemu.
+10. edit_file → WAJIB KONFIRMASI DULU SEBELUM MENGUBAH FILE.
+    Alur WAJIB:
+    a. Tampilkan perubahan yang akan dilakukan (diff/preview).
+    b. Tanya: "Edit file [nama_file]? Ketik 'iya edit' untuk konfirmasi."
+    c. TUNGGU jawaban user.
+    d. HANYA panggil edit_file kalau user EKSPLISIT bilang: "iya", "edit", "iya edit", "lanjut", "yes", "ok edit".
+    e. Kalau user tidak konfirmasi → JANGAN edit.
+    DILARANG KERAS langsung edit hanya dari kata: "perbaiki", "fix", "update", "benerin".
+    "Perbaiki kode" = tampilkan kode yang diperbaiki dulu. "Perbaiki dan simpan" = konfirmasi dulu.
 
 PRINSIP UTAMA WRITE/EDIT:
 - "Buatkan kode X" → tampilkan kode, TANYA konfirmasi, tunggu jawaban
@@ -178,7 +126,7 @@ Kalau log kosong → langsung bilang "tidak ada error" tanpa panggil tool lagi.
 ══ FORMAT PLUGIN MORELA (WAJIB DIIKUTI PERSIS) ═══════════════════════
 
 WAJIB: Simpan sebagai file .js (JavaScript ESM). Contoh filename yang benar: "tools/bratv2.js"
-DILARANG: Jangan pernah simpan sebagai .ts — project ini murni JavaScript ESM, TypeScript TIDAK didukung.
+DILARANG: Jangan pernah simpan sebagai .ts - project ini murni JavaScript ESM, TypeScript TIDAK didukung.
 
 \`\`\`javascript
 'use strict';
@@ -211,14 +159,10 @@ ATURAN PENTING FORMAT PLUGIN:
 - handler.command WAJIB berupa REGEXP (bukan array/string!). Untuk banyak alias pakai: /^(cmd1|cmd2)$/i
 - Gunakan "conn" untuk kirim pesan/media, BUKAN Morela/sock/client. Contoh: conn.sendMessage(m.chat, { image: buffer, caption: 'teks' }, { quoted: m.raw })
 - Gunakan "m.reply(text)" untuk balasan teks simpel.
-- handler.owner / handler.admin / handler.group / handler.premium mengatur siapa yang boleh pakai command — biarkan false kalau tidak perlu dibatasi.
+- handler.owner / handler.admin / handler.group / handler.premium mengatur siapa yang boleh pakai command - biarkan false kalau tidak perlu dibatasi.
 - Import yang umum tersedia di project ini: axios, config dari '../../config.js', db (named export) dari '../../Database/db.js', { findMediaMessage, downloadMessageMedia } dari '../../Library/handle.js', { AIRich, ButtonV2, Toolkit } dari '../../Library/MessageBuilder.js', { buildFkontak } dari '../../Library/utils.js'.
 - JANGAN import package yang tidak ada di package.json project ini.
 `;
-
-// ═══════════════════════════════════════════════════════════════════
-// DEFINISI TOOL UNTUK MODEL AI
-// ═══════════════════════════════════════════════════════════════════
 const TOOLS_BASE = [
     {
         type: 'function',
@@ -236,8 +180,19 @@ const TOOLS_BASE = [
             parameters: { type: 'object', properties: { query: { type: 'string', description: 'Nama lagu atau artis' } }, required: ['query'] },
         },
     },
+    {
+        type: 'function',
+        function: {
+            name: 'edit_image',
+            description: 'Edit gambar yang dikirim langsung atau di-reply user di chat ini, sesuai prompt (ubah gaya, ganti background, tambah/hapus objek, dll) pakai AI image editor. WAJIB ada gambar yang dikirim/di-reply di chat ini, kalau tidak ada gambar jangan panggil tool ini.',
+            parameters: {
+                type: 'object',
+                properties: { prompt: { type: 'string', description: 'Instruksi edit gambar dalam bahasa natural, contoh: "ubah jadi gaya anime", "ganti background jadi pantai"' } },
+                required: ['prompt'],
+            },
+        },
+    },
 ];
-
 const TOOLS_MAIN_OWNER_EXTRA = [
     {
         type: 'function',
@@ -289,7 +244,7 @@ const TOOLS_MAIN_OWNER_EXTRA = [
                 type: 'object',
                 properties: {
                     filepath: { type: 'string', description: 'Path file relatif dari root bot. Contoh: "handler.js", "Plugins-ESM/tools/test.js"' },
-                    mode: { type: 'string', enum: ['replace', 'overwrite'], description: '"replace" — ganti bagian teks tertentu (old_text → new_text). "overwrite" — ganti seluruh isi file dengan content baru.' },
+                    mode: { type: 'string', enum: ['replace', 'overwrite'], description: '"replace" - ganti bagian teks tertentu (old_text → new_text). "overwrite" - ganti seluruh isi file dengan content baru.' },
                     old_text: { type: 'string', description: 'Teks lama yang akan diganti (hanya untuk mode "replace"). Harus unik dan persis sama dengan isi file.' },
                     new_text: { type: 'string', description: 'Teks baru pengganti old_text (hanya untuk mode "replace").' },
                     content: { type: 'string', description: 'Isi file baru secara keseluruhan (hanya untuk mode "overwrite").' },
@@ -348,7 +303,7 @@ const TOOLS_MAIN_OWNER_EXTRA = [
         type: 'function',
         function: {
             name: 'find_plugin',
-            description: 'Cari file berdasarkan nama file, nama command, atau kata kunci di seluruh direktori bot (termasuk root). Pencarian berdasarkan nama file MAUPUN isi file. Contoh: "handler.js", "antilink", "ytdl", "sticker".',
+            description: 'Cari file berdasarkan nama file, nama command, atau kata kunci di seluruh direktori bot (termasuk root). Pencarian berdasarkan nama file MAUPUN isi file. HANYA dipakai kalau nama file/fitur belum jelas - kalau sudah jelas namanya, pakai get_plugin langsung.',
             parameters: {
                 type: 'object',
                 properties: { keyword: { type: 'string', description: 'Nama file, nama command, nama fitur, atau kata kunci yang dicari.' } },
@@ -356,11 +311,27 @@ const TOOLS_MAIN_OWNER_EXTRA = [
             },
         },
     },
+    {
+        type: 'function',
+        function: {
+            name: 'get_plugin',
+            description: 'Ambil isi kode SATU plugin/fitur berdasarkan nama command atau nama file-nya secara langsung (tanpa pencarian). Pakai ini kalau user sudah sebut nama fitur/command spesifik, contoh: "cek isi fitur hd" → get_plugin("hd"), "lihat kode backup" → get_plugin("backup").',
+            parameters: {
+                type: 'object',
+                properties: { name: { type: 'string', description: 'Nama command atau nama file plugin, contoh: "hd", "backup", "owner/backup".' } },
+                required: ['name'],
+            },
+        },
+    },
+    {
+        type: 'function',
+        function: {
+            name: 'run_backup',
+            description: 'Backup seluruh folder project jadi file zip dan kirim ke DM main owner. Panggil segera kalau user minta backup/cadangkan bot, tanpa perlu konfirmasi (aksi ini aman, read-only terhadap kode).',
+            parameters: { type: 'object', properties: {}, required: [] },
+        },
+    },
 ];
-
-// ═══════════════════════════════════════════════════════════════════
-// HELPER: sender / history
-// ═══════════════════════════════════════════════════════════════════
 function getSenderNum(m, participants) {
     const raw = m.sender || m.key?.participant || m.key?.remoteJid || '';
     if (isLidJid(raw)) {
@@ -368,9 +339,7 @@ function getSenderNum(m, participants) {
     }
     return normNum(raw);
 }
-
 const MAX_HISTORY = 20;
-
 function getHistory(key) {
     const store = globalThis.__aiAgentHistory__;
     const ts = globalThis.__aiAgentHistoryTs__;
@@ -378,7 +347,6 @@ function getHistory(key) {
     ts[key] = Date.now();
     return store[key];
 }
-
 function pushHistory(key, role, content) {
     const store = globalThis.__aiAgentHistory__;
     const ts = globalThis.__aiAgentHistoryTs__;
@@ -388,14 +356,9 @@ function pushHistory(key, role, content) {
     store[key] = h;
     ts[key] = Date.now();
 }
-
 function clearHistory(key) {
     globalThis.__aiAgentHistory__[key] = [];
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// OPENROUTER
-// ═══════════════════════════════════════════════════════════════════
 async function callOpenRouter(messages, tools = null) {
     if (!OPENROUTER_API_KEY) throw new Error('API key openrouter belum diisi. Isi config.apiKeys.openrouter dulu.');
     const body = {
@@ -419,10 +382,8 @@ async function callOpenRouter(messages, tools = null) {
     });
     return res.data?.choices?.[0]?.message || null;
 }
-
 function parseXmlToolCall(content) {
     if (!content) return null;
-
     const toolCallMatch = content.match(/<tool_call>[\s\S]*?<function=([\w]+)>([\s\S]*?)<\/function>[\s\S]*?<\/tool_call>/i);
     if (toolCallMatch) {
         const name = toolCallMatch[1];
@@ -430,12 +391,11 @@ function parseXmlToolCall(content) {
         const args = {};
         for (const pm of body.matchAll(/<parameter=([\w]+)>([\s\S]*?)<\/parameter>/gi)) {
             let val = pm[2].trim();
-            try { val = JSON.parse(val); } catch { /* keep string */ }
+            try { val = JSON.parse(val); } catch {  }
             args[pm[1]] = val;
         }
         return { name, args };
     }
-
     const jsonMatch = content.match(/```(?:json)?\s*({[\s\S]*?})\s*```/);
     if (jsonMatch) {
         try {
@@ -446,39 +406,28 @@ function parseXmlToolCall(content) {
                     args: typeof parsed.arguments === 'string' ? JSON.parse(parsed.arguments) : (parsed.arguments || parsed.args || parsed.parameters || {}),
                 };
             }
-        } catch { /* ignore */ }
+        } catch {  }
     }
-
     const invokeMatch = content.match(/<invoke name="([^"]+)">([\s\S]*?)<\/invoke>/i);
     if (invokeMatch) {
         const name = invokeMatch[1];
         const args = {};
         for (const pm of invokeMatch[2].matchAll(/<parameter name="([^"]+)">([\s\S]*?)<\/parameter>/gi)) {
             let val = pm[2].trim();
-            try { val = JSON.parse(val); } catch { /* keep string */ }
+            try { val = JSON.parse(val); } catch {  }
             args[pm[1]] = val;
         }
         return { name, args };
     }
-
     return null;
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// SECURITY HELPER — blokir folder sensitif (session = kredensial WA)
-// ═══════════════════════════════════════════════════════════════════
 const HARD_BLOCKED_DIRS = new Set(['session', '.git']);
 const BINARY_EXTS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp3', '.mp4', '.ttf', '.woff', '.woff2', '.zip', '.bin', '.db', '.db-shm', '.db-wal'];
-
 function isPathBlocked(resolvedAbsPath) {
     const rel = path.relative(BOT_ROOT, resolvedAbsPath);
     const firstSeg = rel.split(path.sep)[0];
     return HARD_BLOCKED_DIRS.has(firstSeg);
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// TOOL: download
-// ═══════════════════════════════════════════════════════════════════
 async function toolDownloadVideo(url) {
     try {
         const baseHeaders = {
@@ -496,28 +445,23 @@ async function toolDownloadVideo(url) {
             });
             const sess = sessRes.headers['set-cookie']?.[0]?.split(';')[0];
             if (sess) cookie = `${baseCookie}; ${sess}`;
-        } catch { /* ignore, pakai cookie dasar */ }
-
+        } catch {  }
         const { data } = await axios.post('https://downr.org/.netlify/functions/nyt', { url }, {
             headers: { ...baseHeaders, cookie }, timeout: 20000,
         });
-
         if (!data?.medias?.length) return { text: '❌ Gagal download: media tidak ditemukan' };
-
         const videos = data.medias.filter((v) => v.type === 'video');
         const audios = data.medias.filter((v) => v.type === 'audio');
         const images = data.medias.filter((v) => v.type === 'image');
         const bestVid = videos.find((v) => v.quality === 'no_watermark') || videos.find((v) => v.quality === 'hd_no_watermark') || videos[0];
-
-        if (bestVid) return { text: `🎬 *${data.title || 'Video'}*\n👤 ${data.author || '-'}`, media: { type: 'video', url: bestVid.url, caption: data.title || '' } };
-        if (audios[0]) return { text: `🎵 *${data.title || 'Audio'}*`, media: { type: 'audio', url: audios[0].url } };
-        if (images[0]) return { text: `🖼️ *${data.title || 'Image'}*`, media: { type: 'image', url: images[0].url } };
+        if (bestVid) return { text: `🎬 *${data.title || 'Video'}*\n👤 ${data.author || '-'}\n\n✅ Sedang dikirim...`, media: { type: 'video', url: bestVid.url, caption: data.title || '' } };
+        if (audios[0]) return { text: `🎵 *${data.title || 'Audio'}*\n\n✅ Sedang dikirim...`, media: { type: 'audio', url: audios[0].url } };
+        if (images[0]) return { text: `🖼️ *${data.title || 'Image'}*\n\n✅ Sedang dikirim...`, media: { type: 'image', url: images[0].url } };
         return { text: 'ℹ️ Media ditemukan tapi format tidak bisa dikirim.' };
     } catch (e) {
         return { text: `❌ Error download video: ${e.message}` };
     }
 }
-
 async function toolDownloadMusic(query) {
     try {
         const { data } = await axios.get('https://api-faa.my.id/faa/ytplay', { params: { query }, timeout: 30000 });
@@ -526,17 +470,26 @@ async function toolDownloadMusic(query) {
         const audioUrl = r.mp3 || r.audio || r.audioUrl || r.audio_url || r.download_url || r.url || null;
         if (!audioUrl) return { text: `ℹ️ Ditemukan: *${r.title || query}*\nTapi tidak ada audio URL.` };
         return {
-            text: `🎵 *${r.title || query}*\n👤 ${r.artist || r.author || r.channel || '-'}\n⏱️ ${r.duration || '-'}`,
+            text: `🎵 *${r.title || query}*\n👤 ${r.artist || r.author || r.channel || '-'}\n⏱️ ${r.duration || '-'}\n\n✅ Sedang dikirim...`,
             media: { type: 'audio', url: audioUrl, title: r.title || query, artist: r.artist || r.author || '-', duration: r.duration || '-', thumb: r.thumbnail || r.thumb || null },
         };
     } catch (e) {
         return { text: `❌ Error cari lagu: ${e.message}` };
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// TOOL: filesystem (Main Owner only)
-// ═══════════════════════════════════════════════════════════════════
+async function toolEditImage(imageBuffer, prompt) {
+    if (!imageBuffer) return { text: '❌ Tidak ada gambar. Kirim atau reply foto dulu, baru minta edit.' };
+    if (!prompt || !prompt.trim()) return { text: '❌ Prompt edit kosong. Contoh: "ubah jadi gaya anime".' };
+    try {
+        const { buffer, status } = await editImageWithPrompt(imageBuffer, prompt);
+        return {
+            text: `✅ Gambar berhasil diedit.\nPrompt: ${prompt}`,
+            media: { type: 'image', buffer },
+        };
+    } catch (e) {
+        return { text: `❌ Gagal edit gambar: ${e.message}` };
+    }
+}
 async function toolListFiles(dirpath = '.') {
     try {
         const resolved = path.resolve(BOT_ROOT, dirpath);
@@ -544,7 +497,6 @@ async function toolListFiles(dirpath = '.') {
         if (isPathBlocked(resolved)) return { text: '🔒 Folder ini diblokir demi keamanan (kredensial WhatsApp).' };
         if (!fs.existsSync(resolved)) return { text: `❌ Direktori tidak ditemukan: ${dirpath}` };
         if (!fs.statSync(resolved).isDirectory()) return { text: `❌ ${dirpath} bukan direktori.` };
-
         const SKIP = new Set(['.git', 'node_modules', '.DS_Store', '__pycache__', 'session']);
         const items = fs.readdirSync(resolved, { withFileTypes: true });
         const dirs = [];
@@ -560,7 +512,6 @@ async function toolListFiles(dirpath = '.') {
         return { text: `❌ Error list files: ${e.message}` };
     }
 }
-
 async function toolReadFile(filepath) {
     try {
         const resolved = path.resolve(BOT_ROOT, filepath);
@@ -578,28 +529,22 @@ async function toolReadFile(filepath) {
         return { text: `❌ Error read file: ${e.message}` };
     }
 }
-
 async function toolWritePlugin(filename, code) {
     try {
         if (!filename || !code) return { text: '❌ filename dan code tidak boleh kosong.' };
-
         let rel = String(filename).trim();
         rel = rel.replace(/^\.?\/*/, '').replace(/^Plugins-ESM\/+/, '');
         rel = rel.replace(/\.(ts|js)$/i, '');
-
         const targetPath = path.join(PLUGIN_ROOT, `${rel}.js`);
         if (!targetPath.startsWith(PLUGIN_ROOT + path.sep)) {
             return { text: '❌ Target file harus di dalam Plugins-ESM/' };
         }
-
         if (!code.includes('export default')) return { text: '❌ Kode tidak valid: tidak ada "export default".' };
         if (!/handler\.command\s*=\s*\//.test(code)) {
             return { text: '❌ Kode tidak valid: "handler.command" harus berupa RegExp, contoh: /^namacommand$/i (bukan array/string).' };
         }
-
         const result = await pluginManager.addPlugin(rel, code);
         if (!result.success) return { text: `❌ Gagal simpan plugin: ${result.error}` };
-
         return {
             text: `✅ *Plugin berhasil ditulis & di-load!*\n\n📄 File    : \`Plugins-ESM/${rel}.js\`\n🔧 Command : ${result.command}\n\n🔄 Plugin manager auto-reload sudah memuatnya, langsung bisa dipakai.`,
         };
@@ -607,12 +552,10 @@ async function toolWritePlugin(filename, code) {
         return { text: `❌ Error write plugin: ${e.message}` };
     }
 }
-
 async function toolEditFile(filepath, mode, oldText, newText, content) {
     try {
         if (!filepath) return { text: '❌ filepath tidak boleh kosong.' };
         if (!['replace', 'overwrite'].includes(mode)) return { text: '❌ mode harus "replace" atau "overwrite".' };
-
         const resolved = path.resolve(BOT_ROOT, filepath);
         if (!resolved.startsWith(BOT_ROOT + path.sep) && resolved !== BOT_ROOT) {
             return { text: '❌ Akses ditolak: path di luar direktori bot.' };
@@ -621,12 +564,9 @@ async function toolEditFile(filepath, mode, oldText, newText, content) {
         if (BINARY_EXTS.some((ext) => filepath.toLowerCase().endsWith(ext))) {
             return { text: `⚠️ Tidak bisa edit file binary: ${filepath}` };
         }
-
         const relPath = path.relative(BOT_ROOT, resolved);
-
         if (mode === 'overwrite') {
             if (!content) return { text: '❌ Parameter "content" diperlukan untuk mode overwrite.' };
-
             let backupInfo = '';
             if (fs.existsSync(resolved)) {
                 const oldContent = fs.readFileSync(resolved, 'utf-8');
@@ -634,24 +574,18 @@ async function toolEditFile(filepath, mode, oldText, newText, content) {
                 fs.writeFileSync(backupPath, oldContent, 'utf-8');
                 backupInfo = `\n💾 Backup disimpan: \`${relPath}.bak\``;
             }
-
             const dir = path.dirname(resolved);
             if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
             await writeFile(resolved, content, 'utf-8');
-
             const newLines = content.split('\n').length;
             return { text: `✅ *File berhasil di-overwrite!*\n\n📄 File    : \`${relPath}\`\n📝 Baris   : ${newLines}${backupInfo}\n\n_(Kalau file di luar Plugins-ESM/, restart bot manual kalau perlu)_` };
         }
-
         if (!oldText) return { text: '❌ Parameter "old_text" diperlukan untuk mode replace.' };
         if (newText === undefined || newText === null) return { text: '❌ Parameter "new_text" diperlukan untuk mode replace.' };
-
         if (!fs.existsSync(resolved)) return { text: `❌ File tidak ditemukan: ${filepath}` };
         if (fs.statSync(resolved).isDirectory()) return { text: `❌ ${filepath} adalah direktori.` };
-
         const fileContent = fs.readFileSync(resolved, 'utf-8');
         const occurrences = fileContent.split(oldText).length - 1;
-
         if (occurrences === 0) {
             const trimmedOld = oldText.trim();
             const found = fileContent.includes(trimmedOld);
@@ -664,46 +598,36 @@ async function toolEditFile(filepath, mode, oldText, newText, content) {
         if (occurrences > 1) {
             return { text: `⚠️ old_text ditemukan ${occurrences}x di \`${relPath}\`.\n\nHarus unik agar edit aman. Tambahkan lebih banyak konteks di old_text agar hanya 1 kemunculan.` };
         }
-
         const backupPath = resolved + '.bak';
         fs.writeFileSync(backupPath, fileContent, 'utf-8');
-
         const updated = fileContent.replace(oldText, newText);
         await writeFile(resolved, updated, 'utf-8');
-
         const oldLines = oldText.split('\n').length;
         const newLines = newText.split('\n').length;
-
         return { text: `✅ *File berhasil diedit!*\n\n📄 File    : \`${relPath}\`\n🔄 Ganti   : ${oldLines} baris → ${newLines} baris\n💾 Backup  : \`${relPath}.bak\`\n\n_(Plugin di Plugins-ESM/ otomatis reload, file lain restart manual kalau perlu)_` };
     } catch (e) {
         return { text: `❌ Error edit file: ${e.message}` };
     }
 }
-
 async function toolScanAndCount(extensions = ['.js'], dirpath = '.', skipDirs = ['node_modules', '.git', 'dist', 'build', '__pycache__', '.DS_Store', 'session', 'data', 'media']) {
     try {
         const resolved = path.resolve(BOT_ROOT, dirpath);
         if (!resolved.startsWith(BOT_ROOT)) return { text: '❌ Akses ditolak: path di luar direktori bot.' };
-
         const results = [];
         const skipped = [];
         const exts = extensions.map((e) => (e.startsWith('.') ? e : `.${e}`));
         const skipSet = new Set([...skipDirs, ...HARD_BLOCKED_DIRS]);
-
         function walkDir(dir) {
             let entries;
             try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
-
             for (const entry of entries) {
                 if (skipSet.has(entry.name)) continue;
                 const fullPath = path.join(dir, entry.name);
-
                 if (entry.isDirectory()) {
                     walkDir(fullPath);
                 } else if (entry.isFile()) {
                     const ext = path.extname(entry.name).toLowerCase();
                     if (!exts.includes(ext)) continue;
-
                     const stat = fs.statSync(fullPath);
                     if (stat.size > 500 * 1024) {
                         skipped.push(path.relative(BOT_ROOT, fullPath) + ' (>500KB)');
@@ -721,21 +645,15 @@ async function toolScanAndCount(extensions = ['.js'], dirpath = '.', skipDirs = 
                 }
             }
         }
-
         walkDir(resolved);
-
         if (!results.length) return { text: `⚠️ Tidak ada file dengan ekstensi ${exts.join(', ')} ditemukan di ${dirpath}.` };
-
         results.sort((a, b) => b.lines - a.lines);
-
         const totalLines = results.reduce((s, r) => s + r.lines, 0);
         const totalCode = results.reduce((s, r) => s + r.code, 0);
         const totalBlank = results.reduce((s, r) => s + r.blank, 0);
         const totalFiles = results.length;
-
         const top = results.slice(0, 15);
         const topText = top.map((r, i) => `${String(i + 1).padStart(2, ' ')}. ${r.file.padEnd(45, ' ')} ${String(r.lines).padStart(5)} baris`).join('\n');
-
         const folderMap = {};
         for (const r of results) {
             const folder = r.file.includes('/') ? r.file.split('/')[0] : '(root)';
@@ -745,7 +663,6 @@ async function toolScanAndCount(extensions = ['.js'], dirpath = '.', skipDirs = 
             .sort((a, b) => b[1] - a[1])
             .map(([folder, lines]) => `  📁 ${folder}: ${lines.toLocaleString()} baris`)
             .join('\n');
-
         let result = '📊 *Hasil Scan Kode Bot*\n';
         result += '━━━━━━━━━━━━━━━━━━━━━━━━\n';
         result += `📁 Total File  : ${totalFiles}\n`;
@@ -755,17 +672,14 @@ async function toolScanAndCount(extensions = ['.js'], dirpath = '.', skipDirs = 
         result += `🔍 Ekstensi    : ${exts.join(', ')}\n\n`;
         result += `📂 *Breakdown per Folder:*\n${folderText}\n\n`;
         result += `🏆 *Top ${top.length} File Terbesar:*\n\`\`\`\n${topText}\n\`\`\``;
-
         if (skipped.length) {
             result += `\n\n⚠️ File di-skip (${skipped.length}): ${skipped.slice(0, 5).join(', ')}${skipped.length > 5 ? '...' : ''}`;
         }
-
         return { text: result };
     } catch (e) {
         return { text: `❌ Error scan: ${e.message}` };
     }
 }
-
 async function toolCheckLogs(lines = 50, _type = 'all') {
     try {
         const os = await import('os');
@@ -784,8 +698,7 @@ async function toolCheckLogs(lines = 50, _type = 'all') {
                     if (f.toLowerCase().includes(keyword)) candidates.push(path.join(pm2Dir, f));
                 }
             }
-        } catch { /* ignore */ }
-
+        } catch {  }
         let picked = null;
         for (const p of candidates) {
             if (!fs.existsSync(p)) continue;
@@ -794,52 +707,46 @@ async function toolCheckLogs(lines = 50, _type = 'all') {
                 const arr = content.split('\n').filter(Boolean);
                 const sliced = arr.slice(-lines).join('\n');
                 if (sliced.trim()) { picked = { path: p, text: sliced }; break; }
-            } catch { /* ignore file */ }
+            } catch {  }
         }
-
         if (!picked) {
             return {
                 text: 'ℹ️ Tidak ada file log ditemukan.\n\nDefault Morela hanya log ke console (tidak menulis file). Kalau bot dijalankan pakai PM2 atau `nohup node launcher.js > bot.log 2>&1 &`, log akan otomatis kebaca di sini.',
             };
         }
-
         const trimmed = picked.text.length > 3500 ? '...(dipotong)\n' + picked.text.slice(-3500) : picked.text;
         const errorCount = (picked.text.match(/\berror\b/gi) || []).length;
         const warningCount = (picked.text.match(/\bwarn(ing)?\b/gi) || []).length;
         const summary = errorCount || warningCount ? `\n\n📊 *Summary:* ${errorCount} error, ${warningCount} warning.` : '\n\n✅ *Tidak ada error terdeteksi.*';
-
         return { text: `🪵 *${path.relative(BOT_ROOT, picked.path)}* (${lines} baris terakhir):\n\`\`\`\n${trimmed}\n\`\`\`${summary}` };
     } catch (e) {
         return { text: `❌ Gagal baca log: ${e.message}` };
     }
 }
-
 async function toolAnalyzeError(errorText, context = '') {
     try {
         if (!errorText?.trim()) return { text: '❌ Error text tidak boleh kosong.' };
-
         const detections = [];
-        if (/cannot find module/i.test(errorText)) detections.push('📦 *Module tidak ditemukan* — package belum di-install atau path import salah.');
-        if (/syntaxerror/i.test(errorText)) detections.push('🔤 *Syntax Error* — ada kesalahan penulisan kode (kurung, titik koma, dll).');
-        if (/typeerror/i.test(errorText)) detections.push('🔢 *Type Error* — variable undefined/null atau tipe data tidak sesuai.');
-        if (/econnrefused|econnreset|etimedout/i.test(errorText)) detections.push('🌐 *Network Error* — koneksi gagal, cek internet atau API endpoint.');
-        if (/401|unauthorized/i.test(errorText)) detections.push('🔑 *Auth Error* — API key salah, expired, atau tidak ada izin.');
-        if (/403|forbidden/i.test(errorText)) detections.push('🚫 *Forbidden* — akses ditolak oleh server.');
-        if (/404/i.test(errorText)) detections.push('❓ *Not Found* — endpoint atau resource tidak ditemukan.');
-        if (/429|rate.?limit/i.test(errorText)) detections.push('⏱️ *Rate Limit* — terlalu banyak request, tunggu beberapa saat.');
-        if (/500|internal server/i.test(errorText)) detections.push('💥 *Server Error* — error di sisi server eksternal, bukan bot.');
-        if (/heap out of memory|javascript heap/i.test(errorText)) detections.push('🧠 *Out of Memory* — bot kekurangan RAM, perlu restart atau optimasi.');
-        if (/enoent/i.test(errorText)) detections.push('📂 *File Not Found* — file atau direktori yang diakses tidak ada.');
-        if (/permission denied|eacces/i.test(errorText)) detections.push('🔒 *Permission Denied* — tidak ada akses baca/tulis ke file/folder.');
-        if (/export default|export \{/i.test(errorText)) detections.push('📤 *Export Error* — masalah pada format export module.');
-
+        if (/cannot find module/i.test(errorText)) detections.push('📦 *Module tidak ditemukan* - package belum di-install atau path import salah.');
+        if (/syntaxerror/i.test(errorText)) detections.push('🔤 *Syntax Error* - ada kesalahan penulisan kode (kurung, titik koma, dll).');
+        if (/typeerror/i.test(errorText)) detections.push('🔢 *Type Error* - variable undefined/null atau tipe data tidak sesuai.');
+        if (/econnrefused|econnreset|etimedout/i.test(errorText)) detections.push('🌐 *Network Error* - koneksi gagal, cek internet atau API endpoint.');
+        if (/401|unauthorized/i.test(errorText)) detections.push('🔑 *Auth Error* - API key salah, expired, atau tidak ada izin.');
+        if (/403|forbidden/i.test(errorText)) detections.push('🚫 *Forbidden* - akses ditolak oleh server.');
+        if (/404/i.test(errorText)) detections.push('❓ *Not Found* - endpoint atau resource tidak ditemukan.');
+        if (/429|rate.?limit/i.test(errorText)) detections.push('⏱️ *Rate Limit* - terlalu banyak request, tunggu beberapa saat.');
+        if (/500|internal server/i.test(errorText)) detections.push('💥 *Server Error* - error di sisi server eksternal, bukan bot.');
+        if (/heap out of memory|javascript heap/i.test(errorText)) detections.push('🧠 *Out of Memory* - bot kekurangan RAM, perlu restart atau optimasi.');
+        if (/enoent/i.test(errorText)) detections.push('📂 *File Not Found* - file atau direktori yang diakses tidak ada.');
+        if (/permission denied|eacces/i.test(errorText)) detections.push('🔒 *Permission Denied* - tidak ada akses baca/tulis ke file/folder.');
+        if (/export default|export \{/i.test(errorText)) detections.push('📤 *Export Error* - masalah pada format export module.');
         const analysisPrompt = `Kamu adalah expert software engineer spesialis Node.js dan JavaScript ESM untuk WhatsApp Bot development.
 
 Analisis error berikut dan berikan:
-1. Root Cause — penyebab utama error (1-2 kalimat)
-2. Lokasi — di bagian kode mana error kemungkinan terjadi
-3. Solusi — langkah konkret untuk fix (sertakan contoh kode jika perlu)
-4. Pencegahan — cara mencegah error ini terjadi lagi
+1. Root Cause - penyebab utama error (1-2 kalimat)
+2. Lokasi - di bagian kode mana error kemungkinan terjadi
+3. Solusi - langkah konkret untuk fix (sertakan contoh kode jika perlu)
+4. Pencegahan - cara mencegah error ini terjadi lagi
 
 ${context ? `Konteks tambahan: ${context}\n` : ''}
 
@@ -850,61 +757,47 @@ ${errorText.substring(0, 2000)}
 
 ${detections.length ? `Pre-deteksi otomatis:\n${detections.join('\n')}\n` : ''}
 
-Jawab dalam bahasa Indonesia, langsung ke poin, TANPA markdown (tanpa **, ##, dll — pakai emoji/huruf kapital untuk penekanan). Sertakan contoh kode dalam code block kalau ada solusi berupa kode.`;
-
+Jawab dalam Bahasa Indonesia baku (EYD, tanpa typo, tanpa kata yang tidak ada artinya), langsung ke poin, TANPA markdown (tanpa **, ##, dll - pakai emoji sebagai bullet, huruf kapital hanya untuk 1-3 kata kunci pendek jika perlu, JANGAN satu kalimat penuh huruf kapital). Sertakan contoh kode dalam code block kalau ada solusi berupa kode.`;
         const aiMessages = [
             { role: 'system', content: 'Kamu adalah expert Node.js/JavaScript engineer. Analisis error dengan akurat dan berikan solusi konkret.' },
             { role: 'user', content: analysisPrompt },
         ];
-
         const aiResponse = await callOpenRouter(aiMessages, null);
         const aiText = aiResponse?.content?.trim() || '';
-
         const quickDetect = detections.length ? `🔍 *Deteksi Cepat:*\n${detections.join('\n')}\n\n` : '';
         const finalText = `🧠 *Analisis Error*\n━━━━━━━━━━━━━━━━━━━━━━━━\n\n${quickDetect}${aiText || 'Tidak dapat menganalisis error ini.'}`;
-
         return { text: finalText.substring(0, 4000) };
     } catch (e) {
         return { text: `❌ Gagal analisis error: ${e.message}` };
     }
 }
-
 async function toolFindPlugin(keyword) {
     try {
         if (!keyword?.trim()) return { text: '❌ Keyword tidak boleh kosong.' };
-
         const kw = keyword.trim().toLowerCase().replace(/\.(ts|js)$/, '');
         const matches = [];
         const skipSet = new Set(['node_modules', '.git', 'dist', 'build', ...HARD_BLOCKED_DIRS]);
-
         function walkDir(dir) {
             let entries;
             try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
-
             for (const entry of entries) {
                 if (skipSet.has(entry.name)) continue;
                 const fullPath = path.join(dir, entry.name);
-
                 if (entry.isDirectory()) {
                     walkDir(fullPath);
                 } else if (entry.isFile() && entry.name.endsWith('.js')) {
                     const stat = fs.statSync(fullPath);
                     if (stat.size > 200 * 1024) continue;
-
                     try {
                         const content = fs.readFileSync(fullPath, 'utf-8');
                         const lower = content.toLowerCase();
                         const fileNameBase = entry.name.toLowerCase().replace(/\.js$/, '');
-
                         const matchByName = fileNameBase.includes(kw);
                         const matchByContent = lower.includes(kw);
                         if (!matchByName && !matchByContent) continue;
-
                         const relPath = path.relative(BOT_ROOT, fullPath);
-
                         const cmdMatch = content.match(/handler\.command\s*=\s*(\/[\s\S]*?\/[a-z]*)/);
                         const commandStr = cmdMatch ? cmdMatch[1] : '(passive/no command)';
-
                         const lines = content.split('\n');
                         const matchLines = [];
                         for (let i = 0; i < lines.length; i++) {
@@ -916,25 +809,19 @@ async function toolFindPlugin(keyword) {
                                 if (matchLines.length >= 3) break;
                             }
                         }
-
                         matches.push({ file: relPath, commands: commandStr, snippets: matchLines, matchByName });
-                    } catch { /* skip unreadable file */ }
+                    } catch {  }
                 }
             }
         }
-
         walkDir(BOT_ROOT);
-
         if (!matches.length) {
             return { text: `❌ Tidak ditemukan file yang mengandung keyword "${keyword}".\n\nKemungkinan:\n- Nama file/command salah\n- File belum ada\n- Keyword terlalu umum` };
         }
-
         matches.sort((a, b) => (b.matchByName ? 1 : 0) - (a.matchByName ? 1 : 0));
-
         let result = `🔍 *Hasil pencarian: "${keyword}"*\n`;
         result += '━━━━━━━━━━━━━━━━━━━━━━━━\n';
         result += `Ditemukan di ${matches.length} file:\n\n`;
-
         for (const mm of matches) {
             result += `📄 *${mm.file}*${mm.matchByName ? ' ✅ (nama file cocok)' : ''}\n`;
             result += `🔧 Command: ${mm.commands}\n`;
@@ -942,20 +829,80 @@ async function toolFindPlugin(keyword) {
             result += '\n';
         }
         result += `_Gunakan "baca file ${matches[0].file}" untuk lihat kode lengkapnya._`;
-
         return { text: result.substring(0, 4000) };
     } catch (e) {
         return { text: `❌ Error find plugin: ${e.message}` };
     }
 }
-
-async function executeTool(name, args, isMO) {
-    const moOnly = new Set(['write_plugin', 'edit_file', 'read_file', 'list_files', 'scan_and_count', 'check_logs', 'analyze_error', 'find_plugin']);
+async function toolGetPlugin(name) {
+    try {
+        if (!name?.trim()) return { text: '❌ Nama plugin/fitur tidak boleh kosong.' };
+        const result = pluginManager.getPluginSource(name.trim());
+        if (!result.success) return { text: `❌ ${result.error}\n\n_Kalau tidak tahu nama pastinya, pakai find_plugin dulu._` };
+        const { rel, code } = result;
+        if (code.length > 50000) {
+            return { text: `📄 File *${rel}.js* (${code.length} bytes) kepanjangan buat 1 pesan.\n\nGunakan read_file("Plugins-ESM/${rel}.js") untuk baca sebagian.` };
+        }
+        return { text: `📄 *${rel}.js*:\n\`\`\`javascript\n${code}\n\`\`\`` };
+    } catch (e) {
+        return { text: `❌ Error get plugin: ${e.message}` };
+    }
+}
+const BACKUP_IGNORE_GLOBS = [
+    'node_modules/**', '.git/**', '*.zip',
+    'session/**', 'sessions/**',
+    'tmp/**', 'temp/**',
+    '.npm/**', '.pm2/**', '.config/**',
+    '.cache/**', 'logs/**',
+    'package-lock.json',
+];
+function fmtBackupSize(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+async function toolRunBackup(conn, chat) {
+    const zipName = `backup-bot-${new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)}.zip`;
+    const zipPath = path.join(config.rootDir, zipName);
+    const mainOwnerNum = getMainOwnerNumber();
+    const ownerJid = mainOwnerNum ? `${mainOwnerNum}@s.whatsapp.net` : '';
+    if (!ownerJid) return { text: '❌ config.mainOwner belum diisi, tidak tahu mau kirim backup ke nomor mana.' };
+    try {
+        const output = fs.createWriteStream(zipPath);
+        const archive = archiver('zip', { zlib: { level: 9 } });
+        const done = new Promise((resolve, reject) => {
+            output.on('close', resolve);
+            output.on('error', reject);
+            archive.on('error', reject);
+        });
+        archive.pipe(output);
+        archive.glob('**/*', { cwd: config.rootDir, ignore: BACKUP_IGNORE_GLOBS });
+        await archive.finalize();
+        await done;
+        const stats = fs.statSync(zipPath);
+        const size = fmtBackupSize(stats.size);
+        await conn.sendMessage(ownerJid, {
+            document: fs.readFileSync(zipPath),
+            fileName: zipName,
+            mimetype: 'application/zip',
+            caption: `📦 Backup Bot ${config.botName}\n📏 Size: ${size}`,
+        });
+        return chat === ownerJid
+            ? { text: `✅ Backup selesai (${size}), dikirim di chat ini.` }
+            : { text: `✅ Backup selesai (${size}), dikirim ke DM main owner.` };
+    } catch (e) {
+        return { text: `❌ Backup gagal: ${e.message}` };
+    } finally {
+        try { fs.unlinkSync(zipPath); } catch {  }
+    }
+}
+async function executeTool(name, args, isMO, ctx = {}) {
+    const moOnly = new Set(['write_plugin', 'edit_file', 'read_file', 'list_files', 'scan_and_count', 'check_logs', 'analyze_error', 'find_plugin', 'get_plugin', 'run_backup']);
     if (moOnly.has(name) && !isMO) return { text: '🔒 Tool ini hanya untuk Main Owner.' };
-
     switch (name) {
         case 'download_video': return toolDownloadVideo(args.url);
         case 'download_music': return toolDownloadMusic(args.query);
+        case 'edit_image': return toolEditImage(ctx.imageBuffer, args.prompt);
         case 'list_files': return toolListFiles(args.dirpath || '.');
         case 'read_file': return toolReadFile(args.filepath);
         case 'write_plugin': return toolWritePlugin(args.filename, args.code);
@@ -964,15 +911,13 @@ async function executeTool(name, args, isMO) {
         case 'check_logs': return toolCheckLogs(args.lines || 50, args.type || 'all');
         case 'analyze_error': return toolAnalyzeError(args.error_text, args.context || '');
         case 'find_plugin': return toolFindPlugin(args.keyword);
+        case 'get_plugin': return toolGetPlugin(args.name);
+        case 'run_backup': return toolRunBackup(ctx.conn, ctx.chat);
         default: return { text: `❓ Tool "${name}" tidak dikenal.` };
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// KIRIM MEDIA HASIL TOOL
-// ═══════════════════════════════════════════════════════════════════
 async function sendMedia(conn, chatId, media, quoted) {
-    if (!media?.url) return;
+    if (!media?.url && !media?.buffer) return;
     if (media.type === 'video') {
         const buf = await axios.get(media.url, { responseType: 'arraybuffer', timeout: 60000 }).then((r) => Buffer.from(r.data));
         await conn.sendMessage(chatId, { video: buf, caption: media.caption || '', mimetype: 'video/mp4' }, { quoted });
@@ -982,7 +927,7 @@ async function sendMedia(conn, chatId, media, quoted) {
         const buf = await axios.get(media.url, { responseType: 'arraybuffer', timeout: 60000 }).then((r) => Buffer.from(r.data));
         let thumb = null;
         if (media.thumb) {
-            try { thumb = await axios.get(media.thumb, { responseType: 'arraybuffer', timeout: 10000 }).then((r) => Buffer.from(r.data)); } catch { /* ignore */ }
+            try { thumb = await axios.get(media.thumb, { responseType: 'arraybuffer', timeout: 10000 }).then((r) => Buffer.from(r.data)); } catch {  }
         }
         await conn.sendMessage(chatId, {
             audio: buf,
@@ -999,19 +944,17 @@ async function sendMedia(conn, chatId, media, quoted) {
         return;
     }
     if (media.type === 'image') {
-        await conn.sendMessage(chatId, { image: { url: media.url } }, { quoted });
+        if (media.buffer) {
+            await conn.sendMessage(chatId, { image: media.buffer }, { quoted });
+        } else {
+            await conn.sendMessage(chatId, { image: { url: media.url } }, { quoted });
+        }
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// FORMATTING & TAMPILAN (MessageBuilder / AIRich)
-// ═══════════════════════════════════════════════════════════════════
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
-
 function hasCodeBlock(text) {
     return /```[a-zA-Z]*\n[\s\S]*?```/.test(text);
 }
-
 function stripMarkdown(text) {
     if (!text) return text;
     const parts = text.split(/(```[\s\S]*?```|`[^`\n]+`)/g);
@@ -1028,84 +971,20 @@ function stripMarkdown(text) {
             .replace(/\*+/g, '');
     }).join('').trim();
 }
-
-async function getBotPP(conn) {
-    return conn.profilePictureUrl(conn.user.id, 'image').catch(() => config.thumbnail);
-}
-
-function newAIRichBase(conn, ppUrl, title) {
-    return new AIRich(conn)
-        .setTitle(title)
-        .addProduct({
-            title: '',
-            brand: config.botName,
-            price: 'AI Agent',
-            sale_price: '',
-            product_url: `https://wa.me/${config.mainOwner}`,
-            icon_url: ppUrl,
-            image_url: ppUrl,
-        });
-}
-
-async function sendAsAIRich(conn, jid, rawText, quoted) {
+async function sendPlainReply(conn, jid, text, quoted) {
     try {
-        const ppUrl = await getBotPP(conn);
-        const segments = rawText.split(/(```[a-zA-Z]*\n[\s\S]*?```)/gi);
-        const builder = newAIRichBase(conn, ppUrl, 'AI Agent');
-
-        const textParts = [];
-        const codeBlocks = [];
-
-        for (const seg of segments) {
-            const trimmed = seg.trim();
-            if (!trimmed) continue;
-
-            const codeMatch = trimmed.match(/^```([a-zA-Z]*)\n([\s\S]*?)```$/i);
-            if (codeMatch) {
-                const lang = codeMatch[1]?.trim() || 'javascript';
-                const code = codeMatch[2] || '';
-                if (code.trim()) codeBlocks.push({ lang, code });
-            } else {
-                const plainText = stripMarkdown(trimmed);
-                if (plainText.trim()) textParts.push(plainText.trim());
-            }
-        }
-
-        if (textParts.length > 0) {
-            for (const part of textParts.join('\n\n').split('\n').filter(Boolean)) {
-                builder.addTip(part);
-            }
-        }
-        for (const { lang, code } of codeBlocks) {
-            builder.addCode(lang, code);
-        }
-
-        if (textParts.length === 0 && codeBlocks.length === 0) throw new Error('no content');
-
-        await builder.send(jid, { quoted });
+        const clean = (text || '').trim();
+        if (!clean) return false;
+        await conn.sendMessage(jid, { text: clean }, { quoted });
         return true;
     } catch {
         return false;
     }
 }
-
-async function sendPlainAsAIRich(conn, jid, finalResponseText, quoted) {
-    try {
-        const ppUrl = await getBotPP(conn);
-        const builder = newAIRichBase(conn, ppUrl, 'AI Agent');
-        for (const line of finalResponseText.split('\n').filter(Boolean)) {
-            builder.addTip(line);
-        }
-        await builder.send(jid, { quoted });
-        return true;
-    } catch {
-        return false;
-    }
-}
-
 const toolLoadMsg = {
     download_video: '🎬 Sedang mengunduh video...',
     download_music: '🎵 Sedang mencari lagu...',
+    edit_image: '🎨 Sedang mengedit gambar...',
     list_files: '📁 Membaca struktur folder server...',
     read_file: '📄 Membuka file...',
     write_plugin: '📝 Menulis plugin ke server...',
@@ -1114,80 +993,28 @@ const toolLoadMsg = {
     check_logs: '🪵 Membaca log terbaru...',
     analyze_error: '🧠 Menganalisis error...',
     find_plugin: '🔍 Mencari plugin...',
+    get_plugin: '📄 Membuka file...',
+    run_backup: '📦 Membuat backup...',
 };
-
-const DIRECT_SEND_TOOLS = new Set(['write_plugin', 'edit_file', 'scan_and_count', 'analyze_error']);
-const SILENT_TOOLS = new Set(['read_file', 'list_files', 'check_logs']);
-
-// ═══════════════════════════════════════════════════════════════════
-// COMMAND: .aiagenton / .aiagentoff / .aiagenreset / .aiagenstat
-// ═══════════════════════════════════════════════════════════════════
-const handler = async (m, { conn, command }) => {
+const DIRECT_SEND_TOOLS = new Set(['write_plugin', 'edit_file', 'scan_and_count', 'analyze_error', 'run_backup', 'download_music', 'download_video', 'edit_image']);
+const SILENT_TOOLS = new Set(['read_file', 'list_files', 'check_logs', 'get_plugin']);
+const handler = async (m, { conn, participants }) => {
+    const senderNum = getSenderNum(m, participants);
+    if (!isMainOwner(senderNum)) return;
+    const userId = m.sender || m.key?.participant || '';
+    const histKey = `${m.chat}:${userId}`;
+    clearHistory(histKey);
     const fkontak = await buildFkontak(conn, config);
-    const ppUrl = await getBotPP(conn);
-
-    const send = (tips) => {
-        const builder = newAIRichBase(conn, ppUrl, 'AI Assistant');
-        for (const tip of tips) builder.addTip(tip);
-        return builder.send(m.chat, { quoted: fkontak || m.raw });
-    };
-
-    if (command === 'aiagenton' || command === 'agenton') {
-        globalThis.__aiAgentStatus__[m.chat] = true;
-        return send([
-            '🤖 AI Agent telah ON di grup ini!',
-            'Bot akan merespon pesan Main Owner secara otomatis.',
-            '',
-            '📌 Kemampuan AI Agent:',
-            '🔹 Chat & tanya jawab bebas',
-            '🔹 Download video (TikTok, IG, YT, dll)',
-            '🔹 Download & putar lagu/musik',
-            '🔹 Baca & list file di server (khusus Main Owner)',
-            '🔹 Buat / edit plugin bot (khusus Main Owner)',
-            '',
-            '💡 Ketik reset untuk hapus history percakapan.',
-        ]);
-    }
-
-    if (command === 'aiagentoff' || command === 'agentoff') {
-        globalThis.__aiAgentStatus__[m.chat] = false;
-        return send(['❌ AI Agent telah OFF di grup ini.']);
-    }
-
-    if (command === 'aiagenreset' || command === 'agenreset') {
-        const hist = globalThis.__aiAgentHistory__;
-        const keys = Object.keys(hist).filter((k) => k.startsWith(m.chat));
-        keys.forEach((k) => delete hist[k]);
-        return send(['🧹 History percakapan AI Agent di grup ini sudah direset!', `${keys.length} sesi dihapus.`]);
-    }
-
-    if (command === 'aiagenstat' || command === 'agenstat') {
-        const isOn = !!globalThis.__aiAgentStatus__[m.chat];
-        const hist = globalThis.__aiAgentHistory__;
-        const users = Object.keys(hist).filter((k) => k.startsWith(m.chat)).length;
-        return send([
-            `🤖 Status AI Agent: ${isOn ? '✅ ON' : '❌ OFF'}`,
-            `📊 History: ${users} sesi aktif`,
-            'Ketik reset untuk bersihkan history.',
-        ]);
-    }
+    await conn.sendMessage(m.chat, { text: '🧹 History percakapan Morela sudah direset. Siap melanjutkan dari awal.' }, { quoted: fkontak || m.raw });
 };
-
-handler.command = /^(aiagenton|aiagentoff|aiagenreset|aiagenstat|agenton|agentoff|agenreset|agenstat)$/i;
+handler.command = /^(reset|lupa|forget|clear)$/i;
 handler.tags = ['ai'];
-handler.group = true;
-handler.admin = true;
+handler.group = false;
+handler.admin = false;
 handler.noLimit = true;
-handler.help = [
-    'aiagenton / agenton     — aktifkan AI Agent di grup',
-    'aiagentoff / agentoff   — matikan AI Agent di grup',
-    'aiagenstat / agenstat   — cek status AI Agent',
-    'aiagenreset / agenreset — reset history percakapan',
-];
-
-// ═══════════════════════════════════════════════════════════════════
-// PASSIVE: AI Agent chat otomatis (khusus Main Owner, di grup yg ON)
-// ═══════════════════════════════════════════════════════════════════
+handler.help = ['reset - reset history percakapan dengan Morela AI'];
+const WAKE_WORD_RE = /\bmorela\b/i;
+const PREFIX_CHARS = new Set((config.prefix && config.prefix.length ? config.prefix : ['.', '!', '#', '/']));
 handler.onText = async (m, { conn, participants }) => {
     let lockKey = null;
     try {
@@ -1197,51 +1024,117 @@ handler.onText = async (m, { conn, participants }) => {
         if (m.message?.senderKeyDistributionMessage) return false;
         if (m.chat === 'status@broadcast') return false;
         if (m.fromMe) return false;
-        if (!m.isGroup) return false;
-        if (!globalThis.__aiAgentStatus__[m.chat]) return false;
-
         const text = m.text || m.body || '';
         if (!text) return false;
-        if (/^[°•π÷×¶∆£¢€¥®™+✓_=|~!?@#$%^&.©^,🐤🗿]/i.test(text)) return false;
-
+        const trimmed = text.trim();
+        if (!trimmed) return false;
+        if (PREFIX_CHARS.has(trimmed[0])) return false;
+        if (/^[°•π÷×¶∆£¢€¥®™+✓_=|~!?@#$%^&©^,🐤🗿]/i.test(trimmed)) return false;
         const senderNum = getSenderNum(m, participants);
         const isMO = isMainOwner(senderNum);
         if (!isMO) return false;
-
         const userId = m.sender || m.key?.participant || '';
         const histKey = `${m.chat}:${userId}`;
-
+        const fkontak = await buildFkontak(conn, config);
+        const quoted = fkontak || m.raw;
+        if (!WAKE_WORD_RE.test(trimmed)) return false;
         lockKey = `${m.chat}:${userId}`;
         if (globalThis.__aiAgentLock__.has(lockKey)) return false;
         globalThis.__aiAgentLock__.add(lockKey);
-
-        const fkontak = await buildFkontak(conn, config);
-        const quoted = fkontak || m.raw;
-
-        if (/^(reset|lupa|forget|clear)$/i.test(text.trim())) {
-            clearHistory(histKey);
-            await conn.sendMessage(m.chat, { text: '🧹 History dihapus. Siap melanjutkan dari awal.' }, { quoted });
+        const media = findMediaMessage(m);
+        const hasImage = media?.type === 'imageMessage';
+        let imageBuffer = null;
+        if (hasImage) {
+            try { imageBuffer = await downloadMessageMedia(m, conn); }
+            catch (e) { console.error('[AI-AGENT] gagal download gambar:', e.message); }
+        }
+        const editImageMatch = hasImage && imageBuffer && /\b(edit|ubah|ubahin|editin|ganti|gantiin|hapus|hilangkan|tambah(?:in|kan)?)\b/i.test(trimmed);
+        if (editImageMatch) {
+            const editPrompt = trimmed.replace(WAKE_WORD_RE, ' ').replace(/\s+/g, ' ').trim() || 'perbaiki dan percantik gambar ini';
+            await conn.sendMessage(m.chat, { text: '🎨 Sedang mengedit gambar...' }, { quoted });
+            const result = await toolEditImage(imageBuffer, editPrompt);
+            pushHistory(histKey, 'user', text);
+            pushHistory(histKey, 'assistant', result.text);
+            await conn.sendMessage(m.chat, { text: result.text }, { quoted });
+            if (result.media) {
+                try { await sendMedia(conn, m.chat, result.media, quoted); }
+                catch (e) { console.error('[AI-AGENT] media error:', e.message); }
+            }
             return true;
         }
-
+        const musicMatch = trimmed.match(/\b(?:cari(?:in|kan)?|download(?:in)?|dl|putar(?:kan)?|unduh(?:kan)?)\s+(?:lagu|musik|music|mp3)\s+(.+)/i);
+        if (musicMatch) {
+            const query = musicMatch[1]
+                .replace(WAKE_WORD_RE, '')
+                .replace(/\b(aja|dong|ya|deh|nih|please|plis|dulu)\b/gi, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            if (query) {
+                await conn.sendMessage(m.chat, { text: '🎵 Sedang mencari lagu...' }, { quoted });
+                const result = await toolDownloadMusic(query);
+                pushHistory(histKey, 'user', text);
+                pushHistory(histKey, 'assistant', result.text);
+                await conn.sendMessage(m.chat, { text: result.text }, { quoted });
+                if (result.media) {
+                    try { await sendMedia(conn, m.chat, result.media, quoted); }
+                    catch (e) { console.error('[AI-AGENT] media error:', e.message); }
+                }
+                return true;
+            }
+        }
+        const urlMatch = trimmed.match(/https?:\/\/[^\s]+/i);
+        if (urlMatch && /(tiktok\.com|instagram\.com|youtube\.com|youtu\.be|twitter\.com|x\.com|facebook\.com|fb\.watch)/i.test(urlMatch[0])) {
+            await conn.sendMessage(m.chat, { text: '🎬 Sedang mengunduh video...' }, { quoted });
+            const result = await toolDownloadVideo(urlMatch[0]);
+            pushHistory(histKey, 'user', text);
+            pushHistory(histKey, 'assistant', result.text);
+            await conn.sendMessage(m.chat, { text: result.text }, { quoted });
+            if (result.media) {
+                try { await sendMedia(conn, m.chat, result.media, quoted); }
+                catch (e) { console.error('[AI-AGENT] media error:', e.message); }
+            }
+            return true;
+        }
+        if (isMO) {
+            if (/\b(backup|cadangkan|back\s*up)\b/i.test(trimmed)) {
+                await conn.sendMessage(m.chat, { text: '📦 Membuat backup...' }, { quoted });
+                const result = await toolRunBackup(conn, m.chat);
+                pushHistory(histKey, 'user', text);
+                pushHistory(histKey, 'assistant', result.text);
+                await conn.sendMessage(m.chat, { text: result.text }, { quoted });
+                return true;
+            }
+            const gpMatch = trimmed.match(/\b(?:cek|lihat|liat|buka|baca)\s+(?:isi\s+)?(?:fitur|plugin|kode|file)\s+([a-z0-9_\-\/]+)/i);
+            if (gpMatch) {
+                const pluginName = gpMatch[1];
+                const gpResult = await toolGetPlugin(pluginName);
+                pushHistory(histKey, 'user', text);
+                pushHistory(histKey, 'assistant', gpResult.text);
+                const sent = await sendPlainReply(conn, m.chat, gpResult.text, quoted);
+                if (!sent) await conn.sendMessage(m.chat, { text: gpResult.text }, { quoted });
+                return true;
+            }
+        }
         const systemPrompt = isMO ? SYSTEM_PROMPT_BASE + SYSTEM_PROMPT_MAIN_OWNER : SYSTEM_PROMPT_BASE;
         const tools = isMO ? [...TOOLS_BASE, ...TOOLS_MAIN_OWNER_EXTRA] : TOOLS_BASE;
-
         const history = getHistory(histKey);
+        const userContent = (hasImage && imageBuffer)
+            ? [
+                { type: 'text', text },
+                { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBuffer.toString('base64')}` } },
+            ]
+            : text;
         const messages = [
             { role: 'system', content: systemPrompt },
             ...history,
-            { role: 'user', content: text },
+            { role: 'user', content: userContent },
         ];
-
         await conn.sendPresenceUpdate('composing', m.chat);
-
         const MAX_CHAIN = 6;
         let mediaToSend = null;
         let finalResponseText = '';
         let rawResponseText = '';
         const collectedResults = [];
-
         const sendLoad = async (toolName, toolArgs) => {
             if (SILENT_TOOLS.has(toolName)) return;
             const loadText = toolName === 'write_plugin'
@@ -1251,7 +1144,6 @@ handler.onText = async (m, { conn, participants }) => {
                 : toolLoadMsg[toolName] || `🔧 Memproses ${toolName}...`;
             await conn.sendMessage(m.chat, { text: loadText }, { quoted });
         };
-
         const extractToolCall = (msg) => {
             if (msg.tool_calls?.length) {
                 const tc = msg.tool_calls[0];
@@ -1262,7 +1154,6 @@ handler.onText = async (m, { conn, participants }) => {
             if (xml) return { name: xml.name, args: xml.args };
             return null;
         };
-
         const buildFollowUp = () => {
             const ctx = collectedResults.map((r) => `[HASIL ${r.name.toUpperCase()}]:\n${r.result}`).join('\n\n');
             return [
@@ -1273,82 +1164,72 @@ handler.onText = async (m, { conn, participants }) => {
                 },
             ];
         };
-
         let currentMsg = await callOpenRouter(messages, tools);
         if (!currentMsg) { return true; }
-
         for (let step = 0; step < MAX_CHAIN; step++) {
             const tc = extractToolCall(currentMsg);
-
             if (!tc) {
                 rawResponseText = (currentMsg.content || '').replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, '').replace(/<\/assistant>/gi, '').trim();
                 finalResponseText = stripMarkdown(rawResponseText);
                 break;
             }
-
             const { name: toolName, args: toolArgs } = tc;
             await sendLoad(toolName, toolArgs);
-
-            const toolResult = await executeTool(toolName, toolArgs, isMO);
+            const toolResult = await executeTool(toolName, toolArgs, isMO, { conn, chat: m.chat, imageBuffer });
             if (toolResult.media && !mediaToSend) mediaToSend = toolResult.media;
-
             if (DIRECT_SEND_TOOLS.has(toolName)) {
                 pushHistory(histKey, 'user', text);
                 pushHistory(histKey, 'assistant', toolResult.text);
                 await conn.sendPresenceUpdate('paused', m.chat);
                 await conn.sendMessage(m.chat, { text: toolResult.text }, { quoted });
+                if (mediaToSend) {
+                    try { await sendMedia(conn, m.chat, mediaToSend, quoted); }
+                    catch (e) { console.error('[AI-AGENT] media error:', e.message); }
+                }
                 return true;
             }
-
             collectedResults.push({ name: toolName, result: toolResult.text || 'OK' });
-
             if (toolName === 'find_plugin') {
-                const filePaths = [...toolResult.text.matchAll(/📄 \*([^*]+\.js)\*/g)].map((mm) => mm[1]).slice(0, 3);
-                if (filePaths.length) {
-                    await conn.sendMessage(m.chat, { text: `📄 Membuka ${filePaths.length} file...` }, { quoted });
-                    for (const fp of filePaths) {
-                        const readResult = await toolReadFile(fp);
-                        collectedResults.push({ name: `read_file(${fp})`, result: readResult.text || '' });
-                    }
+                const allMatches = [...toolResult.text.matchAll(/📄 \*([^*]+\.js)\*( ✅ \(nama file cocok\))?/g)];
+                let filePath = null;
+                if (allMatches.length === 1) filePath = allMatches[0][1];
+                else if (allMatches.length > 1 && allMatches[0][2]) filePath = allMatches[0][1];
+                if (filePath) {
+                    await conn.sendMessage(m.chat, { text: `📄 Membuka ${filePath}...` }, { quoted });
+                    const readResult = await toolReadFile(filePath);
+                    collectedResults.push({ name: `read_file(${filePath})`, result: readResult.text || '' });
                 }
                 currentMsg = await callOpenRouter(buildFollowUp(), null);
                 if (!currentMsg) break;
                 continue;
             }
-
             const nextMessages = [
                 ...messages,
                 { role: 'assistant', content: (currentMsg.content || '').replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, '').trim() || `[called ${toolName}]` },
                 { role: 'user', content: `[HASIL ${toolName.toUpperCase()}]:\n${toolResult.text}\n\nLanjutkan atau jawab pertanyaan user jika sudah cukup data.` },
             ];
-
             currentMsg = await callOpenRouter(nextMessages, tools);
             if (!currentMsg) break;
         }
-
         if (!finalResponseText) finalResponseText = '...';
+        const ALL_TOOL_NAMES = new Set([...TOOLS_BASE, ...TOOLS_MAIN_OWNER_EXTRA].map((t) => t.function.name));
+        const looksLikeBareToolName = ALL_TOOL_NAMES.has(finalResponseText.trim().toLowerCase());
+        if (looksLikeBareToolName) {
+            finalResponseText = 'Maaf, ada kendala waktu menjalankan perintah ini. Coba ulangi lagi dengan kalimat yang lebih spesifik ya.';
+        }
         if (!rawResponseText) rawResponseText = finalResponseText;
         finalResponseText = stripMarkdown(finalResponseText);
-
         pushHistory(histKey, 'user', text);
         pushHistory(histKey, 'assistant', finalResponseText);
-
         await delay(Math.min(3000, 500 + finalResponseText.length * 15));
         await conn.sendPresenceUpdate('paused', m.chat);
-
-        if (hasCodeBlock(rawResponseText)) {
-            const sent = await sendAsAIRich(conn, m.chat, rawResponseText, quoted);
-            if (!sent) await conn.sendMessage(m.chat, { text: finalResponseText }, { quoted });
-        } else {
-            const sent = await sendPlainAsAIRich(conn, m.chat, finalResponseText, quoted);
-            if (!sent) await conn.sendMessage(m.chat, { text: finalResponseText }, { quoted });
-        }
-
+        const textToSend = hasCodeBlock(rawResponseText) ? rawResponseText : finalResponseText;
+        const sent = await sendPlainReply(conn, m.chat, textToSend, quoted);
+        if (!sent) await conn.sendMessage(m.chat, { text: finalResponseText }, { quoted });
         if (mediaToSend) {
             try { await sendMedia(conn, m.chat, mediaToSend, quoted); }
             catch (e) { console.error('[AI-AGENT] media error:', e.message); }
         }
-
         return true;
     } catch (err) {
         console.error('[AI-AGENT] error:', err?.message);
@@ -1357,5 +1238,4 @@ handler.onText = async (m, { conn, participants }) => {
         if (lockKey) globalThis.__aiAgentLock__.delete(lockKey);
     }
 };
-
 export default handler;
