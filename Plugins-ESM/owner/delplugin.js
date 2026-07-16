@@ -1,6 +1,5 @@
 'use strict';
 import pluginManager from '../_pluginmanager.js';
-
 const handler = async (m, { text }) => {
     const name = (text || '').trim();
     if (!name) {
