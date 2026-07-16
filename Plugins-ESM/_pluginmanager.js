@@ -153,7 +153,6 @@ class PluginManager {
     getByTag(tag) {
         return this.getAllPlugins().filter((p) => p.tags?.includes(tag));
     }
-    // Cari plugin berdasar nama file ("namafile") atau "folder/namafile" (case-insensitive, tanpa ekstensi .js).
     findByName(name) {
         if (!name)
             return [];
