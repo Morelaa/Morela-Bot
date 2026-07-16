@@ -108,13 +108,6 @@ const DENY_MESSAGES = {
     premium_required: ' Fitur ini butuh akun premium.',
     bot_not_admin: ' Bot harus jadi admin dulu di grup ini.',
 };
-// "early" = harus lolos sebelum pesan diproses sama sekali (dedup, catat pushname).
-// "commandGate" = cuma menahan EKSEKUSI COMMAND (bukan pemindaian pasif antilink/antigrup/
-// antivirtex/anticatalog). Sebelumnya semua middleware ini jadi satu gate besar di depan,
-// jadi kalau sender kena antiFlood (misal kirim banyak link sekaligus lewat bot spam) atau
-// lagi banned, seluruh pesan langsung di-drop SEBELUM sempat dicek plugin proteksi -> link
-// spam yang datang beruntun malah lolos tanpa dihapus. Proteksi pasif harus tetap jalan
-// terlepas dari status flood/banned/selfmode/privatemode si pengirim.
 const earlyMiddlewares = [
     function dedup(m) {
         return !isDuplicateMessage(m.id);
@@ -238,17 +231,6 @@ export async function handleMessage(sock, rawMsg) {
         catch (err) {
             logError('Superowner shortcut error:', err?.stack || err?.message);
         }
-        // Catatan: sebelumnya di-gate `if (m.body)`, tapi itu bikin fitur proteksi
-        // (antilink/antivirtex/anticatalog/antigrup) tidak pernah jalan untuk pesan
-        // media tanpa caption (gambar/video/dokumen/sticker/interactive), padahal
-        // itu justru yang paling sering dipakai buat kirim bug/virtex. Jadi listener
-        // pasif tetap dipanggil tiap pesan; masing-masing plugin cek sendiri apa
-        // yang mereka butuhkan (m.mtype, m.message, dll).
-        //
-        // PENTING: listener pasif ini jalan SEBELUM commandGateMiddlewares (antiFlood,
-        // bannedGate, dst) dengan sengaja -> supaya pengirim yang lagi kena flood-gate
-        // (kirim banyak pesan/link beruntun lewat bot spam) tetap kena hapus/kick oleh
-        // antilink/antigrup/antivirtex, bukan malah lolos karena pesannya di-skip duluan.
         for (const plugin of pluginManager.getTextListeners()) {
             try {
                 const handled = await plugin.onText(m, { conn: sock, participants, groupMeta });
