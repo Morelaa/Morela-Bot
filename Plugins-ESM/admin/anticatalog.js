@@ -12,18 +12,15 @@ import {
     isSenderAdminInGroup,
     resolveBotAdmin,
 } from '../../Library/resolve.js';
-
 const CFG = {
     CATALOG_BTN_NAME: 'catalog_message',
     AIRICH_SUBMSG_MAX: 15,
     AIRICH_SECTION_MAX: 20,
     AIRICH_PRIM_MAX: 30,
 };
-
 function getMsgType(msg = {}) {
     return Object.keys(msg).find((k) => !['messageContextInfo', 'senderKeyDistributionMessage'].includes(k));
 }
-
 function containsCatalogStr(obj, seen = new WeakSet()) {
     if (!obj) return false;
     if (typeof obj === 'string') return obj.includes('catalog_message');
@@ -33,7 +30,6 @@ function containsCatalogStr(obj, seen = new WeakSet()) {
     if (Array.isArray(obj)) return obj.some((v) => containsCatalogStr(v, seen));
     return Object.values(obj).some((v) => containsCatalogStr(v, seen));
 }
-
 function isCatalogBug(rawMsg) {
     let msg = rawMsg;
     while (true) {
@@ -54,7 +50,6 @@ function isCatalogBug(rawMsg) {
     if (buttons.some((btn) => btn?.name === CFG.CATALOG_BTN_NAME)) return true;
     return containsCatalogStr(interactive);
 }
-
 function countSectionPrimitives(sections) {
     let total = 0;
     for (const sec of sections) {
@@ -65,9 +60,7 @@ function countSectionPrimitives(sections) {
     }
     return total;
 }
-
 const DANGEROUS_TYPENAMES = new Set(['GenAIProductItemCardPrimitive', 'GenAIImaginePrimitive', 'GenAIReelPrimitive', 'GenAIPostPrimitive']);
-
 function countDangerousPrimitives(sections) {
     let count = 0;
     for (const sec of sections) {
@@ -80,7 +73,6 @@ function countDangerousPrimitives(sections) {
     }
     return count;
 }
-
 function isAIRichBug(rawMsg) {
     const botFwd = rawMsg?.botForwardedMessage;
     if (!botFwd) return { detected: false };
@@ -95,7 +87,7 @@ function isAIRichBug(rawMsg) {
             const decoded = JSON.parse(Buffer.from(raw, 'base64').toString('utf-8'));
             sections = decoded?.sections ?? [];
         }
-    } catch { /* noop */ }
+    } catch {  }
     const sectionCount = sections.length;
     const primCount = countSectionPrimitives(sections);
     const dangerCount = countDangerousPrimitives(sections);
@@ -105,7 +97,6 @@ function isAIRichBug(rawMsg) {
     if (dangerCount > CFG.AIRICH_PRIM_MAX) return { detected: true, reason: `dangerous primitives flood (${dangerCount})` };
     return { detected: false };
 }
-
 function resolveSenderInfo(senderJid, pushName) {
     const isLid = isLidJid(senderJid);
     const rawLidNum = senderJid.split('@')[0];
@@ -120,7 +111,6 @@ function resolveSenderInfo(senderJid, pushName) {
         pushName || `+${phoneNum}`;
     return { phoneNum, mentionJid, displayName };
 }
-
 async function deleteMsg(sock, m) {
     try {
         const rawPart = m.key?.participant || m.sender || m.key?.remoteJid || '';
@@ -128,7 +118,6 @@ async function deleteMsg(sock, m) {
         await sock.sendMessage(m.chat, { delete: { remoteJid: m.chat, fromMe: false, id: m.key.id, participant } });
     } catch (e) { console.error('[ANTICATALOG] Delete gagal:', e?.message); }
 }
-
 async function notifyOwnerDM(sock, senderJid, bugLabel, pushName) {
     try {
         const ownerNum = getMainOwnerNumber();
@@ -148,7 +137,6 @@ async function notifyOwnerDM(sock, senderJid, bugLabel, pushName) {
         });
     } catch (e) { console.error('[ANTICATALOG] Notif owner gagal:', e?.message); }
 }
-
 async function findKickableJid(sock, groupJid, senderJid) {
     try {
         const meta = await sock.groupMetadata(groupJid);
@@ -160,7 +148,6 @@ async function findKickableJid(sock, groupJid, senderJid) {
         return safeKickJid(target);
     } catch (e) { console.error('[ANTICATALOG] findKickableJid error:', e?.message); return null; }
 }
-
 async function kickImmediately(sock, m, senderJid, bugLabel) {
     const { phoneNum, mentionJid, displayName } = resolveSenderInfo(senderJid, m.pushName);
     const kickJid = await findKickableJid(sock, m.chat, senderJid);
@@ -168,13 +155,12 @@ async function kickImmediately(sock, m, senderJid, bugLabel) {
         `╭┈┈⬡「 *ᴀɴᴛɪʙᴜɢ* 」\n┃\n┃ ✧ *ʙᴜɢ ᴛᴇʀᴅᴇᴛᴇᴋꜱɪ & ᴅɪᴋɪᴄᴋ!*\n┃\n` +
         `┃ ✧ ɴᴀᴍᴀ  : *${displayName}*\n┃ ✧ ᴋᴀꜱᴜꜱ : *${bugLabel}*\n┃\n` +
         `┃ ✧ _ᴘᴇꜱᴀɴ ᴛᴇʟᴀʜ ᴅɪʜᴀᴘᴜꜱ ᴏᴛᴏᴍᴀᴛɪꜱ._\n╰┈┈┈┈┈┈┈┈⬡`;
-    try { await sock.sendMessage(m.chat, { text: kickText, mentions: [mentionJid] }, { quoted: m.raw }); } catch { /* noop */ }
+    try { await sock.sendMessage(m.chat, { text: kickText, mentions: [mentionJid] }, { quoted: m.raw }); } catch {  }
     if (kickJid) {
         try { await sock.groupParticipantsUpdate(m.chat, [kickJid], 'remove'); }
         catch (e) { console.error('[ANTICATALOG] Kick gagal:', e?.message); }
     }
 }
-
 async function handleGroupBug(sock, m, senderJid, botAdmin, bugLabel) {
     if (!botAdmin) {
         console.warn(`[ANTICATALOG] Bot bukan admin — ${bugLabel} dari ${senderJid.split('@')[0]} tidak bisa ditindak.`);
@@ -183,23 +169,19 @@ async function handleGroupBug(sock, m, senderJid, botAdmin, bugLabel) {
     await deleteMsg(sock, m);
     await kickImmediately(sock, m, senderJid, bugLabel);
 }
-
 async function handleDMBug(sock, m, senderJid, bugLabel) {
     await deleteMsg(sock, m);
     await notifyOwnerDM(sock, senderJid, bugLabel, m.pushName);
 }
-
-// ── Command: .antibug / .anticatalog / .antiairich ────────────────
 const handler = async (m, { conn, args }) => {
     const from = m.chat;
     const sub = (args[0] || '').toLowerCase();
     const action = (args[1] || '').toLowerCase();
     const grp = db.getGroup(from);
     const settings = grp?.settings || {};
-
     if (!sub) {
         let groupName = 'Grup';
-        try { const meta = await conn.groupMetadata(from); groupName = meta.subject || 'Grup'; } catch { /* noop */ }
+        try { const meta = await conn.groupMetadata(from); groupName = meta.subject || 'Grup'; } catch {  }
         const catStatus = settings.anticatalog ? ' Aktif' : ' Nonaktif';
         const airichStatus = settings.antiairich ? ' Aktif' : ' Nonaktif';
         return m.reply(
@@ -213,14 +195,12 @@ const handler = async (m, { conn, args }) => {
             `┃ ✧ ʙᴏᴛ ᴡᴀᴊɪʙ ᴊᴀᴅɪ *ᴀᴅᴍɪɴ* ɢʀᴜᴘ.\n╰┈┈┈┈┈┈┈┈⬡`
         );
     }
-
     const validSubs = {
         catalog: { flagKey: 'anticatalog', label: 'Anti Catalog Bug' },
         airich: { flagKey: 'antiairich', label: 'Anti AIRich Bug' },
     };
     const target = validSubs[sub];
     if (!target) return m.reply('╭┈┈⬡「 *ᴇʀʀᴏʀ* 」\n┃ ✧ ɢᴜɴᴀᴋᴀɴ: ᴄᴀᴛᴀʟᴏɢ ᴀᴛᴀᴜ ᴀɪʀɪᴄʜ\n╰┈┈┈┈┈┈┈┈⬡');
-
     if (action === 'on') {
         if (settings[target.flagKey]) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ *${target.label}* ꜱᴜᴅᴀʜ ᴀᴋᴛɪꜰ!\n╰┈┈┈┈┈┈┈┈⬡`);
         db.updateGroup(from, { [target.flagKey]: true });
@@ -238,8 +218,6 @@ handler.tags = ['group', 'anti'];
 handler.command = /^(antibug|anticatalog|antiairich|antibugcatalog|antibugairich)$/i;
 handler.group = true;
 handler.admin = true;
-
-// ── Passive: scan tiap pesan (grup & DM) ──────────────────────────
 handler.onText = async (m, { conn, participants }) => {
     if (!m.message) return false;
     const rawMsg = m.message;
@@ -247,10 +225,8 @@ handler.onText = async (m, { conn, participants }) => {
     const senderJid = m.sender || m.key?.participant || m.key?.remoteJid || '';
     if (!senderJid) return false;
     if (isGroup && (await isSenderAdminInGroup(conn, m.chat, senderJid, participants))) return false;
-
     const grp = isGroup ? db.getGroup(m.chat) : null;
     const settings = grp?.settings || {};
-
     if (isGroup) {
         if (settings.anticatalog && isCatalogBug(rawMsg)) {
             const botAdmin = await resolveBotAdmin(conn, m.chat, participants);
@@ -261,7 +237,6 @@ handler.onText = async (m, { conn, participants }) => {
         await handleDMBug(conn, m, senderJid, 'Bug Catalog');
         return false;
     }
-
     if (isGroup) {
         if (settings.antiairich) {
             const result = isAIRichBug(rawMsg);
@@ -280,5 +255,4 @@ handler.onText = async (m, { conn, participants }) => {
     }
     return false;
 };
-
 export default handler;
