@@ -10,23 +10,18 @@ import {
     autoMapParticipantLids, resolveSenderLidLive,
 } from '../../Library/resolve.js';
 const { prepareWAMessageMedia } = baileys;
-
 async function resolveTargetJid(m, args, senderJid, conn, participants) {
     if (participants?.length) autoMapParticipantLids(participants);
-
     const { jid, raw, quotedPushName, source } = resolveTarget(m, args, {
         senderJid, fallbackSelf: true, minDigits: 8,
     });
-
     let finalJid = jid;
     if (finalJid && isLidJid(finalJid)) {
         const live = await resolveSenderLidLive(conn, m.chat, raw || finalJid);
         if (live) finalJid = live + '@s.whatsapp.net';
     }
-
     return { jid: finalJid, quotedPushName, isSelf: source === 'self' };
 }
-
 async function fetchPP(conn, jid) {
     const num = jid.split('@')[0].split(':')[0];
     const candidates = [jid, num + '@s.whatsapp.net', num + '@c.us'].filter((v, i, a) => a.indexOf(v) === i);
@@ -36,15 +31,13 @@ async function fetchPP(conn, jid) {
             if (!pp) continue;
             const res = await axios.get(pp, { responseType: 'arraybuffer', timeout: 8000 });
             if (res.data?.byteLength > 500) return Buffer.from(res.data);
-        } catch { /* noop */ }
+        } catch {  }
     }
     return null;
 }
-
 async function fetchPPWithFallback(conn, jid) {
     const userPP = await fetchPP(conn, jid);
     if (userPP) return { buffer: userPP, isBotPP: false };
-
     const botJid = conn.user?.id;
     if (botJid) {
         const botPP = await fetchPP(conn, botJid);
@@ -52,7 +45,6 @@ async function fetchPPWithFallback(conn, jid) {
     }
     return { buffer: null, isBotPP: false };
 }
-
 async function fetchBio(conn, jid) {
     const num = jid.split('@')[0].split(':')[0];
     const candidates = [jid, num + '@s.whatsapp.net', num + '@c.us'].filter((v, i, a) => a.indexOf(v) === i);
@@ -62,36 +54,28 @@ async function fetchBio(conn, jid) {
             const item = Array.isArray(res) ? res[0] : res;
             const text = item?.status?.status || item?.status || item?.text || null;
             if (typeof text === 'string' && text.trim()) return text.trim();
-        } catch { /* noop */ }
+        } catch {  }
     }
     return null;
 }
-
 function formatWIB() {
     return new Intl.DateTimeFormat('id-ID', {
         timeZone: 'Asia/Jakarta', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
     }).format(new Date()).replace('.', ':') + ' WIB';
 }
-
 const handler = async (m, { conn, args, participants }) => {
     const { jid: targetJid, quotedPushName, isSelf } = await resolveTargetJid(m, args, m.sender, conn, participants);
     if (!targetJid) return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴛᴀʀɢᴇᴛ ᴛɪᴅᴀᴋ ᴠᴀʟɪᴅ. ʀᴇᴘʟʏ, ᴍᴇɴᴛɪᴏɴ, ᴀᴛᴀᴜ ᴛᴜʟɪꜱ ɴᴏᴍᴏʀɴʏᴀ.\n╰┈┈┈┈┈┈┈┈⬡`);
-
     const num = normNum(targetJid);
     const userData = db.getUser(targetJid) || {};
-
     const isOwnerTarget = isOwner({ sender: targetJid }, config.owners, participants) || isMainOwner(num);
     const isPremTarget = !!userData.premium;
     const isBanned = !!userData.banned;
-
     let p = participants?.length ? findParticipant(participants, num) : null;
     const lidJid = resolvePhoneToLid(num) || (p?.lid ? normNum(p.lid) : null) || (p?.id?.endsWith('@lid') ? normNum(p.id) : null);
-
     let isTargetAdmin = false;
     if (p) isTargetAdmin = p.admin === 'admin' || p.admin === 'superadmin';
-
     const isReg = db.isRegistered(targetJid);
-
     let statusLabel;
     if (isBanned) statusLabel = 'BLACKLISTED';
     else if (isOwnerTarget) statusLabel = 'OWNER';
@@ -99,19 +83,15 @@ const handler = async (m, { conn, args, participants }) => {
     else if (isTargetAdmin) statusLabel = 'ADMIN GRUP';
     else if (isReg) statusLabel = 'MEMBER';
     else statusLabel = 'TIDAK TERDAFTAR';
-
     const resolvedName = await resolveDisplayName(conn, m, targetJid, { quotedPushName, participants, fallback: '' });
     const selfPushName = isSelf && typeof m.pushName === 'string' ? m.pushName.trim() : '';
     const displayName = userData.name || resolvedName || selfPushName || num;
-
     const tags = [];
     if (isOwnerTarget) tags.push('Owner');
     if (isPremTarget) tags.push('Premium');
     if (isTargetAdmin) tags.push('Admin Grup');
     const trustedLabel = tags.length ? tags.join(' • ') : 'Tidak ada akses khusus.';
-
     const [{ buffer: ppBuffer }, bio] = await Promise.all([fetchPPWithFallback(conn, targetJid), fetchBio(conn, targetJid)]);
-
     const caption =
         `◦ Name: *${displayName}*\n` +
         `◦ Number: *${num}*\n` +
@@ -123,9 +103,7 @@ const handler = async (m, { conn, args, participants }) => {
         ` *TRUSTED ACCESS*\n${trustedLabel}\n\n` +
         ` *Last Update:* ${formatWIB()}\n` +
         `_Gunakan tombol di bawah untuk menyalin_`;
-
     const imgBuf = ppBuffer || (fs.existsSync(config.registerImage) ? fs.readFileSync(config.registerImage) : null);
-
     const interactiveButtons = [
         { name: 'cta_copy', buttonParamsJson: JSON.stringify({ display_text: ' Copy Name', copy_code: displayName }) },
         { name: 'cta_copy', buttonParamsJson: JSON.stringify({ display_text: ' Copy Number', copy_code: num }) },
@@ -133,15 +111,13 @@ const handler = async (m, { conn, args, participants }) => {
         ...(lidJid ? [{ name: 'cta_copy', buttonParamsJson: JSON.stringify({ display_text: ' Copy LID', copy_code: lidJid }) }] : []),
         ...(bio ? [{ name: 'cta_copy', buttonParamsJson: JSON.stringify({ display_text: ' Copy Bio', copy_code: bio }) }] : []),
     ];
-
     let ppImgMsg = null;
     if (imgBuf) {
         try {
             const media = await prepareWAMessageMedia({ image: imgBuf }, { upload: conn.waUploadToServer });
             ppImgMsg = media?.imageMessage;
-        } catch { /* noop */ }
+        } catch {  }
     }
-
     try {
         await conn.relayMessage(m.chat, {
             interactiveMessage: {
@@ -165,5 +141,4 @@ handler.help = [
 ];
 handler.tags = ['tools'];
 handler.command = /^(userinfo|cekuser|infouser)$/i;
-
 export default handler;
