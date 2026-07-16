@@ -3,10 +3,8 @@ import config from '../../config.js';
 import db from '../../Database/db.js';
 import pluginManager from '../_pluginmanager.js';
 import { isSenderAdminInGroup, safeDeleteParticipant, resolveBotAdmin } from '../../Library/resolve.js';
-
 const LINK_REGEX =
     /(https?:\/\/[^\s]+|www\.[^\s]+|chat\.whatsapp\.com\/[^\s]+|wa\.me\/\d+|instagram\.com\/[^\s]+|t\.me\/[^\s]+|discord\.(gg|com)\/[^\s]+)/i;
-
 function isRealBotCommand(text) {
     if (!text) return false;
     const trimmed = text.trim();
@@ -17,7 +15,6 @@ function isRealBotCommand(text) {
     if (!cmd) return false;
     return !!pluginManager.findCommand(cmd);
 }
-
 function extractAllText(m) {
     const parts = [];
     const msg = m.message || {};
@@ -41,7 +38,6 @@ function extractAllText(m) {
     if (msg.listMessage?.title) parts.push(msg.listMessage.title);
     return parts.join(' ');
 }
-
 function hasProhibitedContent(m) {
     const msg = m.message || {};
     const text = extractAllText(m);
@@ -69,14 +65,11 @@ function hasProhibitedContent(m) {
     }
     return false;
 }
-
-// ── Command: .antilink on/off/status ──────────────────────────────
 const handler = async (m, { conn, args }) => {
     const from = m.chat;
     const mode = (args[0] || '').toLowerCase();
     const grp = db.getGroup(from);
     const current = grp?.settings?.antilink || false;
-
     if (!mode || mode === 'status' || mode === 'cek') {
         return m.reply(
             `╭┈┈⬡「 *ᴀɴᴛɪʟɪɴᴋ ꜱᴛᴀᴛᴜꜱ* 」\n` +
@@ -121,29 +114,21 @@ handler.tags = ['group', 'anti'];
 handler.command = /^antilink$/i;
 handler.group = true;
 handler.admin = true;
-
-// ── Passive: scan tiap pesan grup, hapus kalau ada link ───────────
 handler.onText = async (m, { conn, participants }) => {
     if (!m.isGroup) return false;
     if (!m.message) return false;
     if (m.fromMe) return false;
-
     const from = m.chat;
     const grp = db.getGroup(from);
     if (!grp?.settings?.antilink) return false;
-
     const botIsAdmin = await resolveBotAdmin(conn, from, participants);
     if (!botIsAdmin) return false;
-
     const rawText = extractAllText(m);
     if (rawText && isRealBotCommand(rawText)) return false;
-
     const senderRaw = m.key?.participant || m.key?.remoteJid || m.sender || '';
     let senderIsAdmin = await isSenderAdminInGroup(conn, from, senderRaw, participants);
     if (senderIsAdmin) return false;
-
     if (!hasProhibitedContent(m)) return false;
-
     try {
         const deleteParticipant = safeDeleteParticipant(senderRaw);
         await conn.sendMessage(from, {
@@ -159,5 +144,4 @@ handler.onText = async (m, { conn, participants }) => {
     }
     return false;
 };
-
 export default handler;
