@@ -2,7 +2,6 @@
 import config from '../../config.js';
 import db from '../../Database/db.js';
 import usagelimit from '../../Database/usagelimit.js';
-
 const handler = async (m) => {
     const botName = config.botName;
     const userJid = m.sender;
