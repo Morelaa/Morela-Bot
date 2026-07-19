@@ -193,7 +193,7 @@ handler.onText = async (m, { conn, participants }) => {
     if (m.chat === 'status@broadcast') return false;
     const grp = db.getGroup(m.chat);
     if (!grp?.settings?.antivirtex) return false;
-    const senderJid = m.sender || m.key?.participant || m.key?.remoteJid || '';
+    const senderJid = m.senderPn || m.sender || m.key?.participant || m.key?.remoteJid || '';
     if (!senderJid) return false;
     if (await isSenderAdminInGroup(conn, m.chat, senderJid, participants)) return false;
     const botAdmin = await resolveBotAdmin(conn, m.chat, participants);
