@@ -1,6 +1,11 @@
 'use strict';
 import axios from 'axios';
+import yts from 'yt-search';
+import { getYoutubeResources, pickAudio } from '../../Library/vidssave.js';
 import fs from 'fs';
+import os from 'os';
+import { spawn } from 'child_process';
+import crypto from 'crypto';
 import { writeFile } from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -8,6 +13,7 @@ import archiver from 'archiver';
 import config from '../../config.js';
 import { buildFkontak } from '../../Library/utils.js';
 import { isMainOwner, getMainOwnerNumber } from '../../System/mainowner.js';
+import { checkMainOwner } from '../../Core/permissions.js';
 import { isLidJid, resolveLidToPhone, mapSenderLid, normNum } from '../../Library/resolve.js';
 import { findMediaMessage, downloadMessageMedia } from '../../Library/handle.js';
 import { editImageWithPrompt } from './omni.js';
@@ -464,14 +470,23 @@ async function toolDownloadVideo(url) {
 }
 async function toolDownloadMusic(query) {
     try {
-        const { data } = await axios.get('https://api-faa.my.id/faa/ytplay', { params: { query }, timeout: 30000 });
-        if (!data?.status || !data?.result) return { text: `❌ Lagu "${query}" tidak ditemukan.` };
-        const r = data.result;
-        const audioUrl = r.mp3 || r.audio || r.audioUrl || r.audio_url || r.download_url || r.url || null;
-        if (!audioUrl) return { text: `ℹ️ Ditemukan: *${r.title || query}*\nTapi tidak ada audio URL.` };
+        const searchRes = await yts(query);
+        const video = searchRes?.all?.find((v) => v.type === 'video') || searchRes?.videos?.[0];
+        if (!video) return { text: `❌ Lagu "${query}" tidak ditemukan.` };
+        const { title, resources } = await getYoutubeResources(video.url);
+        const chosen = pickAudio(resources);
+        if (!chosen) return { text: `ℹ️ Ditemukan: *${video.title}*\nTapi tidak ada audio yang bisa diunduh.` };
         return {
-            text: `🎵 *${r.title || query}*\n👤 ${r.artist || r.author || r.channel || '-'}\n⏱️ ${r.duration || '-'}\n\n✅ Sedang dikirim...`,
-            media: { type: 'audio', url: audioUrl, title: r.title || query, artist: r.artist || r.author || '-', duration: r.duration || '-', thumb: r.thumbnail || r.thumb || null },
+            text: `🎵 *${title || video.title}*\n👤 ${video.author?.name || '-'}\n⏱️ ${video.timestamp || '-'}\n\n✅ Sedang dikirim...`,
+            media: {
+                type: 'audio',
+                url: chosen.download_url,
+                format: chosen.format,
+                title: title || video.title,
+                artist: video.author?.name || '-',
+                duration: video.timestamp || '-',
+                thumb: video.thumbnail || null,
+            },
         };
     } catch (e) {
         return { text: `❌ Error cari lagu: ${e.message}` };
@@ -916,6 +931,31 @@ async function executeTool(name, args, isMO, ctx = {}) {
         default: return { text: `❓ Tool "${name}" tidak dikenal.` };
     }
 }
+function remuxAudio(buffer, ext) {
+    return new Promise((resolve, reject) => {
+        const id = crypto.randomBytes(6).toString('hex');
+        const inPath = path.join(os.tmpdir(), `aiagent_${id}_in.${ext}`);
+        const outPath = path.join(os.tmpdir(), `aiagent_${id}_out.${ext}`);
+        const cleanup = () => {
+            try { fs.unlinkSync(inPath); } catch { }
+            try { fs.unlinkSync(outPath); } catch { }
+        };
+        fs.writeFileSync(inPath, buffer);
+        const ff = spawn('ffmpeg', ['-i', inPath, '-vn', '-acodec', 'copy', '-y', outPath]);
+        let stderr = '';
+        ff.stderr?.on('data', (d) => { stderr += d.toString(); });
+        const timer = setTimeout(() => { ff.kill(); cleanup(); reject(new Error('ffmpeg timeout saat remux audio')); }, 60000);
+        ff.on('close', (code) => {
+            clearTimeout(timer);
+            if (code === 0) {
+                try { const out = fs.readFileSync(outPath); cleanup(); resolve(out); }
+                catch (e) { cleanup(); reject(e); }
+            }
+            else { cleanup(); reject(new Error(`ffmpeg remux gagal (exit ${code}): ${stderr.slice(-300)}`)); }
+        });
+        ff.on('error', (e) => { clearTimeout(timer); cleanup(); reject(e); });
+    });
+}
 async function sendMedia(conn, chatId, media, quoted) {
     if (!media?.url && !media?.buffer) return;
     if (media.type === 'video') {
@@ -924,16 +964,36 @@ async function sendMedia(conn, chatId, media, quoted) {
         return;
     }
     if (media.type === 'audio') {
-        const buf = await axios.get(media.url, { responseType: 'arraybuffer', timeout: 60000 }).then((r) => Buffer.from(r.data));
+        const AUDIO_EXT = { M4A: 'm4a', OPUS: 'opus', WEBM: 'weba', MP3: 'mp3' };
+        const AUDIO_MIME = { M4A: 'audio/mp4', OPUS: 'audio/ogg', WEBM: 'audio/webm', MP3: 'audio/mpeg' };
+        const fmt = String(media.format || 'MP3').toUpperCase();
+        if (fmt === 'WEBM') throw new Error('Format WEBM/Opus dari sumber ini sering gagal diputar di WhatsApp.');
+        const ext = AUDIO_EXT[fmt] || 'mp3';
+        const mimetype = AUDIO_MIME[fmt] || 'audio/mpeg';
+        const dlRes = await axios.get(media.url, {
+            responseType: 'arraybuffer',
+            timeout: 60000,
+            headers: {
+                Referer: 'https://id.vidssave.com/',
+                Origin: 'https://id.vidssave.com',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            },
+        });
+        const contentType = String(dlRes.headers?.['content-type'] || '');
+        let buf = Buffer.from(dlRes.data);
+        if (contentType.includes('text/html') || contentType.includes('application/json') || buf.length < 10000) {
+            throw new Error(`Link download audio bukan file audio yang valid (content-type: ${contentType || 'unknown'}, size: ${buf.length} bytes).`);
+        }
+        buf = await remuxAudio(buf, ext);
         let thumb = null;
         if (media.thumb) {
             try { thumb = await axios.get(media.thumb, { responseType: 'arraybuffer', timeout: 10000 }).then((r) => Buffer.from(r.data)); } catch {  }
         }
         await conn.sendMessage(chatId, {
             audio: buf,
-            mimetype: 'audio/mpeg',
+            mimetype,
             ptt: false,
-            fileName: `${media.title || 'audio'}.mp3`,
+            fileName: `${media.title || 'audio'}.${ext}`,
             contextInfo: thumb ? {
                 externalAdReply: {
                     title: media.title || 'Audio', body: media.artist ? `👤 ${media.artist}` : '',
@@ -999,8 +1059,7 @@ const toolLoadMsg = {
 const DIRECT_SEND_TOOLS = new Set(['write_plugin', 'edit_file', 'scan_and_count', 'analyze_error', 'run_backup', 'download_music', 'download_video', 'edit_image']);
 const SILENT_TOOLS = new Set(['read_file', 'list_files', 'check_logs', 'get_plugin']);
 const handler = async (m, { conn, participants }) => {
-    const senderNum = getSenderNum(m, participants);
-    if (!isMainOwner(senderNum)) return;
+    if (!checkMainOwner(m, participants)) return;
     const userId = m.sender || m.key?.participant || '';
     const histKey = `${m.chat}:${userId}`;
     clearHistory(histKey);
@@ -1030,8 +1089,7 @@ handler.onText = async (m, { conn, participants }) => {
         if (!trimmed) return false;
         if (PREFIX_CHARS.has(trimmed[0])) return false;
         if (/^[°•π÷×¶∆£¢€¥®™+✓_=|~!?@#$%^&©^,🐤🗿]/i.test(trimmed)) return false;
-        const senderNum = getSenderNum(m, participants);
-        const isMO = isMainOwner(senderNum);
+        const isMO = checkMainOwner(m, participants);
         if (!isMO) return false;
         const userId = m.sender || m.key?.participant || '';
         const histKey = `${m.chat}:${userId}`;
@@ -1233,6 +1291,9 @@ handler.onText = async (m, { conn, participants }) => {
         return true;
     } catch (err) {
         console.error('[AI-AGENT] error:', err?.message);
+        try {
+            await conn.sendMessage(m.chat, { text: `⚠️ AI Agent error: ${err?.message || 'unknown error'}` }, { quoted: m.raw });
+        } catch {  }
         return false;
     } finally {
         if (lockKey) globalThis.__aiAgentLock__.delete(lockKey);
