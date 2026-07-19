@@ -88,4 +88,29 @@ export function migrate() {
     }
 }
 migrate();
+try {
+    const check = db.pragma('integrity_check');
+    const ok = Array.isArray(check) && check.length === 1 && check[0]?.integrity_check === 'ok';
+    if (!ok) {
+        logError('PRAGMA integrity_check menemukan masalah pada database:', JSON.stringify(check));
+        logError('lid_map dan data lain bisa jadi tidak lengkap/hilang. Pertimbangkan restore dari backup jika tersedia.');
+    }
+}
+catch (err) {
+    logError('Gagal menjalankan integrity_check:', err?.message);
+}
+export function checkpointAndClose() {
+    try {
+        // Flush WAL (data/morela.db-wal) into the main db file so a killed process
+        // (e.g. "Stop" di Pterodactyl, biasanya SIGKILL/SIGTERM tanpa graceful exit)
+        // doesn't leave uncommitted WAL data behind (this is the main source of the
+        // "database kadang corrupt" symptom).
+        db.pragma('wal_checkpoint(TRUNCATE)');
+        db.close();
+        logInfo('Database checkpoint & close berhasil sebelum shutdown.');
+    }
+    catch (err) {
+        logError('Gagal checkpoint/close database saat shutdown:', err?.message);
+    }
+}
 export default db;
