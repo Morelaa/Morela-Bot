@@ -1,56 +1,88 @@
 'use strict';
 import axios from 'axios';
-import config from '../../config.js';
+import crypto from 'crypto';
 const TT_URL_REGEX =
     /https?:\/\/(?:www\.|m\.|vm\.|vt\.|v\.)?tiktok\.com(?:\/[^\s]*)?|https?:\/\/(?:vm|vt)\.tiktok\.com\/[^\s]*/i;
+const SNAPTIK_BASE = 'https://snaptik.app';
+const SNAPTIK_SECRET = 'sn4pt1k_v3r1fy2026';
 function numFmt(n) {
     const num = parseInt(n) || 0;
     if (num >= 1_000_000) return (num / 1_000_000).toFixed(1) + 'M';
     if (num >= 1_000) return (num / 1_000).toFixed(1) + 'K';
     return String(num);
 }
-function fmtDuration(sec) {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${m}:${String(s).padStart(2, '0')}`;
-}
-async function fetchNeoxr(url) {
-    const apikey = config.apiKeys.neoxr;
-    if (!apikey) {
-        throw new Error('API key neoxr belum diisi. Isi config.apiKeys.neoxr dulu.');
+function solveChallenge(c) {
+    switch (c.t) {
+        case 'b': return (c.a ^ c.b) >> c.s & 255;
+        case 'r': return c.n.reduce((a, b) => a + b, 0) * 2 + 1;
+        case 'c': return c.w.charCodeAt(c.i) * c.m;
+        case 'm': return (c.a + c.b) % 100 * c.c;
+        case 'n': return c.a * c.b + c.b * c.c + c.c * c.a - c.a;
+        default: throw new Error(`Tipe challenge tidak dikenal: ${c.t}`);
     }
-    const res = await axios.get('https://api.neoxr.eu/api/tiktok', {
-        params: { url, apikey },
-        timeout: 30000,
-    });
-    const d = res.data;
-    if (!d?.status || !d?.data) throw new Error(d?.message || 'Neoxr API gagal');
-    const data = d.data;
-    if (!data.video) throw new Error('URL video tidak ditemukan');
-    return {
-        playUrl: data.video,
-        coverUrl: data.author?.avatar_thumb?.url_list?.[0] || '',
-        desc: data.caption || '',
-        author: data.author?.nickname || 'unknown',
-        uniqueId: data.author?.unique_id || '',
-        duration: data.music?.duration || 0,
-        views: data.statistic?.views || 0,
-        likes: data.statistic?.likes || 0,
-        comments: data.statistic?.comments || 0,
-        music: data.music?.title || '',
-    };
 }
-async function downloadVideo(videoUrl) {
-    const res = await axios.get(videoUrl, {
+function buildXVerify(id, p) {
+    const raw = Buffer.from(p, 'base64');
+    const iv = raw.subarray(0, 16);
+    const ciphertext = raw.subarray(16);
+    const key = crypto.createHash('sha256').update(`${SNAPTIK_SECRET}:${id}`).digest();
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+    const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
+    const challenge = JSON.parse(plaintext);
+    const { _e, _h } = challenge;
+    delete challenge._e;
+    delete challenge._h;
+    const answer = solveChallenge(challenge);
+    return `${id}:${answer}:${_e}:${_h}`;
+}
+async function getXVerify() {
+    const res = await axios.post(`${SNAPTIK_BASE}/api/token`, {}, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' },
+        timeout: 15000,
+    });
+    const { id, p } = res.data || {};
+    if (!id || !p) throw new Error('Respons /api/token tidak lengkap (kemungkinan snaptik ganti format).');
+    return buildXVerify(id, p);
+}
+async function fetchSnaptik(url, retry = true) {
+    const xVerify = await getXVerify();
+    try {
+        const res = await axios.get(`${SNAPTIK_BASE}/api/extract`, {
+            params: { url },
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-Verify': xVerify },
+            timeout: 30000,
+        });
+        const d = res.data;
+        if (!d?.success || !d?.data) throw new Error(d?.error || 'Snaptik gagal proses link ini.');
+        return d.data;
+    }
+    catch (err) {
+        if (retry && err?.response?.status === 403) return fetchSnaptik(url, false);
+        throw new Error(err?.response?.data?.error || err.message);
+    }
+}
+async function downloadBuffer(fileUrl) {
+    const res = await axios.get(fileUrl, {
         responseType: 'arraybuffer',
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Referer': 'https://www.tiktok.com/',
-        },
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
         timeout: 90000,
         maxRedirects: 10,
     });
     return Buffer.from(res.data);
+}
+function extractAudioUrlFromRenderLink(renderUrl) {
+    try {
+        const token = new URL(renderUrl).searchParams.get('token');
+        if (!token) return null;
+        const payloadB64 = token.split('.')[1];
+        if (!payloadB64) return null;
+        const json = Buffer.from(payloadB64, 'base64url').toString('utf8');
+        const payload = JSON.parse(json);
+        return payload.audio_url || null;
+    }
+    catch {
+        return null;
+    }
 }
 const handler = async (m, { conn, args }) => {
     const url = args[0];
@@ -60,22 +92,37 @@ const handler = async (m, { conn, args }) => {
     }
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
     try {
-        const data = await fetchNeoxr(url);
+        const data = await fetchSnaptik(url);
         await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
-        const videoBuf = await downloadVideo(data.playUrl);
-        const sizeMB = (videoBuf.length / 1024 / 1024).toFixed(2);
+        const authorName = data.author?.name || data.author?.username || 'unknown';
+        const stats = data.stats || {};
         const caption =
             ` *TikTok*\n` +
-            `${data.author}${data.uniqueId ? ` (@${data.uniqueId})` : ''}\n` +
-            `${data.desc.slice(0, 80)}${data.desc.length > 80 ? '...' : ''}\n` +
-            ` ${numFmt(data.views)}   ${numFmt(data.likes)}   ${numFmt(data.comments)}\n` +
-            ` ${fmtDuration(data.duration)}   ${sizeMB} MB` +
-            (data.music ? `\n ${data.music.slice(0, 50)}${data.music.length > 50 ? '...' : ''}` : '');
-        await conn.sendMessage(m.chat, {
-            video: videoBuf,
-            caption,
-            ...(data.coverUrl ? { jpegThumbnail: undefined } : {}),
-        }, { quoted: m.raw });
+            `${authorName}${data.author?.username ? ` (@${data.author.username})` : ''}\n` +
+            `${(data.title || '').slice(0, 80)}${(data.title || '').length > 80 ? '...' : ''}\n` +
+            ` ${numFmt(stats.playCount)}   ${numFmt(stats.commentCount)}   ${numFmt(stats.shareCount)}`;
+        if (data.type === 'carousel' && Array.isArray(data.images) && data.images.length) {
+            for (let i = 0; i < data.images.length; i++) {
+                const img = data.images[i];
+                const buf = await downloadBuffer(img.downloadUrl || img.url);
+                await conn.sendMessage(m.chat, { image: buf, caption: i === 0 ? caption : undefined }, { quoted: m.raw });
+            }
+            const audioUrl = extractAudioUrlFromRenderLink(data.downloadUrl);
+            if (audioUrl) {
+                try {
+                    const audioBuf = await downloadBuffer(audioUrl);
+                    await conn.sendMessage(m.chat, { audio: audioBuf, mimetype: 'audio/mpeg', ptt: false }, { quoted: m.raw });
+                }
+                catch (e) {
+                    console.error('[TT] gagal kirim audio slide:', e.message);
+                }
+            }
+        }
+        else {
+            const videoBuf = await downloadBuffer(data.downloadUrl);
+            const sizeMB = (videoBuf.length / 1024 / 1024).toFixed(2);
+            await conn.sendMessage(m.chat, { video: videoBuf, caption: `${caption}\n ${sizeMB} MB` }, { quoted: m.raw });
+        }
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     }
     catch (err) {
