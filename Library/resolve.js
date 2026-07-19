@@ -330,7 +330,7 @@ export function resolveTarget(m, args = [], opts = {}) {
         }
     }
     if (fallbackSelf) {
-        const raw = senderJid || m?.sender || null;
+        const raw = senderJid || m?.senderPn || m?.sender || null;
         const jid = raw ? (toPhoneJid(raw) || raw) : null;
         return { jid, raw, quotedPushName: null, source: jid ? 'self' : null };
     }
