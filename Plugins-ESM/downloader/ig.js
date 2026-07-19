@@ -1,61 +1,71 @@
 'use strict';
 import axios from 'axios';
+import vm from 'vm';
 import config from '../../config.js';
 import { buildFkontak } from '../../Library/utils.js';
-const SF_PHP    = 'https://id.savefrom.net/savefrom.php';
-const SF_WORKER = 'https://worker.savefrom.net/api/convert';
-const COBALT_API = 'https://api.cobalt.tools/api/json';
-const DELINE_API = 'https://api.deline.web.id/downloader/ig';
-async function fetchSavefrom(igUrl) {
-  const UA = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Mobile Safari/537.36';
-  let cookieStr = 'vid=300';
-  try {
-    const page = await axios.get('https://id.savefrom.net/194kC/download-from-instagram', { headers: { 'User-Agent': UA }, timeout: 10000 });
-    const setCookies = page.headers['set-cookie'] || [];
-    const cookies = setCookies.map(c => c.split(';')[0]).join('; ');
-    if (cookies) cookieStr = cookies + '; vid=300';
-  } catch {}
-  const params = new URLSearchParams({ sf_url: String(igUrl), new: '2', lang: 'id', country: 'ID', os: 'android', browser: 'chrome', channel: 'downloader', app: '' });
-  const res = await axios.post(SF_PHP, params.toString(), { headers: { 'User-Agent': UA, 'Referer': 'https://id.savefrom.net/194kC/download-from-instagram', 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: 30000 });
-  if (!res.data || typeof res.data !== 'object' || res.data.error) throw new Error('Savefrom gagal');
-  return parseSavefrom(res.data);
-}
-async function fetchSavefromWorker(igUrl) {
-  const res = await axios.get(SF_WORKER, { params: { url: igUrl, lang: 'id' }, timeout: 25000 });
-  if (!res.data?.url?.length) throw new Error('Worker gagal');
-  return parseSavefrom(res.data);
-}
-async function fetchCobalt(igUrl) {
-  const res = await axios.post(COBALT_API, { url: igUrl, vCodec: 'h264', vQuality: '720', aFormat: 'mp3', isAudioOnly: false, isNoTTWatermark: true }, { headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, timeout: 25000 });
-  const d = res.data;
-  if (d.status === 'error') throw new Error('Cobalt gagal');
-  if (d.status === 'picker') return { title: '', thumb: '', videos: d.picker.filter(p => p.type === 'video').map(p => ({ url: p.url, quality: '' })), images: d.picker.filter(p => p.type === 'photo').map(p => ({ url: p.url, quality: '' })) };
-  return { title: '', thumb: '', videos: [{ url: d.url, quality: '720p' }], images: [] };
-}
-async function fetchDeline(igUrl) {
-  const { data } = await axios.get(DELINE_API, { params: { url: igUrl }, timeout: 30000 });
-  if (!data?.status || !data?.result) throw new Error('Deline gagal');
-  return { title: data.result.title || '', thumb: data.result.thumbnail || '', videos: (data.result.media?.videos || []).map(v => ({ url: v, quality: '' })), images: (data.result.media?.images || []).map(i => ({ url: i, quality: '' })) };
-}
-function parseSavefrom(data) {
-  const result = { title: data.meta?.title || '', thumb: data.meta?.thumb || '', videos: [], images: [] };
-  for (const item of (data.url || [])) {
-    const url = item.url || '';
-    if (!url) continue;
-    if (/\.(jpg|jpeg|png|webp)(\?|$)/i.test(url)) result.images.push({ url, quality: item.s || '' });
-    else result.videos.push({ url, quality: item.s || '' });
+const SNAPSAVE_URL = 'https://snapsave.app/id/action.php?lang=id';
+const SNAPSAVE_HEADERS = {
+  'Content-Type': 'application/x-www-form-urlencoded',
+  Referer: 'https://snapsave.app/id/download-video-instagram',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+  'X-Requested-With': 'XMLHttpRequest',
+};
+function decodePacked(script) {
+  const matches = [...script.matchAll(/eval\(function\([a-z,]+\)\{[\s\S]*?\}\((.*?)\)\)/g)];
+  const arr = ['', 'split', '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/', 'slice', 'indexOf', '', '', '.', 'pow', 'reduce', 'reverse', '0'];
+  function baseConv(d, e, f) {
+    const g = arr[2][arr[1]](arr[0]);
+    const h = g[arr[3]](0, e);
+    const i = g[arr[3]](0, f);
+    let j = d[arr[1]](arr[0])[arr[10]]()[arr[9]]((a, b, c) => {
+      if (h[arr[4]](b) !== -1) return a += h[arr[4]](b) * Math[arr[8]](e, c);
+    }, 0);
+    let k = arr[0];
+    while (j > 0) { k = i[j % f] + k; j = (j - (j % f)) / f; }
+    return k || arr[11];
   }
-  return result;
-}
-async function fetchIG(igUrl) {
-  const sources = [fetchSavefrom, fetchSavefromWorker, fetchCobalt, fetchDeline];
-  for (const fn of sources) {
+  function decoderFn(h, u, n, t, e, r) {
+    r = '';
+    for (let i = 0, len = h.length; i < len; i++) {
+      let s = '';
+      while (h[i] !== n[e]) { s += h[i]; i++; }
+      for (let j = 0; j < n.length; j++) s = s.replace(new RegExp(n[j], 'g'), j);
+      r += String.fromCharCode(baseConv(s, e, 10) - t);
+    }
+    return decodeURIComponent(escape(r));
+  }
+  let out = '';
+  for (const m of matches) {
     try {
-      const res = await fn(igUrl);
-      if (res && (res.videos.length > 0 || res.images.length > 0)) return res;
-    } catch (e) { console.warn(e.message); }
+      const args = vm.runInNewContext('[' + m[1] + ']', {}, { timeout: 5000 });
+      out += decoderFn(...args);
+    } catch { }
   }
-  return null;
+  return out;
+}
+async function fetchSnapsave(igUrl) {
+  const res = await axios.post(SNAPSAVE_URL, new URLSearchParams({ url: igUrl }).toString(), { headers: SNAPSAVE_HEADERS, timeout: 30000 });
+  const raw = decodePacked(String(res.data));
+  if (!raw) throw new Error('Gagal decode respons snapsave (kemungkinan format situs berubah).');
+  let html = '';
+  const strMatches = [...raw.matchAll(/innerHTML\s*=\s*"((?:[^"\\]|\\.)*)"/g)];
+  for (const sm of strMatches) {
+    try { html += JSON.parse('"' + sm[1] + '"'); } catch { }
+  }
+  if (!html) html = raw; // fallback in case format changes and content is already plain HTML
+  const items = [];
+  const re = /<img src="([^"]+)"[^>]*>[\s\S]{0,300}?icon-(dlimage|dlvideo)[\s\S]{0,300}?href="([^"]+)"/g;
+  let m;
+  while ((m = re.exec(html))) {
+    items.push({ thumb: m[1], type: m[2] === 'dlvideo' ? 'video' : 'image', url: m[3] });
+  }
+  if (!items.length) {
+    if (/tidak (ditemukan|valid)|not found|invalid|private/i.test(html)) {
+      throw new Error('Post tidak ditemukan / akun private / link tidak valid.');
+    }
+    throw new Error('Tidak ada media yang berhasil di-parse dari snapsave.');
+  }
+  return items;
 }
 async function downloadBuf(url) {
   const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 60000, headers: { 'User-Agent': 'Mozilla/5.0' } });
@@ -70,26 +80,23 @@ const handler = async (m, { conn, text, usedPrefix, command }) => {
     `ᴄᴏɴᴛᴏʜ:\n${usedPrefix}${command} https://instagram.com/p/xxxxx`
   );
   if (conn.reactSafe) await conn.reactSafe(m.chat, m.key, '⏳');
-  const result = await fetchIG(text.trim());
-  if (!result) {
+  let items;
+  try {
+    items = await fetchSnapsave(text.trim());
+  } catch (e) {
     if (conn.reactSafe) await conn.reactSafe(m.chat, m.key, '❌');
-    return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴍᴇɴɢᴀᴍʙɪʟ ᴍᴇᴅɪᴀ.\n╰┈┈┈┈┈┈┈┈⬡`);
+    return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀɢᴀʟ ᴍᴇɴɢᴀᴍʙɪʟ ᴍᴇᴅɪᴀ.\n┃ ✧ ${e.message}\n╰┈┈┈┈┈┈┈┈⬡`);
   }
-  const total = result.videos.length + result.images.length;
-  await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ _ᴍᴇɴɢᴜɴᴅᴜʜ ${total} ᴍᴇᴅɪᴀ..._\n╰┈┈┈┈┈┈┈┈⬡`);
-  for (let i = 0; i < result.images.length; i++) {
-    const captionStr = `ɪɴꜱᴛᴀɢʀᴀᴍ ᴅᴏᴡɴʟᴏᴀᴅᴇʀ\n\n╭┈┈⬡「 *ʀᴇꜱᴜʟᴛ* 」\n┃ ✧ ᴛɪᴘᴇ : ɢᴀᴍʙᴀʀ\n╰┈┈┈┈┈┈┈┈⬡\n\n_© ${config.botName}_`;
+  await m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ _ᴍᴇɴɢᴜɴᴅᴜʜ ${items.length} ᴍᴇᴅɪᴀ..._\n╰┈┈┈┈┈┈┈┈⬡`);
+  for (const item of items) {
+    const captionStr = `ɪɴꜱᴛᴀɢʀᴀᴍ ᴅᴏᴡɴʟᴏᴀᴅᴇʀ\n\n╭┈┈⬡「 *ʀᴇꜱᴜʟᴛ* 」\n┃ ✧ ᴛɪᴘᴇ : ${item.type === 'video' ? 'ᴠɪᴅᴇᴏ' : 'ɢᴀᴍʙᴀʀ'}\n╰┈┈┈┈┈┈┈┈⬡\n\n_© ${config.botName}_`;
     try {
-      const buf = await downloadBuf(result.images[i].url);
-      await conn.sendMessage(m.chat, { image: buf, caption: captionStr }, { quoted: await buildFkontak(conn, config) });
-    } catch {}
-  }
-  for (let i = 0; i < result.videos.length; i++) {
-    const vid = result.videos[i];
-    const captionStr = `ɪɴꜱᴛᴀɢʀᴀᴍ ᴅᴏᴡɴʟᴏᴀᴅᴇʀ\n\n╭┈┈⬡「 *ʀᴇꜱᴜʟᴛ* 」\n┃ ✧ ᴛɪᴘᴇ : ᴠɪᴅᴇᴏ\n┃ ✧ ᴋᴜᴀʟɪᴛᴀꜱ : ${vid.quality || 'Auto'}\n╰┈┈┈┈┈┈┈┈⬡\n\n_© ${config.botName}_`;
-    try {
-      const buf = await downloadBuf(vid.url);
-      await conn.sendMessage(m.chat, { video: buf, mimetype: 'video/mp4', caption: captionStr }, { quoted: await buildFkontak(conn, config) });
+      const buf = await downloadBuf(item.url);
+      if (item.type === 'video') {
+        await conn.sendMessage(m.chat, { video: buf, mimetype: 'video/mp4', caption: captionStr }, { quoted: await buildFkontak(conn, config) });
+      } else {
+        await conn.sendMessage(m.chat, { image: buf, caption: captionStr }, { quoted: await buildFkontak(conn, config) });
+      }
     } catch {}
   }
   if (conn.reactSafe) await conn.reactSafe(m.chat, m.key, '✅');
