@@ -1,5 +1,60 @@
 # Resolve Name & Mention Name Guide
 
+## m.sender / m.senderAlt / m.senderPn - baca ini duluan
+
+Field ini dibuat sekali per pesan masuk di `System/message.js`:
+
+| Field | Isinya | Kapan dipakai |
+|---|---|---|
+| `m.sender` | JID pengirim **mentah**, bisa `@lid` atau `@s.whatsapp.net` | Keperluan internal Baileys (reply, match key). **Jangan** dipakai langsung untuk lookup nomor/pp/premium/owner. |
+| `m.senderAlt` | Data mentah tambahan dari Baileys (`participantAlt`/`participantPn` di grup, `remoteJidAlt`/`remoteJidPn` di DM). Bisa `null`. | Jarang dipakai langsung, sudah diolah jadi `senderPn`. |
+| **`m.senderPn`** | Nomor telepon asli pengirim dalam bentuk JID (`628xxx@s.whatsapp.net`), sudah dicoba lewat `senderAlt` dulu (jalan walau di DM & belum ada mapping database), fallback ke `resolveLidToPhone`, fallback ke `m.sender` apa adanya. | **Pakai ini** tiap kali butuh nomor/identitas asli pengirim pesan saat ini: pp, cek premium, cek owner, database key, dll. |
+
+**Kenapa ini penting:** WhatsApp sekarang bisa kirim identitas pengirim lewat
+`@lid` alih-alih nomor telepon langsung, terutama di DM yang baru pertama
+kali kontak bot. Sebelum ada `m.senderPn`, beberapa plugin (`brat.js`,
+`menu.js`, `register.js`, `aiagent.js`, `userinfo.js`, `getpp.js`,
+`antivirtex.js`, `antigrup.js`, `anticatalog.js`) resolve nomor pengirim
+sendiri pakai `toPhoneJid(m.sender)` atau `resolveLidToPhone(m.sender)`
+langsung, keduanya **DB-only, tanpa `senderAlt`**, jadi diam-diam gagal
+dan fallback ke identitas yang salah (misal pp bot sendiri, bukan pp
+pengirim) begitu lid-nya belum ke-cache. Semua sudah diperbaiki pakai
+`m.senderPn`.
+
+`m.senderPn` **cuma berlaku untuk pengirim pesan saat ini**. Kalau target-nya
+orang lain (mention/reply/argumen nomor), itu tetap urusan `resolveTarget()`
++ `findParticipant()` seperti dijelaskan di bawah, bukan `senderPn`.
+
+```js
+const handler = async (m, { conn }) => {
+  const senderJid = m.senderPn; // sudah final, langsung pakai
+  const pp = await conn.profilePictureUrl(senderJid, 'image').catch(() => null);
+};
+```
+
+Untuk fallback "tanpa target = diri sendiri" di `resolveTarget`, selalu pass
+eksplisit:
+
+```js
+resolveTarget(m, args, { senderJid: m.senderPn, fallbackSelf: true, minDigits: 8 })
+```
+
+Untuk cek owner/main owner pengirim pesan saat ini, **jangan** reimplementasi
+manual, pakai helper yang sudah robust terhadap DM+lid baru:
+
+```js
+import { checkOwner, checkMainOwner } from '../../Core/permissions.js';
+
+const isOwn = checkOwner(m, participants);
+const isMainOwn = checkMainOwner(m, participants);
+```
+
+Kedua fungsi ini di dalamnya pakai `getSenderCandidates(m, participants)`,
+sebuah **array** kandidat nomor buat pengecekan keanggotaan (`.some(...)`).
+Jangan pernah ambil `candidates[0]` buat "nomor pasti pengirim", elemen
+pertama bisa saja angka lid yang belum ke-resolve. Untuk nomor pasti,
+`m.senderPn` sudah menyediakan itu.
+
 ## Dua Mekanisme Berbeda
 
 Mention hijau: bot mengirim teks `@628xxx` beserta `mentionedJid`. WhatsApp di perangkat penerima yang merender ini menjadi nama hijau, diambil dari kontak masing-masing penerima.
@@ -222,6 +277,27 @@ Solusi: gunakan `resolveDisplayName(conn, m, targetJid, opts)`.
 Penyebab: key pada database pushname adalah nomor LID saja, bukan JID lengkap.
 Solusi: gunakan `getPushName(lidNum)`, bukan `getPushName(lidNum + '@lid')`.
 
+**Foto profil (pp) di ButtonV2/menu/brat malah ambil pp bot sendiri, padahal target-nya jelas ada pp-nya.**
+Penyebab: resolve pp pengirim pesan pakai `toPhoneJid(m.sender)` atau
+`m.sender` mentah tanpa convert, untuk pengirim ber-`@lid` yang belum
+ke-cache di database (umum terjadi di DM baru), ini diam-diam gagal dan
+jatuh ke fallback pp bot. Kasus nyata: `brat.js`, `menu.js`.
+Solusi: pakai `m.senderPn`, bukan `toPhoneJid(m.sender)`/`m.sender`.
+
+**Fitur AI Agent / fitur owner-only diam total tanpa error, padahal dari nomor main owner.**
+Penyebab: pengecekan owner reimplementasi manual pakai resolver DB-only
+(`resolveLidToPhone`/`toPhoneJid` tanpa `senderAlt`), bukan lewat
+`checkOwner`/`checkMainOwner` dari `Core/permissions.js`. Kasus nyata:
+`aiagent.js` (sebelum diperbaiki).
+Solusi: selalu pakai `checkOwner(m, participants)` /
+`checkMainOwner(m, participants)`, jangan resolve nomor manual buat
+pengecekan owner.
+
+**Data user di database kesimpen di bawah identitas lid, bukan nomor asli.**
+Penyebab: key registrasi/database pakai `m.sender` mentah. Kasus nyata:
+`register.js` (sebelum diperbaiki).
+Solusi: pakai `m.senderPn` sebagai key, bukan `m.sender`.
+
 ## Perbandingan Implementasi
 
 | File | Mention hijau | Resolve nama | Catatan |
@@ -230,11 +306,12 @@ Solusi: gunakan `getPushName(lidNum)`, bukan `getPushName(lidNum + '@lid')`.
 | `Plugins-ESM/admin/demote.js` | ya | tidak | Pola sama persis dengan `kick.js`. |
 | `Plugins-ESM/admin/promote.js` | ya | tidak | Pola sama persis dengan `kick.js`. |
 | `Plugins-ESM/admin/hidetag.js` | ya, mention semua member | tidak | `mentions` diisi langsung dari `p.id` hasil `groupMetadata`. |
+| `Plugins-ESM/admin/welcome.js`, `goodbye.js` | ya | tidak | Ambil pp lewat `resolveThumbnail` (target dulu, fallback pp bot). Pola resolusinya sama seperti `toPhoneJid`, DB-only, tanpa live lookup tambahan, tapi biasanya aman karena event join-grup sudah bawa data lid+phone dari Baileys. |
 | `handler.js`, gate `plugin.register` | ya | tidak | LID diresolve ke phone dulu lewat helper di `resolve.js` sebelum di-mention. Kalau resolve gagal, mention tidak dilakukan sama sekali. |
 
-Fitur welcome dan goodbye message sengaja belum diimplementasikan di build ini. Kalau nanti dibuat plugin yang mem-mention member baru atau member yang keluar, ikuti pola resolve LID ke phone di atas.
+Fitur welcome dan goodbye message sudah diimplementasikan (`Plugins-ESM/admin/welcome.js` dan `goodbye.js`). Kalau bikin fitur baru yang mem-mention member baru/keluar, contek pola `resolveThumbnail` di file itu, dan pertimbangkan pakai `m.senderPn` kalau konteksnya pesan biasa (bukan event join/leave grup).
 
-Seluruh helper resolve dan mention yang dijelaskan di guide ini sudah tersedia langsung di `Library/resolve.js`. Plugin baru yang butuh mention atau resolve nama cukup import dari sana, jangan diimplementasikan ulang dengan ekstraksi digit manual dari JID mentah, itu penyebab bug "angka aneh" yang dijelaskan di atas.
+Seluruh helper resolve dan mention yang dijelaskan di guide ini sudah tersedia langsung di `Library/resolve.js`. Plugin baru yang butuh mention atau resolve nama cukup import dari sana, jangan diimplementasikan ulang dengan ekstraksi digit manual dari JID mentah, itu penyebab bug "angka aneh" yang dijelaskan di atas. Untuk identitas pengirim pesan saat ini, `m.senderPn` sudah tersedia langsung di object `m`, tidak perlu import apapun.
 
 ```js
 import {
@@ -243,4 +320,5 @@ import {
   resolveBotAdmin, resolveTarget, resolveDisplayName, resolveNameFromParticipant,
   safeDeleteParticipant,
 } from '../../Library/resolve.js';
+import { checkOwner, checkMainOwner } from '../../Core/permissions.js';
 ```
