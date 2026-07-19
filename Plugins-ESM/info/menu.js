@@ -187,7 +187,7 @@ const handler = async (m, { conn, command, args, isOwner }) => {
     try {
         const menuLists = buildMenuLists();
         const pushname = String(m.pushName || 'User');
-        const senderJid = m.sender;
+        const senderJid = m.senderPn || m.sender;
         const isOwn = !!isOwner;
         const isPrem = checkPremiumUser(senderJid);
         const imgBuf = await loadConfigImage(config.menuImage);
