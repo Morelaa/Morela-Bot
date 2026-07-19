@@ -20,8 +20,7 @@ async function runEval(code, m, sock) {
         return await eval(`(async () => { return ${code} })()`);
     }
     catch (e1) {
-        const msg1 = e1?.message ?? '';
-        if (/SyntaxError|Unexpected token|Cannot use import|Identifier/.test(msg1)) {
+        if (e1 instanceof SyntaxError) {
             return await eval(`(async () => { ${code} })()`);
         }
         throw e1;
