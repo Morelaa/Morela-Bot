@@ -43,6 +43,19 @@ function extractQuoted(message, type) {
         text: extractText(ctx.quotedMessage, quotedType),
     };
 }
+function pickSenderAlt(raw, isGroup) {
+    // Baileys (v6.8+/v7) attaches an "alt" JID alongside the primary one whenever
+    // WhatsApp addresses a chat/participant via LID: participantAlt/participantPn
+    // for groups, remoteJidAlt/remoteJidPn for DMs. Whichever side is the LID, the
+    // Alt/Pn side is the real phone-number JID. We grab it directly from the raw
+    // message instead of relying only on a locally-cached LID->phone table, so a
+    // fresh/empty/corrupted cache doesn't block owner checks.
+    const key = raw?.key || {};
+    const alt = isGroup
+        ? (key.participantAlt || key.participantPn || raw?.participantAlt || raw?.participantPn)
+        : (key.remoteJidAlt || key.remoteJidPn || raw?.remoteJidAlt || raw?.remoteJidPn);
+    return alt || null;
+}
 export function serializeMessage(raw, sock) {
     if (!raw?.message)
         return null;
@@ -54,6 +67,7 @@ export function serializeMessage(raw, sock) {
     const sender = isGroup
         ? (raw.key.participant || raw.participant)
         : (fromMe ? botJid : chat);
+    const senderAlt = pickSenderAlt(raw, isGroup);
     const text = extractText(raw.message, type);
     const contextInfo = raw.message?.[type]?.contextInfo || {};
     const mentionedJid = contextInfo.mentionedJid || [];
@@ -71,6 +85,7 @@ export function serializeMessage(raw, sock) {
         chat,
         isGroup,
         sender,
+        senderAlt,
         fromMe,
         pushName: raw.pushName || '',
         message: raw.message,
