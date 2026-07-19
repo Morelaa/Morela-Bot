@@ -1,5 +1,7 @@
 'use strict';
 import config from '../config.js';
+import { isLidJid, resolveLidToPhone, normNum } from '../Library/resolve.js';
+import { setLidMapping } from '../Database/db.js';
 function getContentType(message) {
     if (!message)
         return null;
@@ -56,6 +58,25 @@ function pickSenderAlt(raw, isGroup) {
         : (key.remoteJidAlt || key.remoteJidPn || raw?.remoteJidAlt || raw?.remoteJidPn);
     return alt || null;
 }
+function resolveSenderPn(sender, senderAlt) {
+    if (!isLidJid(sender)) {
+        const num = normNum(sender);
+        return num ? num + '@s.whatsapp.net' : sender;
+    }
+    if (senderAlt && !isLidJid(senderAlt)) {
+        const phoneNum = normNum(senderAlt);
+        const lidNum = normNum(sender);
+        if (phoneNum) {
+            if (lidNum) {
+                try { setLidMapping(lidNum, phoneNum); } catch { }
+            }
+            return phoneNum + '@s.whatsapp.net';
+        }
+    }
+    const dbPhone = resolveLidToPhone(sender);
+    if (dbPhone) return dbPhone + '@s.whatsapp.net';
+    return sender;
+}
 export function serializeMessage(raw, sock) {
     if (!raw?.message)
         return null;
@@ -68,6 +89,7 @@ export function serializeMessage(raw, sock) {
         ? (raw.key.participant || raw.participant)
         : (fromMe ? botJid : chat);
     const senderAlt = pickSenderAlt(raw, isGroup);
+    const senderPn = resolveSenderPn(sender, senderAlt);
     const text = extractText(raw.message, type);
     const contextInfo = raw.message?.[type]?.contextInfo || {};
     const mentionedJid = contextInfo.mentionedJid || [];
@@ -86,6 +108,7 @@ export function serializeMessage(raw, sock) {
         isGroup,
         sender,
         senderAlt,
+        senderPn,
         fromMe,
         pushName: raw.pushName || '',
         message: raw.message,
