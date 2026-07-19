@@ -62,7 +62,7 @@ const config = {
     pairingCustomCode: 'SENSOR_PAIRINGCUSTOMCODE',
     // Kode custom untuk pairing code (biar gampang diingat/dibaca user saat pairing).
 
-    thumbnail: 'https://cdn.ornzora.eu.cc/b815ef37-1be8-4b37-b522-16c445ef3fbd-upload-1781387499469.jpg',
+    thumbnail: 'https://cdn.ornzora.eu.cc/87259d42-5697-4677-827b-8ef7aa14f9cf-upload-1784457032416.jpg',
     // URL gambar thumbnail default (dipakai untuk preview link/konten tertentu).
 
     menuImage: 'https://athars.space/uploads/7abef2f4.jpg',
@@ -71,7 +71,7 @@ const config = {
     registerImage: path.join(__dirname, 'media', 'register.jpg'),
     // Path gambar yang dikirim di gate "belum terdaftar" (saat user belum .daftar/.register).
 
-    didyoumeanImage: 'https://cdn.ornzora.eu.cc/c6dbc61a-8eb9-4725-adf4-9d4e05bf4953-upload-1780181470322.jpg',
+    didyoumeanImage: 'https://i.ibb.co/B557dhw4/86c587d6f2d5.png',
     // Thumbnail yang tampil di kartu "Did You Mean" saat user salah ketik command.
 
 
