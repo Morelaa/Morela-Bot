@@ -2,56 +2,33 @@
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
-const FAA_BASE = 'https://api-faa.my.id/faa';
-function extractVideoId(url) {
-    const match = url.match(/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/);
-    return match ? match[1] : null;
-}
+import { getYoutubeResources, pickVideo } from '../../Library/vidssave.js';
+
 const handler = async (m, { conn, args }) => {
     const url = args[0];
+    const wantedQuality = args[1] ? args[1].toUpperCase().replace(/P$/, '') + 'P' : null;
     if (!url || !/(youtube\.com|youtu\.be)/.test(url)) {
-        await m.reply(`╭┈┈⬡「 *ᴋᴀꜱɪʜ ʟɪɴᴋ ʏᴏᴜᴛᴜʙᴇ ʏᴀɴɢ ᴠᴀʟɪᴅ.* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: .ʏᴛᴍᴘ4 ʜᴛᴛᴘꜱ://ʏᴏᴜᴛᴜ.ʙᴇ/xxxxx\n╰┈┈┈┈┈┈┈┈⬡`);
+        await m.reply(`╭┈┈⬡「 *ᴋᴀꜱɪʜ ʟɪɴᴋ ʏᴏᴜᴛᴜʙᴇ ʏᴀɴɢ ᴠᴀʟɪᴅ.* 」\n┃ ✧ ᴄᴏɴᴛᴏʜ: .ʏᴛᴍᴘ4 ʜᴛᴛᴘꜱ://ʏᴏᴜᴛᴜ.ʙᴇ/xxxxx [720]\n╰┈┈┈┈┈┈┈┈⬡`);
         return;
     }
     await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
     let videoOut;
     try {
-        const videoId = extractVideoId(url);
-        const thumbUrl = videoId ? `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg` : null;
-        let title = 'YouTube Video';
-        let channel = 'Unknown';
-        try {
-            const oembed = await axios.get(
-                `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`,
-                { timeout: 10000 }
-            );
-            title = oembed.data.title || title;
-            channel = oembed.data.author_name || channel;
-        } catch {}
-        const res = await axios.get(`${FAA_BASE}/ytmp4`, { params: { url }, timeout: 120000 });
-        const data = res.data;
-        const dlUrl =
-            data?.result?.mp4 ||
-            data?.result?.download_url ||
-            data?.result?.url ||
-            data?.download_url ||
-            data?.url ||
-            data?.link ||
-            data?.video ||
-            null;
-        if (!dlUrl) throw new Error(`API tidak memberikan link download. Respon: ${JSON.stringify(data).slice(0, 150)}`);
+        const { title, thumbnail, resources } = await getYoutubeResources(url);
+        const chosen = pickVideo(resources, wantedQuality);
+        if (!chosen) throw new Error('Tidak ada resource video yang tersedia dari sumber.');
         const tempDir = path.join(process.cwd(), 'media', 'temp');
         if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
         const stamp = Date.now();
         videoOut = path.join(tempDir, `${stamp}.mp4`);
-        const videoRes = await axios.get(dlUrl, { responseType: 'arraybuffer', timeout: 120000 });
+        const videoRes = await axios.get(chosen.download_url, { responseType: 'arraybuffer', timeout: 120000 });
         fs.writeFileSync(videoOut, Buffer.from(videoRes.data));
         const sizeMB = fs.statSync(videoOut).size / 1024 / 1024;
         await conn.sendMessage(m.chat, { react: { text: '', key: m.key } });
         await conn.sendMessage(m.chat, {
             video: fs.readFileSync(videoOut),
-            caption: ` *${title}*\n ${channel}\n ${sizeMB.toFixed(2)} MB`,
-            thumbnail: thumbUrl ? { url: thumbUrl } : undefined,
+            caption: ` *${title}*\n ${chosen.quality} ${chosen.format}\n ${sizeMB.toFixed(2)} MB`,
+            thumbnail: thumbnail ? { url: thumbnail } : undefined,
         }, { quoted: m.raw });
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     }
@@ -64,7 +41,7 @@ const handler = async (m, { conn, args }) => {
         try { if (videoOut && fs.existsSync(videoOut)) fs.unlinkSync(videoOut); } catch {}
     }
 };
-handler.help = ['ytmp4 <link YouTube>'];
+handler.help = ['ytmp4 <link YouTube> [kualitas: 144/240/360/480/720/1080]'];
 handler.tags = ['downloader'];
 handler.command = /^(ytmp4|ytv|mp4)$/i;
 handler.limit = true;
