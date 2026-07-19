@@ -231,6 +231,25 @@ export function getSenderCandidates(m, participants) {
     add(m?.key?.participant);
     if (isPrivate)
         add(rawRemoteJid);
+    // senderAlt comes straight from Baileys' own key.participantAlt/participantPn
+    // (or remoteJidAlt/remoteJidPn for DMs) — the phone-number JID WhatsApp sends
+    // alongside a LID, independent of our local cache. Use it directly, and if it
+    // pairs with a LID we haven't cached yet, cache it immediately so future
+    // messages (including DMs with no group participants to cross-check) resolve
+    // right away instead of depending on group-metadata luck.
+    if (m?.senderAlt) {
+        add(m.senderAlt);
+        if (isLidJid(rawSender) && !isLidJid(m.senderAlt)) {
+            const lidNum = normNum(rawSender);
+            const phoneNum = normNum(m.senderAlt);
+            if (lidNum && phoneNum && !getPhoneByLid(lidNum)) {
+                try {
+                    setLidMapping(lidNum, phoneNum);
+                }
+                catch { }
+            }
+        }
+    }
     if (isLidJid(rawSender)) {
         const resolved = resolveLidToPhone(rawSender) || mapSenderLid(rawSender, participants);
         if (resolved)
