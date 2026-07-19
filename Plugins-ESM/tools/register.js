@@ -270,7 +270,7 @@ async function fetchPP(conn, jid) {
 }
 const handler = async (m, { conn, text, isOwner }) => {
     const from = m.chat;
-    const userJid = m.sender;
+    const userJid = m.senderPn || m.sender;
     const userNumber = userJid.replace('@s.whatsapp.net', '').replace(/[^0-9]/g, '');
     const pushname = m.pushName || userNumber;
     const command = m.command;
