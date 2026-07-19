@@ -1,7 +1,7 @@
 'use strict';
 import config from '../../config.js';
 import { ButtonV2 } from '../../Library/MessageBuilder.js';
-import { toPhoneJid } from '../../Library/resolve.js';
+import { toPhoneJid, isLidJid } from '../../Library/resolve.js';
 import { buildFkontak } from '../../Library/utils.js';
 import bratoriginalHandler from './bratoriginal.js';
 import bratruromiyaHandler from './bratruromiya.js';
@@ -9,9 +9,15 @@ import bratvidHandler from './bratvid.js';
 const footer = `© ${config.copyrightName || config.botName}`;
 const bratSessions = new Map();
 const SESSION_TTL_MS = 2 * 60 * 1000;
-async function resolveSenderThumb(sock, senderJid) {
+async function resolveSenderThumb(sock, m) {
     try {
-        const jid = toPhoneJid(senderJid) || senderJid;
+        const rawSender = m.sender;
+        let jid = null;
+        if (isLidJid(rawSender) && m.senderAlt && !isLidJid(m.senderAlt)) {
+            jid = toPhoneJid(m.senderAlt) || m.senderAlt;
+        } else {
+            jid = toPhoneJid(rawSender) || rawSender;
+        }
         const url = await sock.profilePictureUrl(jid, 'image');
         if (url) return url;
     } catch {}
@@ -23,7 +29,7 @@ async function resolveSenderThumb(sock, senderJid) {
     return null;
 }
 async function sendBratMenu(m, conn, text) {
-    const thumb = await resolveSenderThumb(conn, m.sender);
+    const thumb = await resolveSenderThumb(conn, m);
     const btn = new ButtonV2(conn)
         .setTitle(' Brat Sticker')
         .setSubtitle(`Teks: ${text}`)
