@@ -253,7 +253,7 @@ handler.onText = async (m, { conn, participants }) => {
     if (!m.isGroup) return false;
     if (!m.message) return false;
     if (m.fromMe) return false;
-    const senderJid = m.sender || m.key?.participant || m.key?.remoteJid || '';
+    const senderJid = m.senderPn || m.sender || m.key?.participant || m.key?.remoteJid || '';
     if (!senderJid) return false;
     if (await isSenderAdminInGroup(conn, m.chat, senderJid, participants)) return false;
     const grp = db.getGroup(m.chat);
