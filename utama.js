@@ -13,6 +13,8 @@ import logger from './System/logger.js';
 import { logInfo, logSuccess, logWarn, logError } from './Core/logutil.js';
 import { playBootSequence, logConnection } from './Core/terminalfx.js';
 import events, { EVENTS } from './Core/events.js';
+import { checkpointAndClose } from './Database/sqlite.js';
+import { setLidMapping } from './Database/db.js';
 let reconnectAttempts = 0;
 function askQuestion(query) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
@@ -20,6 +22,28 @@ function askQuestion(query) {
 }
 function sleep(ms) {
     return new Promise((r) => setTimeout(r, ms));
+}
+async function primeMainOwnerLid(sock) {
+    // Baileys can tell us the LID that corresponds to a phone number via
+    // onWhatsApp(). We do this once at startup for the main owner so the
+    // LID<->phone mapping already exists in the DB *before* any message comes
+    // in — this is what makes DM-only owner commands (no group participants to
+    // cross-reference) work reliably instead of depending on chance.
+    const mainOwnerNum = String(config.mainOwner || '').replace(/[^0-9]/g, '');
+    if (!mainOwnerNum || typeof sock.onWhatsApp !== 'function')
+        return;
+    const results = await sock.onWhatsApp(mainOwnerNum);
+    const info = Array.isArray(results) ? results[0] : results;
+    if (!info?.exists)
+        return;
+    const lidRaw = info.lid || info.jid?.endsWith?.('@lid') ? (info.lid || info.jid) : null;
+    if (lidRaw) {
+        const lidNum = String(lidRaw).split('@')[0].replace(/[^0-9]/g, '');
+        if (lidNum) {
+            setLidMapping(lidNum, mainOwnerNum);
+            logInfo(`LID main owner ter-cache: ${lidNum} <-> ${mainOwnerNum}`);
+        }
+    }
 }
 async function startBot() {
     fs.mkdirSync(config.sessionDir, { recursive: true });
@@ -55,6 +79,7 @@ async function startBot() {
             logSuccess(`${config.botName} berhasil terhubung sebagai ${sock.user?.id}`);
             logConnection('connected', `${config.botName} · ${sock.user?.id || '-'}`);
             events.emitLogged(EVENTS.READY, { user: sock.user });
+            primeMainOwnerLid(sock).catch((err) => logWarn('Gagal priming LID main owner:', err?.message));
             store.reconcileGroups(sock)
                 .then((count) => logInfo(`Reconcile grup selesai: ${count} grup aktif tersinkron ke database.`))
                 .catch((err) => logError('Reconcile grup gagal:', err?.message || err));
@@ -113,5 +138,16 @@ async function bootstrap() {
     await startBot();
     process.on('uncaughtException', (err) => logError('uncaughtException:', err?.stack || err?.message));
     process.on('unhandledRejection', (reason) => logError('unhandledRejection:', reason));
+    let shuttingDown = false;
+    for (const sig of ['SIGINT', 'SIGTERM']) {
+        process.on(sig, () => {
+            if (shuttingDown)
+                return;
+            shuttingDown = true;
+            logInfo(`Menerima ${sig}, checkpoint database sebelum keluar...`);
+            checkpointAndClose();
+            process.exit(0);
+        });
+    }
 }
 bootstrap();
