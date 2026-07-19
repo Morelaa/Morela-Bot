@@ -1,29 +1,35 @@
 'use strict';
 import axios from 'axios';
+import crypto from 'crypto';
 import config from '../../config.js';
 import { findMediaMessage, downloadMessageMedia } from '../../Library/handle.js';
-import { AIRich, Toolkit } from '../../Library/MessageBuilder.js';
-import { buildFkontak } from '../../Library/utils.js';
-const OWNER_WA = `https://wa.me/${config.mainOwner}`;
-const NEOXR_KEY = config.apiKeys?.neoxr;
-function bufferToBlob(buffer, mimeType) {
-    return new Blob([buffer], { type: mimeType });
-}
-async function uploadImage(buffer, conn) {
-    try {
-        const url = await Toolkit.toUrl(conn, buffer, 'image');
-        if (url) return url;
-        throw new Error('CDN WA tidak mengembalikan URL');
-    } catch {
-        const form = new FormData();
-        form.append('file', bufferToBlob(buffer, 'image/jpeg'), 'image.jpg');
-        const res = await fetch('https://cdn.ornzora.eu.cc/upload', { method: 'POST', body: form });
-        const data = await res.json().catch(() => null);
-        const url = data?.url || data?.data?.url || data?.link || data?.data?.link ||
-            (typeof data === 'string' && data.startsWith('https://') ? data.trim() : null);
-        if (url) return url;
-        throw new Error('Upload gagal (CDN WA & Ornzora)');
+const EZREMOVE_BASE = 'https://api.ezremove.ai/api';
+async function removeWatermark(buffer, mimeType = 'image/jpeg') {
+    const productSerial = crypto.randomBytes(16).toString('hex');
+    const form = new FormData();
+    form.append('image_file', new Blob([buffer], { type: mimeType }), 'image.jpg');
+    form.append('model_name', 'v2');
+    const createRes = await axios.post(`${EZREMOVE_BASE}/ez-remove/watermark-remove/create-job`, form, {
+        headers: { 'Product-Serial': productSerial },
+        timeout: 60000,
+    });
+    const jobId = createRes.data?.result?.job_id;
+    if (!jobId) throw new Error(createRes.data?.message?.en || 'Gagal membuat job di ezremove.ai');
+    const started = Date.now();
+    while (Date.now() - started < 90000) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const jobRes = await axios.get(`${EZREMOVE_BASE}/ez-remove/watermark-remove/get-job/${jobId}`, { timeout: 30000 });
+        const code = jobRes.data?.code;
+        if (code === 100000) {
+            const output = jobRes.data?.result?.output?.[0];
+            if (output) return output;
+            throw new Error('Job selesai tapi tidak ada hasil.');
+        }
+        if (code !== 300001) {
+            throw new Error(jobRes.data?.message?.en || 'Job gagal diproses di ezremove.ai.');
+        }
     }
+    throw new Error('Timeout menunggu hasil (90 detik).');
 }
 const handler = async (m, { conn, usedPrefix, command }) => {
     const media = findMediaMessage(m);
@@ -42,9 +48,6 @@ const handler = async (m, { conn, usedPrefix, command }) => {
     if ((img.fileLength || 0) > 20 * 1024 * 1024) {
         return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ɢᴀᴍʙᴀʀ ᴛᴇʀʟᴀʟᴜ ʙᴇꜱᴀʀ, ᴍᴀᴋꜱɪᴍᴀʟ *20 ᴍʙ*\n╰┈┈┈┈┈┈┈┈⬡`);
     }
-    if (!NEOXR_KEY) {
-        return m.reply(`╭┈┈⬡「 *ɪɴꜰᴏ* 」\n┃ ✧ ᴀᴘɪ ᴋᴇʏ ɴᴇᴏxʀ ʙᴇʟᴜᴍ ᴅɪᴀᴛᴜʀ ᴅɪ ᴄᴏɴꜰɪɢ.ᴊꜱ (ᴀᴘɪᴋᴇʏꜱ.ɴᴇᴏxʀ)\n╰┈┈┈┈┈┈┈┈⬡`);
-    }
     await conn.sendMessage(m.chat, { react: { text: '⏳', key: m.key } });
     let buffer;
     try {
@@ -56,37 +59,10 @@ const handler = async (m, { conn, usedPrefix, command }) => {
     }
     await conn.sendMessage(m.chat, { react: { text: '⚙️', key: m.key } });
     try {
-        const [imageUrl, ppUrl, fk] = await Promise.all([
-            uploadImage(buffer, conn),
-            conn.profilePictureUrl(conn.user.id, 'image').catch(() => config.thumbnail),
-            buildFkontak(conn, config),
-        ]);
-        const response = await axios.get('https://api.neoxr.eu/api/nowm', {
-            params: { image: imageUrl, apikey: NEOXR_KEY },
-            timeout: 120000,
-        });
-        if (!response.data?.status || !response.data?.data?.url) {
-            throw new Error(response.data?.message || 'Gagal mendapatkan hasil dari API');
-        }
-        const resultUrl = response.data.data.url;
-        await new AIRich(conn)
-            .setTitle('Ai Assistant')
-            .addProduct({
-                title: '',
-                brand: config.botName,
-                price: ' Remove Watermark',
-                sale_price: '',
-                product_url: OWNER_WA,
-                icon_url: ppUrl,
-                image_url: ppUrl,
-            })
-            .addTip(' ')
-            .addImage(resultUrl, { mimeType: 'image/jpeg' })
-            .addSource([
-                ['https://www.google.com/s2/favicons?domain=google.com&sz=16', 'https://google.com', 'Google'],
-                ['https://www.google.com/s2/favicons?domain=whatsapp.com&sz=16', OWNER_WA, config.botName],
-            ])
-            .send(m.chat, { quoted: fk });
+        const resultUrl = await removeWatermark(buffer);
+        const resRes = await axios.get(resultUrl, { responseType: 'arraybuffer', timeout: 60000 });
+        const resultBuf = Buffer.from(resRes.data);
+        await conn.sendMessage(m.chat, { image: resultBuf, caption: ' Remove Watermark' }, { quoted: m.raw });
         await conn.sendMessage(m.chat, { react: { text: '✅', key: m.key } });
     } catch (e) {
         await conn.sendMessage(m.chat, { react: { text: '❌', key: m.key } });
