@@ -7,6 +7,7 @@ import * as baileys from '@itsliaaa/baileys';
 import config from '../../config.js';
 import db from '../../Database/db.js';
 import { loadConfigImage, buildFkontak } from '../../Library/utils.js';
+import { resolveLidToPhone, normNum } from '../../Library/resolve.js';
 const { proto, generateWAMessageContent, generateWAMessageFromContent } = baileys;
 const FONT_DIR = path.join(config.dataDir, 'font');
 const FONT_BOLD = path.join(FONT_DIR, 'Poppins-Bold.ttf');
@@ -497,7 +498,13 @@ const handler = async (m, { conn, text, isOwner }) => {
             const prem = u.premium ? ' ' : '';
             const banned = u.banned ? ' ' : '';
             const ageStr = u.age != null ? ` (${u.age} th)` : '';
-            txt += `┃ ✧ *${i + 1}.* ${u.name || 'User'}${ageStr}${prem}${banned}\n` + `┃ ✧ +${u.phone || u.jid.replace('@s.whatsapp.net', '')}\n` + `┃ ✧ ${tgl}\n┃\n`;
+            const rawJid = u.jid || '';
+            const isLid = rawJid.endsWith('@lid');
+            const resolvedPhone = u.phone || (isLid ? resolveLidToPhone(rawJid) : normNum(rawJid));
+            const numberLine = resolvedPhone
+                ? `┃ ✧ +${resolvedPhone}\n`
+                : `┃ ✧ LID: ${normNum(rawJid)} (nomor belum diketahui)\n`;
+            txt += `┃ ✧ *${i + 1}.* ${u.name || 'User'}${ageStr}${prem}${banned}\n` + numberLine + `┃ ✧ ${tgl}\n┃\n`;
         });
         txt += `╰┈┈┈┈┈┈┈┈⬡\n\n꒰ © ${botName} ꒱`;
         await m.reply(txt);
