@@ -9,7 +9,7 @@ function withTimeout(p, ms) {
     ]);
 }
 const handler = async (m, { conn, args }) => {
-    const resolved = resolveTarget(m, args, { fallbackSelf: true, minDigits: 8 });
+    const resolved = resolveTarget(m, args, { senderJid: m.senderPn || m.sender, fallbackSelf: true, minDigits: 8 });
     const targetJid = resolved.jid;
     if (!targetJid) {
         return m.reply(`╭┈┈⬡「 *ʀᴇᴘʟʏ/ᴍᴇɴᴛɪᴏɴ ᴏʀᴀɴɢɴʏᴀ, ᴀᴛᴀᴜ ᴋᴇᴛɪᴋ ɴᴏᴍᴏʀɴʏᴀ.* 」\n┃\n┃ ✧ ᴄᴏɴᴛᴏʜ: *.ɢᴇᴛᴘᴘ 628xxx*\n╰┈┈┈┈┈┈┈┈⬡`);
