@@ -256,9 +256,10 @@ export async function handleMessage(sock, rawMsg) {
         }
         const isOwnerSender = checkOwner(m, participants);
         const isAdminSender = m.isGroup ? checkGroupAdmin(m, participants) : false;
+        const isMainOwnerSender = checkMainOwner(m, participants);
         const exemptFromRegisterGate = plugin.noRegisterGate ||
             isOwnerSender ||
-            checkMainOwner(m, participants) ||
+            isMainOwnerSender ||
             isAdminSender ||
             checkPremiumUser(m.sender);
         if (!exemptFromRegisterGate && !db.isRegistered(m.sender)) {
@@ -266,7 +267,7 @@ export async function handleMessage(sock, rawMsg) {
             return;
         }
         const ctx = { m, participants, groupMeta, sock };
-        if (plugin.limit) {
+        if (plugin.limit && !isOwnerSender && !isMainOwnerSender) {
             const cost = typeof plugin.limit === 'number' ? plugin.limit : 1;
             const isPremium = checkPremiumUser(m.sender);
             const limitResult = usagelimit.checkAndConsume(m.sender, { isPremium, cost });
@@ -312,3 +313,4 @@ export async function handleMessage(sock, rawMsg) {
     }
 }
 export default { handleMessage };
+            
