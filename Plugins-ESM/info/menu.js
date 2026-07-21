@@ -2,7 +2,7 @@
 import * as baileys from '@itsliaaa/baileys';
 import config from '../../config.js';
 import pluginManager from '../_pluginmanager.js';
-import { loadConfigImage, buildFkontak, buildForwardContext, toBoldSans } from '../../Library/utils.js';
+import { loadConfigImage, buildFkontak, buildForwardContext } from '../../Library/utils.js';
 import { ButtonV2 } from '../../Library/MessageBuilder.js';
 import { getMenuStyle } from '../../System/menustyle.js';
 import { getProcessUptime } from '../../Library/system.js';
@@ -12,34 +12,60 @@ import db from '../../Database/db.js';
 const OWNER_WA = `https://wa.me/${config.mainOwner}`;
 const OWNER_CALL_NUMBER = `+${config.pairingNumber || config.mainOwner}`;
 const CATEGORY_META = {
-    ai: { emoji: '', title: 'AI MENU' },
-    downloader: { emoji: '', title: 'DOWNLOADER' },
-    sticker: { emoji: '', title: 'STICKER' },
-    maker: { emoji: '', title: 'MAKER' },
-    tools: { emoji: '', title: 'TOOLS' },
-    games: { emoji: '', title: 'GAME & RPG' },
-    info: { emoji: '', title: 'INFO' },
-    admin: { emoji: '', title: 'ADMIN' },
-    owner: { emoji: '', title: 'OWNER' },
+    ai: { emoji: '', title: 'ᴀɪ ᴍᴇɴᴜ' },
+    downloader: { emoji: '', title: 'ᴅᴏᴡɴʟᴏᴀᴅᴇʀ' },
+    sticker: { emoji: '', title: 'ꜱᴛɪᴄᴋᴇʀ' },
+    maker: { emoji: '', title: 'ᴍᴀᴋᴇʀ' },
+    tools: { emoji: '', title: 'ᴛᴏᴏʟꜱ' },
+    games: { emoji: '', title: 'ɢᴀᴍᴇ & ʀᴘɢ' },
+    info: { emoji: '', title: 'ɪɴꜰᴏ' },
+    admin: { emoji: '', title: 'ᴀᴅᴍɪɴ' },
+    owner: { emoji: '', title: 'ᴏᴡɴᴇʀ' },
 };
 const CATEGORY_ORDER = ['ai', 'downloader', 'sticker', 'maker', 'tools', 'games', 'info', 'admin', 'owner'];
 function slugCat(tag) {
-    return String(tag || 'lainnya').toLowerCase();
+    const t = String(tag || 'lainnya').toLowerCase();
+    if (t === 'group') return 'admin';
+    return t;
+}
+const SMALLCAPS_MAP = {
+    a: 'ᴀ', b: 'ʙ', c: 'ᴄ', d: 'ᴅ', e: 'ᴇ', f: 'ꜰ', g: 'ɢ', h: 'ʜ', i: 'ɪ', j: 'ᴊ',
+    k: 'ᴋ', l: 'ʟ', m: 'ᴍ', n: 'ɴ', o: 'ᴏ', p: 'ᴘ', q: 'q', r: 'ʀ', s: 'ꜱ', t: 'ᴛ',
+    u: 'ᴜ', v: 'ᴠ', w: 'ᴡ', x: 'x', y: 'ʏ', z: 'ᴢ',
+};
+function toSmallCaps(text) {
+    return String(text).replace(/[a-zA-Z]/g, (ch) => SMALLCAPS_MAP[ch.toLowerCase()] || ch);
+}
+function bareCommandName(plugin) {
+    const raw = plugin.help?.[0] || '';
+    const first = raw.trim().split(/\s+/)[0];
+    if (first) return first;
+    const src = plugin.command instanceof RegExp ? plugin.command.source : '';
+    const m = src.match(/[a-zA-Z0-9_]+/);
+    return m ? m[0] : '(tanpa nama)';
+}
+function accessLetter(plugin) {
+    if (plugin.premium) return 'Ⓟ';
+    if (plugin.mainOwner || plugin.owner) return 'Ⓞ';
+    if (plugin.admin) return 'Ⓐ';
+    return '';
 }
 function buildMenuLists() {
     const grouped = {};
     for (const plugin of pluginManager.getAllPlugins()) {
         const cat = slugCat(plugin.tags?.[0]);
         grouped[cat] ??= [];
-        const usage = plugin.help?.[0] || plugin.command?.toString() || '(tanpa usage)';
-        grouped[cat].push(usage);
+        const name = toSmallCaps(bareCommandName(plugin));
+        const letter = accessLetter(plugin);
+        grouped[cat].push({ name, letter, label: letter ? `${name} ${letter}` : name });
     }
     const lists = {};
     const orderedKeys = [...CATEGORY_ORDER, ...Object.keys(grouped).filter((k) => !CATEGORY_ORDER.includes(k))];
     for (const key of orderedKeys) {
         if (!grouped[key]) continue;
         const meta = CATEGORY_META[key] || { emoji: '', title: key.toUpperCase() };
-        lists[key] = { emoji: meta.emoji, title: meta.title, commands: grouped[key].sort() };
+        const commands = grouped[key].sort((a, b) => a.name.localeCompare(b.name)).map((c) => c.label);
+        lists[key] = { emoji: meta.emoji, title: meta.title, commands };
     }
     return lists;
 }
@@ -53,49 +79,57 @@ function getGreeting() {
     return ' Selamat Malam';
 }
 function buildMenuBody(menuLists) {
-    return Object.values(menuLists).map((d) => ` ⌞ ${d.title.toLowerCase()} ⌝`).join('\n');
+    let txt = `╭┈┈⬡「 *ᴅᴀꜰᴛᴀʀ ᴍᴇɴᴜ* 」\n`;
+    for (const d of Object.values(menuLists)) txt += `┃ ✧ ${d.title}\n`;
+    txt += `╰┈┈┈┈┈┈┈┈⬡`;
+    return txt;
 }
 function buildCategoryBody(data) {
-    let txt = ` ⌞ ${data.emoji} ${data.title} ⌝\n\n`;
-    for (const cmd of data.commands) txt += ` ⌞ ${cmd} ⌝\n`;
+    let txt = `╭┈┈⬡「 *${data.title}* 」\n`;
+    for (const cmd of data.commands) txt += `┃ ✧ ${cmd}\n`;
+    txt += `╰┈┈┈┈┈┈┈┈⬡`;
     return txt;
 }
 function buildFullMenuBody(menuLists, pushname, senderJid, isOwn, isPrem, groupJid) {
     const uptime = getProcessUptime();
-    const mode = isSelfMode(groupJid) ? 'Self' : 'Public';
+    const mode = isSelfMode(groupJid) ? 'ꜱᴇʟꜰ' : 'ᴘᴜʙʟɪᴄ';
     let totalCommands = 0;
     Object.values(menuLists).forEach((d) => (totalCommands += d.commands.length));
-    let akses = ' User';
+    let akses = ' ᴜꜱᴇʀ';
     let limit = '-';
-    let daftar = ' Belum';
+    let daftar = ' ʙᴇʟᴜᴍ';
     try {
         const isReg = db.isRegistered(senderJid);
         if (isOwn) {
-            akses = ' Owner';
-            limit = ' Unlimited';
-            daftar = isReg ? ' Sudah' : ' Belum';
+            akses = ' ᴏᴡɴᴇʀ';
+            limit = ' ᴜɴʟɪᴍɪᴛᴇᴅ';
+            daftar = isReg ? ' ꜱᴜᴅᴀʜ' : ' ʙᴇʟᴜᴍ';
         } else if (isReg) {
-            akses = isPrem ? ' Premium' : ' User';
+            akses = isPrem ? ' ᴘʀᴇᴍɪᴜᴍ' : ' ᴜꜱᴇʀ';
             limit = isPrem ? '∞' : `${config.defaultUsageLimit}/hari`;
-            daftar = ' Sudah';
+            daftar = ' ꜱᴜᴅᴀʜ';
         }
     } catch {  }
-    let txt = `${getGreeting()}, *${pushname}!* \n\n`;
-    txt += ` ⌞ ${toBoldSans('INFO BOT')} ⌝\n`;
-    txt += ` ⌞ Name     : ${config.botName} ⌝\n`;
-    txt += ` ⌞ Version  : ${config.botVersion} ⌝\n`;
-    txt += ` ⌞ Uptime   : ${uptime} ⌝\n`;
-    txt += ` ⌞ Owner    : ${config.ownerName} ⌝\n`;
-    txt += ` ⌞ Mode     : ${mode} ⌝\n`;
-    txt += ` ⌞ Commands : ${totalCommands} ⌝\n\n`;
-    txt += ` ⌞ ${toBoldSans('INFO USER')} ⌝\n`;
-    txt += ` ⌞ Nama   : ${pushname} ⌝\n`;
-    txt += ` ⌞ Akses  : ${akses} ⌝\n`;
-    txt += ` ⌞ Limit  : ${limit} ⌝\n`;
-    txt += ` ⌞ Daftar : ${daftar} ⌝\n\n`;
+    let txt = `${getGreeting()}, *${pushname}!*\n\n`;
+    txt += `╭┈┈⬡「 *ɪɴꜰᴏ ʙᴏᴛ* 」\n`;
+    txt += `┃ ✧ ɴᴀᴍᴇ     : ${config.botName}\n`;
+    txt += `┃ ✧ ᴠᴇʀꜱɪᴏɴ  : ${config.botVersion}\n`;
+    txt += `┃ ✧ ᴜᴘᴛɪᴍᴇ   : ${uptime}\n`;
+    txt += `┃ ✧ ᴏᴡɴᴇʀ    : ${config.ownerName}\n`;
+    txt += `┃ ✧ ᴍᴏᴅᴇ     : ${mode}\n`;
+    txt += `┃ ✧ ᴄᴏᴍᴍᴀɴᴅꜱ : ${totalCommands}\n`;
+    txt += `╰┈┈┈┈┈┈┈┈⬡\n\n`;
+    txt += `╭┈┈⬡「 *ɪɴꜰᴏ ᴜꜱᴇʀ* 」\n`;
+    txt += `┃ ✧ ɴᴀᴍᴀ   : ${pushname}\n`;
+    txt += `┃ ✧ ᴀᴋꜱᴇꜱ  : ${akses}\n`;
+    txt += `┃ ✧ ʟɪᴍɪᴛ  : ${limit}\n`;
+    txt += `┃ ✧ ᴅᴀꜰᴛᴀʀ : ${daftar}\n`;
+    txt += `╰┈┈┈┈┈┈┈┈⬡\n\n`;
+    txt += `╭┈┈⬡「 *ᴅᴀꜰᴛᴀʀ ᴍᴇɴᴜ* 」\n`;
     for (const key of Object.keys(menuLists)) {
-        txt += ` ⌞ ${toBoldSans(`menu ${key}`)} ⌝\n`;
+        txt += `┃ ✧ ${toSmallCaps(`menu ${key}`)}\n`;
     }
+    txt += `╰┈┈┈┈┈┈┈┈⬡`;
     return txt.trim();
 }
 function buildSectionsV1Style(menuLists) {
@@ -117,8 +151,8 @@ async function sendMenuV1Style(conn, jid, imgBuf, bodyText, fkontak, ctx, menuLi
         {
             interactiveMessage: {
                 header: { hasMediaAttachment: true, imageMessage: imgMsg },
-                body: { text: bodyText },
-                footer: { text: `Powered by ${config.botName} ` },
+                body: { text: '' },
+                footer: { text: `${bodyText}\nPowered by ${config.botName} ` },
                 contextInfo: {
                     forwardingScore: 1,
                     isForwarded: true,
