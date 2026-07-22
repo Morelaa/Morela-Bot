@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:6C63FF,100:00C9A7&height=200&section=header&text=Morela%20Bot&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=WhatsApp%20Bot%20Base%20%2C%20Plugin%20Hot-Reload%20%26%20Sistem%20Izin%20Berlapis&descAlignY=58&descSize=18" width="100%"/>
+# Morela Bot
 
 <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&duration=3000&pause=1000&color=6C63FF&center=true&vCenter=true&width=600&lines=Owner+%2F+Admin+%2F+Premium+Permission+System;SQLite+Database+%2B+Plugin+Hot-Reload;Dibangun+di+atas+%40itsliaaa%2Fbaileys" alt="Typing SVG" />
 
@@ -181,8 +181,3 @@ Nemu error, bug, atau butuh bantuan setup? Langsung hubungi lewat WhatsApp:
 ## Lisensi
 
 MIT
-
-<div align="center">
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:00C9A7,100:6C63FF&height=100&section=footer" width="100%"/>
-</div>
-
