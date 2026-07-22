@@ -52,7 +52,7 @@ export async function evaluatePluginAccess(plugin, ctx) {
         if (!botIsAdmin)
             return { allowed: false, reason: 'bot_not_admin' };
     }
-    if (plugin.premium && !isOwnerOrMain && !checkPremiumUser(m?.sender)) {
+    if (plugin.premium && !isOwnerOrMain && !checkPremiumUser(m?.senderPn || m?.sender)) {
         return { allowed: false, reason: 'premium_required' };
     }
     return { allowed: true };
@@ -66,3 +66,4 @@ export default {
     checkPremiumUser,
     evaluatePluginAccess,
 };
+                
