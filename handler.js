@@ -61,7 +61,7 @@ function printIncomingLog(m, participants, groupMeta) {
         messageType: m.type,
         isNewsletter,
         isOwner: checkOwner(m, participants),
-        isPremium: checkPremiumUser(m.sender),
+        isPremium: checkPremiumUser(m.senderPn || m.sender),
         isAdmin: m.isGroup ? checkGroupAdmin(m, participants) : false,
         device: getDeviceHint(m.id),
     });
@@ -157,7 +157,7 @@ const commandGateMiddlewares = [
     function bannedGate(m) {
         if (m.fromMe)
             return true;
-        const user = db.getUser(m.sender);
+        const user = db.getUser(m.senderPn || m.sender);
         return !user?.banned;
     },
 ];
@@ -257,20 +257,22 @@ export async function handleMessage(sock, rawMsg) {
         const isOwnerSender = checkOwner(m, participants);
         const isAdminSender = m.isGroup ? checkGroupAdmin(m, participants) : false;
         const isMainOwnerSender = checkMainOwner(m, participants);
+        const regJid = m.senderPn || m.sender;
         const exemptFromRegisterGate = plugin.noRegisterGate ||
             isOwnerSender ||
             isMainOwnerSender ||
             isAdminSender ||
-            checkPremiumUser(m.sender);
-        if (!exemptFromRegisterGate && !db.isRegistered(m.sender)) {
+            checkPremiumUser(regJid);
+        if (!exemptFromRegisterGate && !db.isRegistered(regJid)) {
             await runUnbranded(() => sendRegisterGate(sock, m, participants));
             return;
         }
         const ctx = { m, participants, groupMeta, sock };
+        
         if (plugin.limit && !isOwnerSender && !isMainOwnerSender) {
             const cost = typeof plugin.limit === 'number' ? plugin.limit : 1;
-            const isPremium = checkPremiumUser(m.sender);
-            const limitResult = usagelimit.checkAndConsume(m.sender, { isPremium, cost });
+            const isPremium = checkPremiumUser(regJid);
+            const limitResult = usagelimit.checkAndConsume(regJid, { isPremium, cost });
             if (!limitResult.allowed) {
                 await m.reply(` Limit harian kamu sudah habis (${limitResult.used}/${limitResult.limit}). Coba lagi besok atau upgrade ke premium.`);
                 return;
@@ -313,4 +315,3 @@ export async function handleMessage(sock, rawMsg) {
     }
 }
 export default { handleMessage };
-            
