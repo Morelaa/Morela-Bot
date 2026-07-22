@@ -1,6 +1,34 @@
-# Morela Bot v0.0.1
+<div align="center">
 
-WhatsApp bot base berbasis [`@itsliaaa/baileys`](https://www.npmjs.com/package/@itsliaaa/baileys), plugin hot-reload, database SQLite, sistem izin berlapis (owner/admin/premium).
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:6C63FF,100:00C9A7&height=200&section=header&text=Morela%20Bot&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=WhatsApp%20Bot%20Base%20%2C%20Plugin%20Hot-Reload%20%26%20Sistem%20Izin%20Berlapis&descAlignY=58&descSize=18" width="100%"/>
+
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&duration=3000&pause=1000&color=6C63FF&center=true&vCenter=true&width=600&lines=Owner+%2F+Admin+%2F+Premium+Permission+System;SQLite+Database+%2B+Plugin+Hot-Reload;Dibangun+di+atas+%40itsliaaa%2Fbaileys" alt="Typing SVG" />
+
+<br/>
+
+![Node](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-3C873A?style=for-the-badge&logo=node.js&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
+![Database](https://img.shields.io/badge/Database-SQLite-07405e?style=for-the-badge&logo=sqlite&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)
+
+</div>
+
+---
+
+## Daftar Isi
+
+- [Instalasi](#instalasi)
+- [Struktur Project](#struktur-project)
+- [Menulis Plugin Baru](#menulis-plugin-baru)
+- [Gate Registrasi](#gate-registrasi-wajib-daftar)
+- [Mode Eval / Shell (Main Owner)](#mode-eval--shell-main-owner)
+- [Pelacakan Event Grup](#pelacakan-event-grup)
+- [Fitur Welcome & Goodbye](#fitur-welcome--goodbye)
+- [Tampilan Balasan](#tampilan-balasan-branded-replies)
+- [Kontak & Bantuan](#kontak--bantuan)
+- [Lisensi](#lisensi)
+
+---
 
 ## Instalasi
 
@@ -10,7 +38,7 @@ npm install
 npm start
 ```
 
-Login pakai **pairing code** (bukan QR): bot minta nomor WhatsApp lalu tampilkan kode di terminal  WhatsApp HP  **Perangkat Tertaut**  **Tautkan dengan nomor telepon**.
+Login pakai **pairing code** (bukan QR): bot minta nomor WhatsApp lalu tampilkan kode di terminal → WhatsApp HP → **Perangkat Tertaut** → **Tautkan dengan nomor telepon**.
 
 | Command | Kegunaan |
 |---|---|
@@ -18,7 +46,9 @@ Login pakai **pairing code** (bukan QR): bot minta nomor WhatsApp lalu tampilkan
 | `npm run start:direct` | Jalankan `utama.js` langsung, tanpa supervisor `launcher.js` |
 | `npm run dev` | Alias, isinya sama persis dengan `start:direct` (`node utama.js`) |
 
-Catatan: project ini plain JavaScript, tidak ada langkah compile/build (bukan TypeScript). Jadi tidak ada `npm run build`, dan `dev` bukan mode watch/nodemon, cuma nama lain untuk `node utama.js`, dipisah dari `start:direct` sekadar biar familiar buat yang terbiasa `npm run dev`. Kalau mau auto-restart pas develop, tetap pakai `npm start` (lewat `launcher.js`).
+> Project ini plain JavaScript (bukan TypeScript), jadi tidak ada langkah compile/build. `dev` bukan mode watch/nodemon, cuma nama lain untuk `node utama.js`. Kalau mau auto-restart pas develop, tetap pakai `npm start` (lewat `launcher.js`).
+
+---
 
 ## Struktur Project
 
@@ -33,11 +63,12 @@ System/        self mode, private mode, pengecekan owner, eval/shell shortcut (s
 Library/       resolve LID/JID, MessageBuilder, sticker, canvas, util lain
 Database/      SQLite (better-sqlite3): users, groups, group_members, dll
 Plugins-ESM/   semua command, per folder kategori (owner/admin/tools/games/dst)
-               termasuk admin/welcome.js & admin/goodbye.js (fitur welcome/goodbye, lihat bagian di bawah)
 data/          file database SQLite + soal game JSON
-media/         aset gambar (register.jpg disertakan, tambahkan sendiri kalau perlu)
+media/         aset gambar (register.jpg untuk tampilan register, gambar menu diatur lewat config.menuImage)
 session/       kredensial login WhatsApp (auto-generate, path diatur lewat config.sessionDir)
 ```
+
+---
 
 ## Menulis Plugin Baru
 
@@ -68,22 +99,26 @@ handler.noRegisterGate = false; // true = lolos wajib .daftar (dipakai plugin da
 export default handler;
 ```
 
-Pengecekan akses & pesan penolakan sudah dihandle otomatis oleh `handler.js`, plugin tinggal pasang flag. File otomatis ke-reload saat disave (`pluginHotReload: true`) — **tapi kalau ada perubahan yang gak nyangkut setelah save, restart proses bot manual, jangan cuma andalin hot-reload.**
+Pengecekan akses & pesan penolakan sudah dihandle otomatis oleh `handler.js`, plugin tinggal pasang flag. File otomatis ke-reload saat disave (`pluginHotReload: true`), **tapi kalau ada perubahan yang gak nyangkut setelah save, restart proses bot manual, jangan cuma andalin hot-reload.**
 
 Plugin juga bisa punya `handler.onText(m, { conn })` untuk menangkap pesan tanpa prefix (return `true` kalau sudah ditangani).
 
+---
+
 ## Gate Registrasi (Wajib `.daftar`)
 
-Sejak `handler.js` diperbarui, **semua command butuh registrasi (`.daftar`/`.register`) secara default** — bukan opt-in per plugin lagi. Kalau pengirim belum terdaftar, dia dapet balasan penolakan otomatis dan command-nya gak dijalankan.
+Semua command butuh registrasi (`.daftar`/`.register`) secara default, bukan opt-in per plugin. Kalau pengirim belum terdaftar, dia dapet balasan penolakan otomatis dan command-nya gak dijalankan.
 
-Yang **otomatis lolos** dari gate ini (gak perlu `.daftar` dulu):
+Yang **otomatis lolos** dari gate ini:
 - Owner bot (`config.owners`)
 - Main owner (`checkMainOwner`)
 - Admin grup, khusus command yang dipanggil di dalam grup (`checkGroupAdmin`)
 - User dengan akun premium (`checkPremiumUser`)
-- Plugin yang secara eksplisit ditandai `handler.noRegisterGate = true` — dipakai di `Plugins-ESM/tools/register.js` sendiri, biar user baru tetap bisa jalanin `.daftar`
+- Plugin yang secara eksplisit ditandai `handler.noRegisterGate = true`
 
-Pengecekan ini role-based (siapa yang ngirim), bukan berdasarkan flag command (`handler.admin`/`handler.owner` dkk) — jadi admin grup tetap lolos gate walau lagi manggil command biasa yang gak ditandai admin-only.
+Pengecekan ini role-based (siapa yang ngirim), bukan berdasarkan flag command, jadi admin grup tetap lolos gate walau lagi manggil command biasa yang gak ditandai admin-only.
+
+---
 
 ## Mode Eval / Shell (Main Owner)
 
@@ -95,49 +130,59 @@ Diimplementasikan di `System/superowner.js`, dipicu otomatis dari isi pesan (buk
 | `=>kode` | Eval JS dibungkus `return`, buat ekspresi singkat |
 | `$perintah` | Jalankan shell command langsung di server, tampilkan stdout/stderr |
 
-Berguna buat debug live (cek status API eksternal, isi file di disk, state proses, dll) tanpa perlu deploy ulang. Command yang mengandung pola restart proses (`pm2 restart`, `systemctl restart`, dll) otomatis dikasih jeda & pesan peringatan sebelum dieksekusi.
+> ⚠️ Fitur ini setara akses shell penuh ke server, pastikan `config.owners`/main owner cuma diisi nomor yang beneran dipercaya.
 
- Fitur ini setara akses shell penuh ke server — pastikan `config.owners`/main owner cuma diisi nomor yang beneran dipercaya.
+---
 
 ## Pelacakan Event Grup
 
 `Core/store.js` otomatis nulis ke database setiap ada perubahan di grup:
-- Member join/keluar/promote/demote  tabel `group_members` (`Database/groupMembers.js`)
-- Kalau bot sendiri yang dikick/keluar/dipromote/didemote  status `botInGroup`/`isBotAdmin` tersimpan di tabel `groups`
-- Kalau member (bukan bot) join/keluar dan fitur welcome/goodbye grup itu aktif  otomatis kirim pesan welcome/goodbye (lihat bagian di bawah)
+- Member join/keluar/promote/demote → tabel `group_members`
+- Kalau bot sendiri yang dikick/keluar/dipromote/didemote → status tersimpan di tabel `groups`
+- Kalau member join/keluar dan fitur welcome/goodbye grup itu aktif → otomatis kirim pesan
+
+---
 
 ## Fitur Welcome & Goodbye
 
-Diimplementasikan di `Plugins-ESM/admin/welcome.js` dan `Plugins-ESM/admin/goodbye.js`, dipicu otomatis dari event `group-participants.update` di `Core/store.js`. Tampilan pakai `ButtonV2` (card + thumbnail + 2 tombol), sama seperti gaya v2.
-
-- Gambar thumbnail: coba ambil foto profil member yang join/keluar dulu; kalau kosong/private/gagal, otomatis fallback pakai foto profil bot sendiri.
-- Tombol welcome: **Menu** (`.menu`) dan **Daftar** (`.daftar`).
-- Tombol goodbye: **Menu** (`.menu`) dan **Profil** (`.profil <nomor>`).
-- Status disimpan per-grup di kolom `settings` tabel `groups` (`settings.welcome` / `settings.goodbye`, lewat `upsertGroupSettings`).
+Dipicu otomatis dari event `group-participants.update`. Tampilan pakai card + thumbnail + 2 tombol.
 
 | Command | Kegunaan |
 |---|---|
 | `.welcome on` / `.welcome off` | Aktif/nonaktifkan welcome otomatis di grup ini |
 | `.welcome` / `.welcome status` | Cek status welcome |
-| `.welcome @user` / `.teswelcome @user` | Kirim contoh pesan welcome manual (buat testing) |
+| `.welcome @user` / `.teswelcome @user` | Kirim contoh pesan welcome manual (testing) |
 | `.goodbye on` / `.goodbye off` | Aktif/nonaktifkan goodbye otomatis di grup ini |
 | `.goodbye` / `.goodbye status` | Cek status goodbye |
-| `.goodbye @user` / `.tesgoodbye @user` | Kirim contoh pesan goodbye manual (buat testing) |
+| `.goodbye @user` / `.tesgoodbye @user` | Kirim contoh pesan goodbye manual (testing) |
 
 Semua command di atas khusus admin grup (`handler.admin = true`, `handler.group = true`).
 
-## Konfigurasi Tambahan
-
-- **`.ytmp3` / `.ytmp4` / `.tiktok`**: isi `apiKeys.neoxr` (daftar di https://api.neoxr.eu).
-- **`media/menu.jpg`**: belum disertakan, tambahkan sendiri kalau mau menu bergambar.
-- **`githubToken` / `githubRepo`**: belum dipakai plugin manapun saat ini.
-
- Semua nilai sensitif (nomor owner, API key) ada langsung di `config.js`. Kalau mau push ke repo publik, kosongkan dulu atau masukkan `config.js` ke `.gitignore`.
+---
 
 ## Tampilan Balasan (Branded Replies)
 
 Balasan teks otomatis dibungkus tampilan "forwarded dari channel" lewat `Core/sockext.js`. Atur lewat `config.js`: `ownerName`, `channelJid`, `channelName`, `thumbnail`. Matikan dengan `brandedReplies: false`.
 
+---
+
+## Kontak & Bantuan
+
+Nemu error, bug, atau butuh bantuan setup? Langsung hubungi lewat WhatsApp:
+
+<div align="center">
+
+[![WhatsApp](https://img.shields.io/badge/Chat_di_WhatsApp-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](https://wa.me/6282184455955)
+
+</div>
+
+---
+
 ## Lisensi
 
 MIT
+
+<div align="center">
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:00C9A7,100:6C63FF&height=100&section=footer" width="100%"/>
+</div>
+
